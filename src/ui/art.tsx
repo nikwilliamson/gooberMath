@@ -9,7 +9,7 @@ const prng = (seed: number) => {
 }
 
 const DISPLAY_STACK =
-  "'Inter Tight','SF Pro Display',system-ui,-apple-system,'Segoe UI',sans-serif"
+  "obviously-wide,obviously,'Inter Tight',system-ui,-apple-system,sans-serif"
 
 /* ========================================================================== */
 /* Brush-textured display type                                                 */
@@ -66,7 +66,7 @@ export function RoughText({
         textAnchor="middle"
         fontFamily={DISPLAY_STACK}
         fontSize={size}
-        fontWeight={900}
+        fontWeight={700}
         fontStyle="italic"
         letterSpacing={-size * 0.03}
         fill={color}

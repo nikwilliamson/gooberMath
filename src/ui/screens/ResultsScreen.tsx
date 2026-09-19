@@ -89,7 +89,7 @@ export function ResultsScreen() {
                   <span className="statrow__v tnum">
                     {summary.correct}
                     {summary.wrong > 0 && (
-                      <small style={{ color: 'var(--dim)', fontWeight: 600 }}>&middot; {summary.wrong} missed</small>
+                      <small style={{ color: 'var(--dim)', fontWeight: 400 }}>&middot; {summary.wrong} missed</small>
                     )}
                   </span>
                 </div>

@@ -37,8 +37,10 @@
   --r-pill: 999px;
 
   /* Condensed geometric UI; the display moments use SVG brush text instead. */
-  --font-ui: 'Inter', 'SF Pro Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Inter Tight', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  /* Obviously (Adobe Fonts). The kit ships 400 and 700 only, so every weight in
+     this stylesheet is one of those two — anything else renders as faux-bold. */
+  --font-ui: obviously, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: obviously-wide, obviously, 'Inter Tight', system-ui, -apple-system, sans-serif;
 
   /* --- motion -----------------------------------------------------------
    * Four durations and four curves, and nothing outside them. Everything

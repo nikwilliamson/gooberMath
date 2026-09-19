@@ -25,6 +25,17 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
         runtimeCaching: [
           {
+            // The typeface is external, so offline runs would fall back to the
+            // system stack without this.
+            urlPattern: /^https:\/\/(use|p)\.typekit\.net\//,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'goobermath-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: ({ request }: { request: Request }) =>
               request.destination === 'image' || request.destination === 'audio',
             handler: 'CacheFirst',

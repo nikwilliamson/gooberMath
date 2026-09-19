@@ -7,7 +7,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
-  font-weight: 600;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
   touch-action: manipulation;
@@ -118,7 +118,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   padding: 0.85em 1.5em;
   border-radius: var(--r-md);
   font-size: clamp(0.72rem, 1.9vmin, 0.88rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: var(--panel);
@@ -153,7 +153,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   background: var(--amber);
   color: #1a1204;
   font-size: clamp(0.56rem, 1.5vmin, 0.68rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -206,14 +206,14 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .map__op {
   font-family: var(--font-display);
   font-size: clamp(1.5rem, 5.4vmin, 2.6rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--ink);
 }
 .map__sub { font-size: clamp(0.66rem, 1.8vmin, 0.8rem); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
-.map__blurb { font-size: clamp(0.72rem, 1.9vmin, 0.86rem); color: var(--dim); font-weight: 600; margin-top: 10px; max-width: 42ch; }
+.map__blurb { font-size: clamp(0.72rem, 1.9vmin, 0.86rem); color: var(--dim); font-weight: 400; margin-top: 10px; max-width: 42ch; }
 
 .nodes { overflow-y: auto; padding: clamp(14px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
 .node { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
@@ -225,7 +225,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   border: 2px solid var(--line-2);
   background: var(--bg-2);
   font-size: clamp(0.8rem, 2.2vmin, 1rem);
-  font-weight: 800;
+  font-weight: 700;
   color: var(--dim);
   transition: box-shadow var(--dur-enter) var(--ease-out), border-color var(--dur-enter) var(--ease-out);
 }
@@ -234,18 +234,18 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .node__line { width: 2px; flex: 1; min-height: clamp(16px, 3.4vmin, 30px); background: var(--line-2); }
 .node__line--done { background: var(--ink); }
 .node__body { padding-bottom: clamp(16px, 3.4vmin, 30px); display: grid; gap: 3px; text-align: left; width: 100%; }
-.node__name { font-size: clamp(0.88rem, 2.4vmin, 1.05rem); font-weight: 800; }
+.node__name { font-size: clamp(0.88rem, 2.4vmin, 1.05rem); font-weight: 700; }
 .node--locked .node__name, .node--locked .node__meta { color: var(--dimmer); }
-.node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 600; display: flex; gap: 12px; flex-wrap: wrap; }
+.node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 400; display: flex; gap: 12px; flex-wrap: wrap; }
 .node__grid { margin-top: 5px; }
 
 .questbar { padding: clamp(12px, 2.6vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 12px; background: linear-gradient(180deg, transparent, rgba(6, 9, 15, 0.9) 30%); }
 .questbar__card { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: clamp(12px, 2.4vmin, 18px); }
 .questbar__info { display: grid; gap: 2px; flex: 1; min-width: 150px; }
-.questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 800; }
-.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 600; }
+.questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
+.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; }
 .questbar__target { display: grid; gap: 2px; text-align: right; }
-.questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 800; color: var(--amber); }
+.questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
 .questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .optabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -260,7 +260,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   border-radius: var(--r-md);
   border: 1px solid transparent;
   font-size: clamp(0.54rem, 1.5vmin, 0.66rem);
-  font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--dim);
 }
 .optab__sym { font-size: clamp(1rem, 2.8vmin, 1.3rem); line-height: 1; }
@@ -281,14 +281,23 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .hud { display: flex; align-items: flex-start; gap: 14px; }
 .hud__time { display: grid; gap: 5px; flex: 1; min-width: 0; }
 .hud__clock { display: flex; align-items: center; gap: 12px; }
-.hud__digits { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.hud__digits {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 4vmin, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  /* No tabular figures in this family: reserve the width so the clock and the
+     combo cannot jiggle the HUD as they count. */
+  min-width: 3.4ch;
+}
 .timer { position: relative; flex: 1; max-width: 240px; height: clamp(7px, 1.4vmin, 10px); border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.10); overflow: hidden; }
 .timer__fill { position: absolute; inset: 0; transform-origin: left center; border-radius: var(--r-pill); background: var(--amber); transition: transform 100ms linear, background var(--dur-state) var(--ease-snap); }
 .timer--ok .timer__fill { background: var(--green); }
 .timer--urgent .timer__fill { background: var(--red); }
 
 .combo { display: grid; justify-items: end; gap: 3px; flex: none; }
-.combo__v { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 800; line-height: 1; color: var(--amber); }
+.combo__v { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 700; line-height: 1; color: var(--amber); min-width: 2.6ch; text-align: right; }
 .combo--hot .combo__v { color: var(--green); }
 .combo--cold .combo__v { color: var(--red); }
 /* Always occupies its line so the HUD height never changes mid-run. */
@@ -312,7 +321,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 }
 .problem {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: clamp(2rem, 9vmin, 3.8rem);
   line-height: 1;
   letter-spacing: -0.01em;
@@ -349,7 +358,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .sticker__points {
   font-family: var(--font-display);
   font-size: clamp(0.8rem, 2.4vmin, 1.15rem);
-  font-weight: 800;
+  font-weight: 700;
   color: #eaffe2;
   text-shadow: 0 2px 8px rgba(4, 8, 14, 0.9);
 }
@@ -364,7 +373,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   position: relative; z-index: 1;
   font-family: var(--font-display);
   font-size: clamp(1.4rem, 5vmin, 2.4rem);
-  font-weight: 800;
+  font-weight: 700;
   /* It sits on top of the splat, so it needs its own separation. */
   text-shadow: 0 2px 10px rgba(4, 8, 14, 0.9), 0 0 3px rgba(4, 8, 14, 0.8);
 }
@@ -379,8 +388,8 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   display: grid; gap: 4px; justify-items: center;
   box-shadow: 0 0 34px rgba(255, 77, 94, 0.28);
 }
-.fb__answersub { font-size: clamp(0.7rem, 1.9vmin, 0.85rem); color: var(--dim); font-weight: 600; }
-.fb__answerv { font-family: var(--font-display); font-size: clamp(1.8rem, 6.5vmin, 3rem); font-weight: 800; font-variant-numeric: tabular-nums; }
+.fb__answersub { font-size: clamp(0.7rem, 1.9vmin, 0.85rem); color: var(--dim); font-weight: 400; }
+.fb__answerv { font-family: var(--font-display); font-size: clamp(1.8rem, 6.5vmin, 3rem); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* --- number pad ----------------------------------------------------------- */
 .padwrap { display: grid; place-items: center; position: relative; }
@@ -443,7 +452,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
     radial-gradient(60% 40% at 50% 20%, rgba(245, 178, 31, 0.10) 0%, transparent 62%),
     linear-gradient(180deg, #101623 0%, #05070c 78%);
 }
-.countdown__mode { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.8rem); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.countdown__mode { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.8rem); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .countdown__n { position: relative; width: min(64%, 320px); display: grid; place-items: center; }
 .countdown__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150%; opacity: 0.85; z-index: 0; }
 .countdown__n > svg:not(.countdown__splat) { position: relative; z-index: 1; }
@@ -456,13 +465,13 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 /* ========================================================================== */
 .results { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; padding: clamp(14px, 3vmin, 32px); overflow-y: auto; }
 .results__card { width: min(560px, 100%); display: grid; gap: clamp(14px, 3vmin, 24px); }
-.results__title { font-family: var(--font-display); font-size: clamp(1.5rem, 5.4vmin, 2.4rem); font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+.results__title { font-family: var(--font-display); font-size: clamp(1.5rem, 5.4vmin, 2.4rem); font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
 .results__body { display: flex; align-items: center; gap: 16px; position: relative; }
 .results__stats { display: grid; gap: clamp(8px, 1.8vmin, 14px); flex: 1; min-width: 0; }
 .statrow { display: flex; align-items: center; gap: 12px; }
 .statrow__icon { width: 1.5em; font-size: clamp(0.95rem, 2.6vmin, 1.15rem); text-align: center; color: var(--amber); }
 .statrow__body { display: grid; gap: 1px; }
-.statrow__v { font-family: var(--font-display); font-size: clamp(1.1rem, 3.2vmin, 1.5rem); font-weight: 800; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.statrow__v { font-family: var(--font-display); font-size: clamp(1.1rem, 3.2vmin, 1.5rem); font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
 .results__mascot { position: relative; flex: none; display: grid; place-items: center; }
 .results__mascot .splatbg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 185%; opacity: 0.7; z-index: 0; }
 .results__mascot > svg:not(.splatbg) { position: relative; z-index: 1; }
@@ -474,12 +483,12 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 
 .reward { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 22px; background: radial-gradient(55% 45% at 50% 46%, rgba(245,178,31,0.18), rgba(4,6,12,0.97) 72%); }
 .reward__card { display: grid; justify-items: center; gap: clamp(8px, 2vmin, 16px); text-align: center; position: relative; }
-.reward__title { font-family: var(--font-display); font-size: clamp(1.2rem, 4.4vmin, 2rem); font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+.reward__title { font-family: var(--font-display); font-size: clamp(1.2rem, 4.4vmin, 2rem); font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
 .reward__art { position: relative; display: grid; place-items: center; margin: clamp(4px, 2vmin, 18px) 0; }
 .reward__glow { position: absolute; width: 150%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(245,178,31,0.4), transparent 62%); }
 .reward__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 175%; opacity: 0.55; z-index: 0; }
 .reward__art > svg:not(.reward__splat) { position: relative; z-index: 1; }
-.reward__name { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.6rem); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.reward__name { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.6rem); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .reward__kind { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); }
 .reward__actions { display: flex; gap: 10px; margin-top: 6px; }
 
@@ -496,7 +505,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   padding-bottom: calc(clamp(16px, 3vmin, 26px) + env(safe-area-inset-bottom));
   display: grid; gap: 16px;
 }
-.sheet__title { font-family: var(--font-display); font-size: clamp(1.05rem, 3.2vmin, 1.4rem); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.sheet__title { font-family: var(--font-display); font-size: clamp(1.05rem, 3.2vmin, 1.4rem); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .sheet__section { display: grid; gap: 9px; }
 
 .toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); gap: 8px; }
@@ -506,7 +515,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   border-radius: var(--r-md);
   border: 1px solid var(--line-2);
   background: var(--panel);
-  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--dim);
 }
 .toggle--on { background: color-mix(in srgb, var(--amber) 15%, transparent); border-color: color-mix(in srgb, var(--amber) 55%, transparent); color: var(--amber); }
@@ -517,15 +526,15 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .cosmetic--active { border-color: var(--amber); color: var(--amber); }
 .cosmetic--locked { opacity: 0.35; }
 
-table.data { width: 100%; border-collapse: collapse; font-size: 0.74rem; font-weight: 600; }
+table.data { width: 100%; border-collapse: collapse; font-size: 0.74rem; font-weight: 400; }
 table.data th, table.data td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
-table.data th { color: var(--dim); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 800; }
+table.data th { color: var(--dim); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; }
 table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 textarea.io {
   width: 100%; min-height: 96px; border-radius: var(--r-md);
   background: rgba(0,0,0,0.45); color: var(--text); border: 1px solid var(--line-2);
-  padding: 10px; font-family: ui-monospace, monospace; font-size: 0.66rem; font-weight: 500;
+  padding: 10px; font-family: ui-monospace, monospace; font-size: 0.66rem; font-weight: 400;
 }
 
 /* ========================================================================== */
