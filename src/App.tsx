@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { audio } from './audio/engine'
 import { useGame } from './store/game'
+import { readLocal, writeLocal } from './ui/safeStorage'
 import { MapScreen } from './ui/screens/MapScreen'
 import { ResultsScreen } from './ui/screens/ResultsScreen'
 import { RunScreen } from './ui/screens/RunScreen'
@@ -23,14 +24,10 @@ export default function App() {
   // Reduced motion is a safety net, not the default: he likes the stimulation.
   useEffect(() => {
     if (!ready) return
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const firstRun = !localStorage.getItem('goobermath:seen')
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    const firstRun = !readLocal('goobermath:seen')
     if (reduce && firstRun) setSettings({ flashes: false, shake: false, particles: false })
-    try {
-      localStorage.setItem('goobermath:seen', '1')
-    } catch {
-      /* private mode: harmless */
-    }
+    writeLocal('goobermath:seen', '1')
   }, [ready, setSettings])
 
   useEffect(() => {

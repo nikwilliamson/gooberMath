@@ -9,10 +9,15 @@ const base = process.env.BASE_PATH ?? '/gooberMath/'
 
 export default defineConfig({
   base,
+  // Vite's default target assumes very recent Safari. An older iPad or phone
+  // then fails to parse the bundle and renders a blank page.
+  build: { target: ['es2020', 'safari14', 'chrome87', 'firefox78'] },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // A stale worker must never be able to pin a broken build on a device.
+      workbox: { cleanupOutdatedCaches: true, skipWaiting: true, clientsClaim: true },
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'GooberMath',

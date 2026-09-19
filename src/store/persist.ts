@@ -27,7 +27,11 @@ export function saveSoon(data: SaveData) {
   if (timer !== null) return
   timer = window.setTimeout(() => {
     timer = null
-    if (queued) void set(KEY, queued).catch(() => {})
+    try {
+      if (queued) void set(KEY, queued).catch(() => {})
+    } catch {
+      /* IndexedDB unavailable (private mode): progress just will not persist */
+    }
     queued = null
   }, 400)
 }
