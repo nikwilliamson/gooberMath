@@ -47,13 +47,13 @@ export function ResultsScreen() {
         <SplatField count={2} seed={summary.score % 13} color="#f5b21f" opacity={0.05} />
       </div>
 
-      <div className="results">
+      <div className="results screen-in">
         <div className="results__card">
-          <h1 className="results__title">{title}</h1>
+          <h1 className="results__title screen-in">{title}</h1>
 
           <div className="results__body">
             <div className="results__stats">
-              <div className="statrow">
+              <div className="statrow stagger" style={{ ['--i' as string]: 0 }}>
                 <span className="statrow__icon">&#9733;</span>
                 <div className="statrow__body">
                   <span className="label">Score</span>
@@ -64,7 +64,7 @@ export function ResultsScreen() {
                   </span>
                 </div>
               </div>
-              <div className="statrow">
+              <div className="statrow stagger" style={{ ['--i' as string]: 1 }}>
                 <span className="statrow__icon">&#10003;</span>
                 <div className="statrow__body">
                   <span className="label">Answers</span>
@@ -76,7 +76,7 @@ export function ResultsScreen() {
                   </span>
                 </div>
               </div>
-              <div className="statrow">
+              <div className="statrow stagger" style={{ ['--i' as string]: 2 }}>
                 <span className="statrow__icon">&#9889;</span>
                 <div className="statrow__body">
                   <span className="label">Best streak</span>
@@ -84,7 +84,7 @@ export function ResultsScreen() {
                 </div>
               </div>
               {summary.avgMs !== null && (
-                <div className="statrow">
+                <div className="statrow stagger" style={{ ['--i' as string]: 3 }}>
                   <span className="statrow__icon">&#9201;</span>
                   <div className="statrow__body">
                     <span className="label">Avg time</span>
@@ -92,7 +92,7 @@ export function ResultsScreen() {
                   </div>
                 </div>
               )}
-              <div className="statrow">
+              <div className="statrow stagger" style={{ ['--i' as string]: 4 }}>
                 <span className="statrow__icon">&#9819;</span>
                 <div className="statrow__body">
                   <span className="label">Stars earned</span>
@@ -102,8 +102,8 @@ export function ResultsScreen() {
             </div>
 
             <div className="results__mascot">
-              <SplatBurst className="splatbg" color="#f5b21f" color2="#35d6ef" seed={summary.score % 7} />
-              <Goober mood={awards.cleared || awards.newBest ? 'cheer' : 'idle'} size={150} />
+              <SplatBurst className="splatbg fb-splat" color="#f5b21f" color2="#35d6ef" seed={summary.score % 7} />
+              <Goober mood={awards.cleared || awards.newBest ? 'cheer' : 'idle'} size={150} className="reward-in" />
             </div>
           </div>
 
@@ -124,7 +124,7 @@ export function ResultsScreen() {
             Brighter worlds.&rdquo;
           </span>
 
-          <div className="results__actions">
+          <div className="results__actions stagger" style={{ ['--i' as string]: 5 }}>
             <button className="btn btn--ghost" onClick={() => go('map')}>
               Map
             </button>
@@ -143,14 +143,14 @@ export function ResultsScreen() {
       {showReward && reward && (
         <div className="reward">
           <div className="reward__card">
-            <RoughText text="New Reward!" size={72} color="#ffffff" seed={6} style={{ maxWidth: 420 }} />
+            <RoughText text="New Reward!" size={72} color="#ffffff" seed={6} className="fb-word" style={{ maxWidth: 420 }} />
             <div className="reward__art">
-              <span className="reward__glow" />
-              <SplatBurst className="reward__splat" color="#f5b21f" color2="#35d6ef" seed={rewardIdx + 3} />
+              <span className="reward__glow reward-glow" />
+              <SplatBurst className="reward__splat fb-splat" color="#f5b21f" color2="#35d6ef" seed={rewardIdx + 3} />
               {reward.kind === 'goober' ? (
-                <Goober mood="cheer" tint={reward.tint} size={170} className="pop" />
+                <Goober mood="cheer" tint={reward.tint} size={170} className="reward-in" />
               ) : (
-                <GooberCap size={190} className="pop" />
+                <GooberCap size={190} className="reward-in" />
               )}
             </div>
             <span className="reward__name">{reward.name}</span>

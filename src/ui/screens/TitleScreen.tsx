@@ -37,7 +37,7 @@ export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void
         More goobers
       </span>
 
-      <div className="title">
+      <div className="title screen-in">
         <div className="title__hero">
           <div className="wordmark">
             <Crown className="wordmark__crown" size={44} />

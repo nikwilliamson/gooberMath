@@ -91,7 +91,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   background: var(--panel);
   border: 1.5px solid var(--line-2);
   color: var(--text);
-  transition: transform 90ms ease, background 150ms ease, border-color 150ms ease;
+  transition: transform var(--dur-micro) var(--ease-snap),
+    background var(--dur-state) var(--ease-snap),
+    border-color var(--dur-state) var(--ease-snap);
 }
 .btn:not([class*='btn--']):hover { background: var(--panel-2); }
 .btn:active { transform: scale(0.97); }
@@ -184,7 +186,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   font-size: clamp(0.8rem, 2.2vmin, 1rem);
   font-weight: 800;
   color: var(--dim);
-  transition: box-shadow 200ms ease, border-color 200ms ease;
+  transition: box-shadow var(--dur-enter) var(--ease-out), border-color var(--dur-enter) var(--ease-out);
 }
 .node__dot--done { background: color-mix(in srgb, var(--ink) 20%, var(--bg-2)); border-color: var(--ink); color: var(--ink); }
 .node__dot--current { border-color: var(--ink); color: var(--ink); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 18%, transparent), 0 0 26px color-mix(in srgb, var(--ink) 45%, transparent); }
@@ -240,7 +242,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .hud__clock { display: flex; align-items: center; gap: 12px; }
 .hud__digits { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
 .timer { position: relative; flex: 1; max-width: 240px; height: clamp(7px, 1.4vmin, 10px); border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.10); overflow: hidden; }
-.timer__fill { position: absolute; inset: 0; transform-origin: left center; border-radius: var(--r-pill); background: var(--amber); transition: transform 90ms linear; }
+.timer__fill { position: absolute; inset: 0; transform-origin: left center; border-radius: var(--r-pill); background: var(--amber); transition: transform 100ms linear, background var(--dur-state) var(--ease-snap); }
 .timer--ok .timer__fill { background: var(--green); }
 .timer--urgent .timer__fill { background: var(--red); }
 
@@ -248,12 +250,21 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .combo__v { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 800; line-height: 1; color: var(--amber); }
 .combo--hot .combo__v { color: var(--green); }
 .combo--cold .combo__v { color: var(--red); }
-.combo__mult { font-size: clamp(0.54rem, 1.4vmin, 0.64rem); letter-spacing: 0.14em; color: var(--dim); }
+/* Always occupies its line so the HUD height never changes mid-run. */
+.combo__mult {
+  font-size: clamp(0.54rem, 1.4vmin, 0.64rem);
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  opacity: 0;
+  transition: opacity var(--dur-state) var(--ease-snap);
+}
+.combo__mult[data-on] { opacity: 1; }
 
 .board { display: grid; place-items: center; align-content: center; min-height: 0; position: relative; }
 .board > *:not(.inklayer):not(.fb) { position: relative; z-index: 2; }
 
 .problemcard {
+  transition: opacity var(--dur-state) var(--ease-snap), filter var(--dur-state) var(--ease-snap);
   display: grid; place-items: center;
   padding: clamp(18px, 4vmin, 40px) clamp(24px, 7vmin, 64px);
   width: min(94%, 560px);
@@ -279,10 +290,17 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 
 /* --- feedback ------------------------------------------------------------- */
 .fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
-.fb__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(150%, 760px); opacity: 0.9; z-index: 0; }
+.fb__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(132%, 660px); opacity: 0.82; z-index: 0; }
 .fb__word { position: relative; z-index: 1; width: min(84%, 460px); }
-.fb__points { position: relative; z-index: 1; font-family: var(--font-display); font-size: clamp(1.4rem, 5vmin, 2.4rem); font-weight: 800; }
-.fb__points--good { color: var(--green-hi); }
+.fb__points {
+  position: relative; z-index: 1;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 5vmin, 2.4rem);
+  font-weight: 800;
+  /* It sits on top of the splat, so it needs its own separation. */
+  text-shadow: 0 2px 10px rgba(4, 8, 14, 0.9), 0 0 3px rgba(4, 8, 14, 0.8);
+}
+.fb__points--good { color: #eaffe2; }
 .fb__answer {
   position: relative;
   z-index: 1;
@@ -303,9 +321,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(7px, 1.5vmin, 12px);
   width: min(100%, 380px);
-  transition: opacity 200ms ease, filter 200ms ease;
+  transition: opacity var(--dur-state) var(--ease-snap), filter var(--dur-state) var(--ease-snap);
 }
-.pad--dim { opacity: 0.25; filter: saturate(0.4); }
+.pad--dim, .problemcard--dim { opacity: 0.22; filter: saturate(0.35); }
 .key {
   height: clamp(46px, 9dvh, 78px);
   border-radius: var(--r-md);
@@ -315,7 +333,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   font-size: clamp(1.1rem, 3.4vmin, 1.6rem);
   font-weight: 700;
   color: var(--text);
-  transition: transform 70ms ease, background 120ms ease, border-color 120ms ease;
+  transition: transform var(--dur-micro) var(--ease-snap),
+    background var(--dur-state) var(--ease-snap),
+    border-color var(--dur-state) var(--ease-snap);
 }
 .key:active, .key--down {
   transform: scale(0.95);
@@ -441,18 +461,92 @@ textarea.io {
 }
 
 /* ========================================================================== */
-/* Effects                                                                     */
+/* Motion                                                                      */
 /* ========================================================================== */
 .inklayer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-.shake { animation: shake 240ms ease; }
-@keyframes shake { 20% { transform: translate(-5px, 2px); } 50% { transform: translate(4px, -2px); } 80% { transform: translate(-2px, 1px); } }
-.flash { position: fixed; inset: 0; z-index: 35; pointer-events: none; animation: flash 240ms ease-out forwards; }
+
+/* A new question is the most-repeated moment in the game, so it gets the
+   lightest possible arrival: it must never slow down reading it. */
+.problem-in { animation: problemIn var(--dur-enter) var(--ease-out) both; }
+@keyframes problemIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.985); }
+}
+
+/* A digit landing in a slot. */
+.slot-in { animation: slotIn var(--dur-state) var(--ease-spring) both; }
+@keyframes slotIn {
+  from { transform: scale(0.5); opacity: 0; }
+}
+
+.shake { animation: shake var(--dur-enter) var(--ease-out); }
+@keyframes shake {
+  20% { transform: translate3d(-5px, 2px, 0); }
+  50% { transform: translate3d(4px, -2px, 0); }
+  80% { transform: translate3d(-2px, 1px, 0); }
+}
+
+.flash { position: fixed; inset: 0; z-index: 35; pointer-events: none; animation: flash var(--dur-enter) var(--ease-in) forwards; }
 @keyframes flash { from { opacity: 0.32; } to { opacity: 0; } }
-.pop { animation: pop 240ms cubic-bezier(0.2, 1.5, 0.4, 1); }
-@keyframes pop { from { transform: scale(0.6); opacity: 0; } }
-.bob { animation: bob 3.4s ease-in-out infinite; }
-@keyframes bob { 50% { transform: translateY(-8px); } }
+
+/* Feedback: the word lands first, the splat blooms a beat behind it. */
+.fb-word { animation: fbWord var(--dur-enter) var(--ease-spring) both; }
+@keyframes fbWord {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.82); }
+}
+.fb-splat { animation: fbSplat var(--dur-celebrate) var(--ease-out) both; animation-delay: 40ms; }
+@keyframes fbSplat {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.55) rotate(-8deg); }
+  to { opacity: 0.82; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+.fb-points { animation: fbPoints var(--dur-celebrate) var(--ease-out) both; animation-delay: 70ms; }
+@keyframes fbPoints {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+}
+
+/* The combo number pulses only when the multiplier actually steps up. */
+.combo-step { animation: comboStep var(--dur-celebrate) var(--ease-spring); }
+@keyframes comboStep {
+  40% { transform: scale(1.35); }
+}
+
+/* Countdown digits swap rather than cut. */
+.count-in { animation: countIn 620ms var(--ease-out) both; }
+@keyframes countIn {
+  from { opacity: 0; transform: scale(1.5); }
+  70% { opacity: 1; transform: scale(1); }
+  to { opacity: 0.94; transform: scale(0.97); }
+}
+
+/* Screen arrivals: one short rise, same curve everywhere. */
+.screen-in { animation: screenIn var(--dur-enter) var(--ease-out) both; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+}
+
+/* Lists arrive in sequence; --i is the row index. */
+.stagger { animation: screenIn var(--dur-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+/* Rewards are the one place overshoot is earned. */
+.reward-in { animation: rewardIn var(--dur-celebrate) var(--ease-spring) both; }
+@keyframes rewardIn {
+  from { opacity: 0; transform: scale(0.55) rotate(-6deg); }
+}
+.reward-glow { animation: rewardGlow var(--dur-celebrate) var(--ease-out) both; }
+@keyframes rewardGlow {
+  from { opacity: 0; transform: scale(0.4); }
+}
+
+.bob { animation: bob 3.6s var(--ease-snap) infinite; }
+@keyframes bob {
+  50% { transform: translate3d(0, -8px, 0); }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .bob { animation: none !important; }
 }

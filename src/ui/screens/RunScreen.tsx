@@ -28,6 +28,7 @@ export function RunScreen() {
   const [flash, setFlash] = useState<string | null>(null)
   const seenAnswers = useRef(0)
   const lastMult = useRef(1)
+  const [comboStep, setComboStep] = useState(0)
 
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
@@ -65,9 +66,12 @@ export function RunScreen() {
     if (last.correct) {
       audio.hit(run.streak)
       const mult = comboMult(run.streak)
-      if (mult > lastMult.current && settings.flashes) {
-        setFlash('rgba(110,224,95,0.4)')
-        window.setTimeout(() => setFlash(null), 240)
+      if (mult > lastMult.current) {
+        setComboStep((n) => n + 1)
+        if (settings.flashes) {
+          setFlash('rgba(110,224,95,0.4)')
+          window.setTimeout(() => setFlash(null), 240)
+        }
       }
       lastMult.current = mult
     } else {
@@ -132,21 +136,31 @@ export function RunScreen() {
           </div>
           <div className={`combo${mult >= 2 ? ' combo--hot' : run.streak === 0 ? ' combo--cold' : ''}`}>
             <span className="label">Combo</span>
-            <span className="combo__v tnum">x{run.streak}</span>
-            {mult > 1 && <span className="combo__mult">{mult}&times; points</span>}
+            <span key={comboStep} className="combo__v tnum combo-step">
+              x{run.streak}
+            </span>
+            <span className="combo__mult" data-on={mult > 1 || undefined}>
+              {mult > 1 ? `${mult}\u00d7 points` : '\u00a0'}
+            </span>
           </div>
         </div>
 
         <div className="board">
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
-          <div className="panel problemcard">
-            <span className="problem tnum">
+          <div className={`panel problemcard${showRight || showWrong ? ' problemcard--dim' : ''}`}>
+            <span key={`${run.currentKey}:${run.answers.length}`} className="problem tnum problem-in">
               {formatFact(fact)} ={' '}
               <span className="problem__answer">
                 {slots.map((d, i) => (
                   <span key={i} className="problem__slot">
-                    {d || '?'}
+                    {d ? (
+                      <span key={d} className="slot-in" style={{ display: 'inline-block' }}>
+                        {d}
+                      </span>
+                    ) : (
+                      '?'
+                    )}
                   </span>
                 ))}
               </span>
@@ -154,22 +168,44 @@ export function RunScreen() {
           </div>
 
           {showRight && (
-            <div className="fb pop">
+            <div className="fb">
               {settings.particles && (
-                <SplatBurst className="fb__splat" color="#6ee05f" color2="#a8f58c" seed={run.answers.length} />
+                <SplatBurst
+                  className="fb__splat fb-splat"
+                  color="#6ee05f"
+                  color2="#a8f58c"
+                  seed={run.answers.length}
+                />
               )}
-              <RoughText text={cheer} size={140} color="#ffffff" seed={run.answers.length} className="fb__word" />
-              <span className="fb__points fb__points--good">+{lastPoints.toLocaleString()}</span>
+              <RoughText
+                text={cheer}
+                size={140}
+                color="#ffffff"
+                seed={run.answers.length}
+                className="fb__word fb-word"
+              />
+              <span className="fb__points fb__points--good fb-points">+{lastPoints.toLocaleString()}</span>
             </div>
           )}
 
           {showWrong && (
-            <div className="fb pop">
+            <div className="fb">
               {settings.particles && (
-                <SplatBurst className="fb__splat" color="#ff4d5e" color2="#7a1020" seed={run.answers.length + 5} />
+                <SplatBurst
+                  className="fb__splat fb-splat"
+                  color="#ff4d5e"
+                  color2="#7a1020"
+                  seed={run.answers.length + 5}
+                />
               )}
-              <RoughText text="Oops" size={130} color="#ff4d5e" seed={run.answers.length + 2} className="fb__word" />
-              <div className="fb__answer">
+              <RoughText
+                text="Oops"
+                size={130}
+                color="#ff4d5e"
+                seed={run.answers.length + 2}
+                className="fb__word fb-word"
+              />
+              <div className="fb__answer fb-points">
                 <span className="fb__answersub">The answer was</span>
                 <span className="fb__answerv tnum">{fact.answer}</span>
               </div>
@@ -187,8 +223,21 @@ export function RunScreen() {
           <div className="countdown">
             <span className="countdown__mode">{modeName}</span>
             <div className="countdown__n">
-              <SplatBurst className="countdown__splat" color="#f5b21f" color2="#ff8a1f" seed={count * 3} />
-              <RoughText text={String(count)} size={210} color="var(--amber)" seed={count} />
+              <SplatBurst
+                key={`s${count}`}
+                className="countdown__splat fb-splat"
+                color="#f5b21f"
+                color2="#ff8a1f"
+                seed={count * 3}
+              />
+              <RoughText
+                key={count}
+                text={String(count)}
+                size={210}
+                color="var(--amber)"
+                seed={count}
+                className="count-in"
+              />
             </div>
             <span className="label">
               {run.mode === 'blitz' ? 'Same facts. Faster you.' : 'Misses cost three seconds.'}

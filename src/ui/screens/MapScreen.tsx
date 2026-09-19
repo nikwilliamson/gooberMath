@@ -47,7 +47,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
         <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.055} />
       </div>
 
-      <div className="map">
+      <div className="map screen-in">
         <header className="map__head">
           <button className="btn btn--ghost" onClick={() => go('title')} aria-label="Back">
             &#8592;
