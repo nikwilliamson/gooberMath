@@ -17,6 +17,19 @@ on a laptop (digits, Backspace, Esc to quit). Installable as a PWA — add to ho
 screen and it runs full-screen offline. No backend, no accounts; progress lives
 in IndexedDB on the device.
 
+## Deploying
+
+Pushes to `main` build and publish to GitHub Pages via `.github/workflows/deploy.yml`.
+One-time setup in the repo: **Settings → Pages → Source: GitHub Actions**.
+
+The Vite `base` defaults to `/gooberMath/` and CI overrides it with the real repo
+name, so renaming the repo needs no code change. For a custom domain or a
+`<user>.github.io` repo, build with `BASE_PATH=/`.
+
+```bash
+pnpm deploy:check   # what CI runs: typecheck + tests + build
+```
+
 ## Modes
 
 - **Sniper** — speed *and* accuracy. A miss resets the combo and costs 3 seconds.
