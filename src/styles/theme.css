@@ -1,0 +1,68 @@
+:root {
+  /* --- world ------------------------------------------------------------ */
+  --sky-top: #3f9fe0;
+  --sky-mid: #79c7f2;
+  --sky-low: #bfe9ff;
+  --grass: #4fb055;
+  --grass-deep: #2c8040;
+  --sea: #1f8fc4;
+  --sea-deep: #135f8a;
+
+  /* Play screen: shaded jungle-temple, so the parchment and splats pop. */
+  --arena-top: #1a3a34;
+  --arena-bot: #0c1a24;
+
+  /* --- parchment -------------------------------------------------------- */
+  --parch: #f8e8c8;
+  --parch-2: #efd9ae;
+  --parch-edge: #b98d52;
+  --parch-ink: #3b2a17;
+
+  /* --- ui chrome -------------------------------------------------------- */
+  --navy: #182746;
+  --navy-2: #0f1b33;
+  --navy-line: rgba(255, 255, 255, 0.22);
+  --outline: #16233d;
+  --text: #ffffff;
+  --text-dim: #c3d2ee;
+
+  --yellow: #ffcb2b;
+  --yellow-2: #f59e0b;
+  --yellow-edge: #9a5f0c;
+  --purple: #7c4dff;
+  --purple-edge: #4c2bb5;
+  --gold: #ffd233;
+  --good: #3ddc84;
+  --bad: #ff4d6d;
+
+  /* --- splat inks ------------------------------------------------------- */
+  --ink-cyan: #22d3ee;
+  --ink-magenta: #ff3ea5;
+  --ink-lime: #a3e635;
+  --ink-orange: #fb923c;
+  --ink-violet: #a855f7;
+  --ink-yellow: #fde047;
+
+  /* Region accent, set on [data-region]. */
+  --ink: var(--ink-cyan);
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* ui-rounded is SF Pro Rounded on his devices, which is the closest thing
+     to the reference lettering without shipping a webfont. */
+  --font-display: ui-rounded, 'SF Pro Rounded', 'Baloo 2', 'Fredoka',
+    'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-ui: var(--font-display);
+
+  --shadow-hard: 0 6px 0 rgba(0, 0, 0, 0.35);
+  --shadow-soft: 0 10px 28px rgba(4, 12, 28, 0.35);
+}
+
+[data-region='add'] { --ink: var(--ink-cyan); }
+[data-region='sub'] { --ink: var(--ink-magenta); }
+[data-region='mul'] { --ink: var(--ink-lime); }
+[data-region='div'] { --ink: var(--ink-orange); }
