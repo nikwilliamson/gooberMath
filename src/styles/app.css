@@ -254,7 +254,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .board > *:not(.inklayer) { position: relative; z-index: 2; }
 
 .problemcard {
-  display: grid; place-items: center; gap: 12px;
+  display: grid; place-items: center;
   padding: clamp(18px, 4vmin, 40px) clamp(24px, 7vmin, 64px);
   width: min(94%, 560px);
 }
@@ -267,8 +267,15 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.problem__slot { display: inline-block; min-width: 1.6ch; text-align: center; color: var(--text); }
-.problem__rule { width: clamp(52px, 14vmin, 96px); height: 4px; border-radius: var(--r-pill); background: var(--cyan); }
+.problem__slot { display: inline-block; min-width: 1.2ch; text-align: center; color: var(--text); }
+/* The rule marks where the answer goes, so it hangs off the slots themselves
+   rather than being centred under the whole equation. */
+.problem__answer {
+  display: inline-block;
+  padding: 0 0.12em 0.14em;
+  border-bottom: 4px solid var(--cyan);
+  border-radius: 2px;
+}
 
 /* --- feedback ------------------------------------------------------------- */
 .fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
@@ -318,18 +325,26 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .key--back { color: var(--dim); font-size: clamp(0.9rem, 2.6vmin, 1.2rem); }
 .key[disabled] { opacity: 0.5; pointer-events: none; }
 
-@media (min-aspect-ratio: 1/1) and (min-width: 760px) {
-  .run {
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr minmax(280px, 34vw);
-    grid-template-areas: 'hud hud' 'board pad';
-    align-items: center;
-  }
-  .run > .hud { grid-area: hud; }
-  .run > .board { grid-area: board; }
-  .run > .padwrap { grid-area: pad; }
-  .pad { width: min(100%, 340px); }
-  .key { height: clamp(50px, 12dvh, 88px); }
+/*
+ * The pad is bottom-anchored at every size. A side-by-side tablet layout was
+ * tried and pulled: the same screen has to feel identical on every device, and
+ * a pad that moves between the phone and the iPad breaks the muscle memory the
+ * whole game is trying to build.
+ */
+@media (min-width: 760px) {
+  .run { gap: clamp(14px, 2.4vmin, 28px); }
+  .hud, .board, .padwrap > * { max-width: 760px; margin-inline: auto; width: 100%; }
+  .pad { width: min(100%, 460px); }
+  .key { height: clamp(56px, 8.5dvh, 86px); }
+}
+
+/* Landscape phones: keep four rows of real touch targets above the fold. */
+@media (max-height: 520px) {
+  .run { gap: 8px; padding: 8px clamp(10px, 3vw, 28px); }
+  .key { height: clamp(40px, 12.5dvh, 58px); }
+  .problem { font-size: clamp(1.5rem, 6.5vmin, 2.4rem); }
+  .problemcard { padding: clamp(10px, 2.4vmin, 18px) clamp(16px, 5vmin, 40px); }
+  .fb__word { width: min(64%, 340px); }
 }
 
 .countdown {

@@ -143,13 +143,14 @@ export function RunScreen() {
           <div className="panel problemcard">
             <span className="problem tnum">
               {formatFact(fact)} ={' '}
-              {slots.map((d, i) => (
-                <span key={i} className="problem__slot">
-                  {d || '?'}
-                </span>
-              ))}
+              <span className="problem__answer">
+                {slots.map((d, i) => (
+                  <span key={i} className="problem__slot">
+                    {d || '?'}
+                  </span>
+                ))}
+              </span>
             </span>
-            <span className="problem__rule" />
           </div>
 
           {showRight && (
