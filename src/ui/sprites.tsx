@@ -1,39 +1,46 @@
 import type { CSSProperties } from 'react'
+import frames from './spriteFrames.json'
 
 const IMG = `${import.meta.env.BASE_URL}img`
+
+interface SheetData {
+  sheet: string
+  width: number
+  height: number
+  frames: Array<[number, number, number, number]>
+}
+
+const SHEETS = frames as unknown as Record<string, SheetData>
 
 /**
  * One frame of a sprite sheet, drawn as a background so the browser scales it
  * on the GPU and we never ship a DOM node per frame.
  *
- * Position is col/(cols-1) because background-position percentages align the
- * same percentage of the image with that percentage of the box.
+ * Frame rects are measured from the artwork by scripts/optimize-art.py, not
+ * assumed from an even grid: these sheets are not evenly spaced, and positioning
+ * against an assumed grid pulls slivers of the neighbouring frames into view.
  */
 export function Sprite({
   sheet,
-  cols,
-  rows,
-  col,
-  row,
+  index,
   width,
-  aspect,
   className,
   style,
   title,
 }: {
+  /** Key in spriteFrames.json. */
   sheet: string
-  cols: number
-  rows: number
-  col: number
-  row: number
-  /** CSS width; height follows from `aspect`. */
+  index: number
   width: number | string
-  aspect: number
   className?: string
   style?: CSSProperties
   title?: string
 }) {
-  const w = typeof width === 'number' ? `${width}px` : width
+  const data = SHEETS[sheet]
+  const [x, y, w, h] = data.frames[Math.abs(Math.floor(index)) % data.frames.length]
+  const cssWidth = typeof width === 'number' ? `${width}px` : width
+  // Standard sprite maths: scale the sheet so this frame fills the box, then
+  // offset by the frame's share of the remaining space.
   return (
     <span
       role={title ? 'img' : undefined}
@@ -42,11 +49,13 @@ export function Sprite({
       className={className}
       style={{
         display: 'inline-block',
-        width: w,
-        aspectRatio: String(aspect),
-        backgroundImage: `url(${IMG}/${sheet})`,
-        backgroundSize: `${cols * 100}% ${rows * 100}%`,
-        backgroundPosition: `${cols > 1 ? (col / (cols - 1)) * 100 : 0}% ${rows > 1 ? (row / (rows - 1)) * 100 : 0}%`,
+        width: cssWidth,
+        aspectRatio: `${w} / ${h}`,
+        backgroundImage: `url(${IMG}/${data.sheet})`,
+        backgroundSize: `${(data.width / w) * 100}% ${(data.height / h) * 100}%`,
+        backgroundPosition: `${data.width === w ? 0 : (x / (data.width - w)) * 100}% ${
+          data.height === h ? 0 : (y / (data.height - h)) * 100
+        }%`,
         backgroundRepeat: 'no-repeat',
         ...style,
       }}
@@ -63,14 +72,12 @@ export type Pose =
   | 'crawl' | 'think' | 'point' | 'sit' | 'tablet'
   | 'ready' | 'dizzy' | 'sad' | 'stride' | 'peek'
 
-/** [col, row] in gooberSprite.webp. */
-export const POSES: Record<Pose, [number, number]> = {
-  idle: [0, 0], walk: [1, 0], run: [2, 0], jump: [3, 0], cheer: [4, 0],
-  crawl: [0, 1], think: [1, 1], point: [2, 1], sit: [3, 1], tablet: [4, 1],
-  ready: [0, 2], dizzy: [1, 2], sad: [2, 2], stride: [3, 2], peek: [4, 2],
+/** Frame index in gooberSprite, row-major across the 5 x 3 sheet. */
+export const POSES: Record<Pose, number> = {
+  idle: 0, walk: 1, run: 2, jump: 3, cheer: 4,
+  crawl: 5, think: 6, point: 7, sit: 8, tablet: 9,
+  ready: 10, dizzy: 11, sad: 12, stride: 13, peek: 14,
 }
-
-const GOOBER_ASPECT = (1200 / 5) / (1050 / 3) // 240 x 350
 
 export function GooberSprite({
   pose = 'idle',
@@ -85,16 +92,11 @@ export function GooberSprite({
   style?: CSSProperties
   title?: string
 }) {
-  const [col, row] = POSES[pose]
   return (
     <Sprite
-      sheet="gooberSprite.webp"
-      cols={5}
-      rows={3}
-      col={col}
-      row={row}
+      sheet="gooberSprite"
+      index={POSES[pose]}
       width={width}
-      aspect={GOOBER_ASPECT}
       className={className}
       style={style}
       title={title}
@@ -108,12 +110,13 @@ export function GooberSprite({
 
 export type SplatTone = 'good' | 'bad' | 'amber' | 'cool' | 'any'
 
-const SPLAT_FRAMES: Record<SplatTone, Array<[number, number]>> = {
-  good: [[2, 0], [2, 1], [5, 2], [3, 3]],
-  bad: [[3, 0], [0, 1], [3, 1], [4, 2]],
-  amber: [[0, 0], [5, 0], [2, 2], [0, 3], [5, 3]],
-  cool: [[1, 0], [4, 0], [1, 1], [5, 1], [3, 2], [1, 3], [2, 3]],
-  any: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [0, 1], [5, 1], [2, 2], [5, 2], [0, 3], [4, 3]],
+/** Frame indices into the 6 x 4 splat sheet, grouped by colour family. */
+const SPLAT_FRAMES: Record<SplatTone, number[]> = {
+  good: [2, 8, 17, 21],
+  bad: [3, 6, 9, 16],
+  amber: [0, 5, 14, 18, 23],
+  cool: [1, 4, 7, 11, 15, 19, 20],
+  any: [0, 1, 2, 3, 4, 5, 6, 11, 14, 17, 18, 22],
 }
 
 export function SplatImg({
@@ -129,17 +132,12 @@ export function SplatImg({
   className?: string
   style?: CSSProperties
 }) {
-  const frames = SPLAT_FRAMES[tone]
-  const [col, row] = frames[Math.abs(Math.floor(seed)) % frames.length]
+  const pool = SPLAT_FRAMES[tone]
   return (
     <Sprite
-      sheet="splatSprite.webp"
-      cols={6}
-      rows={4}
-      col={col}
-      row={row}
+      sheet="splatSprite"
+      index={pool[Math.abs(Math.floor(seed)) % pool.length]}
       width={width}
-      aspect={1}
       className={className}
       style={style}
     />
@@ -149,8 +147,6 @@ export function SplatImg({
 /* -------------------------------------------------------------------------- */
 /* Correct-answer stickers: 5 x 4 sheet of 20 phrases                          */
 /* -------------------------------------------------------------------------- */
-
-const STICKER_ASPECT = (1150 / 5) / (767 / 4)
 
 /** Reads left-to-right, top-to-bottom, matching the sheet. */
 export const STICKERS = [
@@ -188,13 +184,9 @@ export function CorrectSticker({
   const i = Math.abs(Math.floor(index)) % 20
   return (
     <Sprite
-      sheet="positiveSprite.webp"
-      cols={5}
-      rows={4}
-      col={i % 5}
-      row={Math.floor(i / 5)}
+      sheet="positiveSprite"
+      index={i}
       width={width}
-      aspect={STICKER_ASPECT}
       className={className}
       style={style}
       title={STICKERS[i]}
