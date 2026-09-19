@@ -16,21 +16,27 @@ export interface QuestDef {
   blurb: string
   spec: FactSpec
   /**
-   * Share of this quest's facts that must reach 'known' to clear it.
+   * Share of this quest's facts that must reach 'known' to master it.
    * Defaults to DEFAULT_CLEAR_RATIO.
    */
   clearRatio?: number
+  /** Sniper score that unlocks the next quest. Defaults to UNLOCK_SCORE. */
+  unlockScore?: number
   /** New content: play it untimed once before the clock starts. */
   untimedFirst: boolean
   boss?: boolean
 }
 
 /**
- * Quests clear on mastery of their own facts, not on a score.
+ * Two separate ideas, deliberately:
+ * - UNLOCK_SCORE (in scoring.ts) opens the next quest. Low enough to pass on a
+ *   first good run, so progress never stalls on one level.
+ * - DEFAULT_CLEAR_RATIO is mastery of the quest's own facts. It is the real
+ *   measure of whether he has learned them, and it gates nothing.
  *
- * The previous rule set each target to 80% of his best on the PREVIOUS quest,
- * which punished a good run by raising the next bar, compared scores across
- * fact sets of different sizes and difficulty, and quietly rewarded sandbagging.
+ * Neither depends on a previous quest's result. The original rule set each
+ * target to 80% of his best on the PREVIOUS quest, which punished a good run by
+ * raising the next bar and quietly rewarded sandbagging.
  */
 export const DEFAULT_CLEAR_RATIO = 0.8
 

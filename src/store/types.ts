@@ -1,7 +1,10 @@
 import type { Op, StatsMap } from '@/engine/types'
 
 export interface QuestProgress {
+  /** Unlock gate passed: a Sniper run reached the unlock score. */
   cleared: boolean
+  /** Facts actually learned. Tracked, celebrated, and gates nothing. */
+  mastered: boolean
   practiced: boolean
   bestSniper: number
   bestBlitz: number
@@ -40,7 +43,8 @@ export interface SaveData {
 }
 
 export const emptyQuest = (): QuestProgress => ({
-  cleared: false, practiced: false, bestSniper: 0, bestBlitz: 0, plays: 0, perfect: false, blitzCleared: false,
+  cleared: false, mastered: false, practiced: false, bestSniper: 0, bestBlitz: 0,
+  plays: 0, perfect: false, blitzCleared: false,
 })
 
 export const today = () => new Date().toISOString().slice(0, 10)

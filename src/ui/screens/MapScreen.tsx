@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { audio } from '@/audio/engine'
 import { questsIn, type QuestDef } from '@/engine/quests'
+import { UNLOCK_SCORE } from '@/engine/scoring'
 import type { Mode, Op } from '@/engine/types'
 import {
-  allRegions, factKeysOf, questMastery, questProgress, questStatus, regionOpen, useGame,
+  allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
 import { OP_ACCENT, SplatField } from '../art'
 import { ART } from '../sprites'
@@ -21,7 +22,6 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
   const [selected, setSelected] = useState<string | null>(null)
 
   const quests = questsIn(region)
-  const open = regionOpen(save, region)
   const regionDef = allRegions.find((r) => r.id === region)!
   const clearedHere = quests.filter((q) => questProgress(save, q.id).cleared).length
   const worldNo = allRegions.findIndex((r) => r.id === region) + 1
@@ -46,7 +46,10 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
     <div className="app" data-region={region}>
       <div
         className="scene scene--art"
-        style={{ backgroundImage: `url(${region === 'add' ? ART.additionFields : ART.world})` }}
+        // One backdrop across all four worlds; the region accent and splats do
+        // the differentiating. The second scene made three tabs feel like a
+        // different, lesser screen.
+        style={{ backgroundImage: `url(${ART.additionFields})` }}
       >
         <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.07} />
       </div>
@@ -74,7 +77,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
         </header>
 
         <div className="nodes">
-          <p className="map__blurb">{open ? regionDef.blurb : 'Clear the previous world to open this one.'}</p>
+          <p className="map__blurb">{regionDef.blurb}</p>
           {quests.map((quest, i) => {
             const status = questStatus(save, quest)
             const prog = questProgress(save, quest.id)
@@ -107,6 +110,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                   <span className="node__meta">
                     <span>
                       {questMastery(save, quest).learned}/{questMastery(save, quest).required} facts
+                      {prog.mastered ? ' ★' : ''}
                     </span>
                     <span>Best {prog.bestSniper.toLocaleString()}</span>
                     {prog.perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
@@ -129,9 +133,18 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                 <span className="questbar__blurb">{current.blurb}</span>
               </div>
               <div className="questbar__target">
+                <span className="label">{currentProg?.cleared ? 'Unlocked' : 'Unlock at'}</span>
+                <span className="questbar__targetv tnum">
+                  {currentProg?.cleared
+                    ? '✓'
+                    : (current.unlockScore ?? UNLOCK_SCORE).toLocaleString()}
+                </span>
+              </div>
+              <div className="questbar__target">
                 <span className="label">Facts learned</span>
                 <span className="questbar__targetv tnum">
                   {questMastery(save, current).learned}/{questMastery(save, current).required}
+                  {currentProg?.mastered ? ' ★' : ''}
                 </span>
               </div>
               <div className="questbar__modes">
@@ -152,19 +165,18 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
           <nav className="optabs">
             {allRegions.map((r) => {
-              const unlocked = regionOpen(save, r.id)
               const done = questsIn(r.id).filter((q) => questProgress(save, q.id).cleared).length
               return (
                 <button
                   key={r.id}
-                  className={`optab${r.id === region ? ' optab--active' : ''}${unlocked ? '' : ' optab--locked'}`}
+                  className={`optab${r.id === region ? ' optab--active' : ''}`}
                   style={{ ['--tab' as string]: OP_ACCENT[r.id] }}
                   onClick={() => {
                     setRegion(r.id)
                     setSelected(null)
                   }}
                 >
-                  <span className="optab__sym">{unlocked ? OP_SYM[r.id] : '🔒'}</span>
+                  <span className="optab__sym">{OP_SYM[r.id]}</span>
                   {OP_SHORT[r.id]}
                   <span className="label" style={{ letterSpacing: '0.1em' }}>
                     {done}/{questsIn(r.id).length}

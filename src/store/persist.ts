@@ -1,7 +1,20 @@
 import { get, set } from 'idb-keyval'
-import { DEFAULT_SAVE, type SaveData } from './types'
+import { DEFAULT_SAVE, emptyQuest, type QuestProgress, type SaveData } from './types'
 
 const KEY = 'goobermath:save:v1'
+
+/**
+ * Saves written before unlocking and mastery were split have no `mastered`
+ * flag, and back then `cleared` *was* mastery. Carry it across so nobody loses
+ * a star they earned under the old rules.
+ */
+function migrateQuests(quests: Record<string, QuestProgress> | undefined) {
+  const out: Record<string, QuestProgress> = {}
+  for (const [id, q] of Object.entries(quests ?? {})) {
+    out[id] = { ...emptyQuest(), ...q, mastered: q.mastered ?? q.cleared ?? false }
+  }
+  return out
+}
 
 export async function loadSave(): Promise<SaveData> {
   try {
@@ -12,6 +25,7 @@ export async function loadSave(): Promise<SaveData> {
       ...raw,
       settings: { ...DEFAULT_SAVE.settings, ...raw.settings },
       daily: { ...DEFAULT_SAVE.daily, ...raw.daily },
+      quests: migrateQuests(raw.quests),
     }
   } catch {
     return { ...DEFAULT_SAVE }
@@ -42,7 +56,7 @@ export function importSave(text: string): SaveData | null {
   try {
     const parsed = JSON.parse(text) as SaveData
     if (parsed.version !== 1 || typeof parsed.stats !== 'object') return null
-    return { ...DEFAULT_SAVE, ...parsed }
+    return { ...DEFAULT_SAVE, ...parsed, quests: migrateQuests(parsed.quests) }
   } catch {
     return null
   }

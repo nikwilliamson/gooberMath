@@ -20,17 +20,20 @@ export function RunScreen() {
   const arm = useGame((s) => s.arm)
   const digit = useGame((s) => s.digit)
   const backspace = useGame((s) => s.backspace)
+  const advance = useGame((s) => s.advance)
   const quit = useGame((s) => s.quit)
 
   const [count, setCount] = useState(3)
   const [live, setLive] = useState(false)
   const [shake, setShake] = useState(false)
-  const [flash, setFlash] = useState<string | null>(null)
   const seenAnswers = useRef(0)
   const lastMult = useRef(1)
   const [comboStep, setComboStep] = useState(0)
   const [lastCorrectAt, setLastCorrectAt] = useState(0)
   const [lastMissAt, setLastMissAt] = useState(0)
+  /** The question he just answered, kept on screen long enough to leave. */
+  const [outgoing, setOutgoing] = useState<{ key: string; text: string; won: boolean } | null>(null)
+  const prevProblem = useRef<{ key: string; text: string } | null>(null)
 
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
@@ -60,6 +63,31 @@ export function RunScreen() {
   useRaf((now) => tick(now), live)
   useKeypad(live && run?.phase === 'playing', { digit, backspace, escape: quit })
 
+  // The reveal ignores input for a beat before it will accept a dismissal.
+  // Without that, the very tap that answered wrong dismissed it: the pad
+  // submits on pointerdown, and the click that follows the same finger press
+  // lands on a reveal that only exists because of it. The pause also stops him
+  // blowing past the answer mid-flow, which is the one thing it is there for.
+  const held = run?.phase === 'feedback' && run.lastCorrect === false
+  const [canDismiss, setCanDismiss] = useState(false)
+  useEffect(() => {
+    if (!held) return setCanDismiss(false)
+    const id = window.setTimeout(() => setCanDismiss(true), 450)
+    return () => window.clearTimeout(id)
+  }, [held])
+
+  // Keyboard players get the same dismissal as the tap: any key moves on.
+  useEffect(() => {
+    if (!held || !canDismiss) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return
+      e.preventDefault()
+      advance()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [held, canDismiss, advance])
+
   useEffect(() => {
     if (!run || run.answers.length === seenAnswers.current) return
     seenAnswers.current = run.answers.length
@@ -69,13 +97,7 @@ export function RunScreen() {
       setLastCorrectAt(run.answers.length)
       audio.hit(run.streak)
       const mult = comboMult(run.streak)
-      if (mult > lastMult.current) {
-        setComboStep((n) => n + 1)
-        if (settings.flashes) {
-          setFlash('rgba(110,224,95,0.4)')
-          window.setTimeout(() => setFlash(null), 240)
-        }
-      }
+      if (mult > lastMult.current) setComboStep((n) => n + 1)
       lastMult.current = mult
     } else {
       setLastMissAt(run.answers.length)
@@ -85,12 +107,26 @@ export function RunScreen() {
         setShake(true)
         window.setTimeout(() => setShake(false), 240)
       }
-      if (settings.flashes) {
-        setFlash('rgba(255,77,94,0.35)')
-        window.setTimeout(() => setFlash(null), 240)
-      }
     }
-  }, [pulse, run, settings.flashes, settings.shake])
+  }, [pulse, run, settings.shake])
+
+  // A question swaps out only when the next one is actually on screen, so the
+  // exit and entrance overlap instead of leaving a hole where the problem was.
+  useEffect(() => {
+    if (!run || run.phase !== 'playing') return
+    const prev = prevProblem.current
+    const fact = factsByKey.get(run.currentKey)
+    if (!fact) return
+    const text = `${formatFact(fact)} = ${fact.answer}`
+    if (prev && prev.key !== run.currentKey) {
+      const won = run.answers[run.answers.length - 1]?.correct ?? false
+      setOutgoing({ ...prev, won })
+      const id = window.setTimeout(() => setOutgoing(null), 320)
+      prevProblem.current = { key: run.currentKey, text }
+      return () => window.clearTimeout(id)
+    }
+    prevProblem.current = { key: run.currentKey, text }
+  }, [run?.currentKey, run?.phase, run, factsByKey])
 
   useEffect(() => {
     if (!run) return
@@ -122,7 +158,6 @@ export function RunScreen() {
       <div className="scene scene--arena">
         {settings.particles && <SplatField count={3} seed={11} color="#5b7bb5" opacity={0.08} />}
       </div>
-      {flash && <div className="flash" style={{ background: flash }} />}
 
       <div className={`run${shake ? ' shake' : ''}`}>
         <div className="hud">
@@ -179,6 +214,20 @@ export function RunScreen() {
           </div>
 
           <div className={`panel problemcard${showWrong ? ' problemcard--dim' : ''}`}>
+            {settings.flashes && comboStep > 0 && (
+              <span key={comboStep} className="problemcard__glow" aria-hidden />
+            )}
+            {/* The old question leaves while the new one arrives: both sit in
+                the same grid cell so the card never jumps between them. */}
+            {outgoing && (
+              <span
+                key={outgoing.key}
+                className={`problem tnum problem-out${outgoing.won ? ' problem-out--won' : ''}`}
+                aria-hidden
+              >
+                {outgoing.text}
+              </span>
+            )}
             <span key={`${run.currentKey}:${run.answers.length}`} className="problem tnum problem-in">
               {formatFact(fact)} ={' '}
               <span className="problem__answer">
@@ -220,18 +269,34 @@ export function RunScreen() {
           </div>
 
           {showWrong && (
-            <div className="fb fb--answer">
-              {/* The sticker says he missed; this says what the answer was,
-                  which is the part that actually teaches. */}
+            // Tap anywhere to move on. The clock is already paused here, so
+            // this beat costs him nothing but the three-second miss penalty —
+            // reading the whole fact is the part that actually teaches, and a
+            // reveal that vanished on a timer was gone before he had read it.
+            <button
+              className="fb fb--answer"
+              onClick={canDismiss ? advance : undefined}
+              aria-label="Next problem"
+            >
               <div className="fb__answer fb-word">
-                <span className="fb__answersub">The answer was</span>
-                <span className="fb__answerv tnum">{fact.answer}</span>
+                <span className="fb__answersub">Not quite</span>
+                <span className="fb__answerv tnum">
+                  {formatFact(fact)} = {fact.answer}
+                </span>
+                {run.entry !== '' && (
+                  <span className="fb__answeryou">
+                    you said <b className="tnum">{run.entry}</b>
+                  </span>
+                )}
+                <span className="fb__answertap" data-ready={canDismiss || undefined}>
+                  Tap to keep going
+                </span>
               </div>
-            </div>
+            </button>
           )}
         </div>
 
-        <div className="padwrap">
+        <div className="padwrap" onClick={showWrong && canDismiss ? advance : undefined}>
           <div className={showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
             <NumberPad onDigit={digit} onBackspace={backspace} disabled={run.phase !== 'playing'} />
           </div>

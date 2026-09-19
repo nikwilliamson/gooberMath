@@ -329,12 +329,14 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .board > .problemcard { position: relative; z-index: 2; }
 
 .problemcard {
+  position: relative;
   transition: opacity var(--dur-state) var(--ease-snap), filter var(--dur-state) var(--ease-snap);
-  display: grid; place-items: center;
+  display: grid; grid-template-areas: 'problem'; place-items: center;
   padding: clamp(18px, 4vmin, 40px) clamp(24px, 7vmin, 64px);
   width: min(94%, 560px);
 }
 .problem {
+  grid-area: problem;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(2rem, 9vmin, 3.8rem);
@@ -357,7 +359,16 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
 /* The answer reveal sits over the problem deliberately: it is the one moment
    that has to be read. The miss sticker stays out in a zone like the rest. */
-.fb--answer { pointer-events: none; }
+.fb--answer {
+  pointer-events: auto;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
 .fb__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(132%, 660px); opacity: 0.82; z-index: 0; }
 .fb__word { position: relative; z-index: 1; width: min(84%, 460px); }
 /* A sticker beside the problem, not over it. It animates itself out and ends
@@ -415,8 +426,33 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   display: grid; gap: 4px; justify-items: center;
   box-shadow: 0 0 34px rgba(255, 77, 94, 0.28);
 }
-.fb__answersub { font-size: clamp(0.7rem, 1.9vmin, 0.85rem); color: var(--dim); font-weight: 400; }
-.fb__answerv { font-family: var(--font-display); font-size: clamp(1.8rem, 6.5vmin, 3rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.fb__answersub {
+  font-size: clamp(0.7rem, 1.9vmin, 0.85rem);
+  color: var(--red);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.fb__answeryou { font-size: clamp(0.72rem, 2vmin, 0.9rem); color: var(--dim); font-weight: 400; }
+.fb__answeryou b { color: var(--text); font-weight: 700; }
+.fb__answertap {
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity var(--dur-enter) var(--ease-out);
+  font-size: clamp(0.66rem, 1.8vmin, 0.8rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.fb__answertap[data-ready] { opacity: 1; animation: tapHint 1.6s ease-in-out infinite; }
+@keyframes tapHint { 50% { opacity: 0.4; } }
+.fb__answerv {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5.6vmin, 2.7rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 /* --- number pad ----------------------------------------------------------- */
 .padwrap { display: grid; place-items: center; position: relative; }
@@ -591,9 +627,31 @@ textarea.io {
 
 /* A new question is the most-repeated moment in the game, so it gets the
    lightest possible arrival: it must never slow down reading it. */
-.problem-in { animation: problemIn var(--dur-enter) var(--ease-out) both; }
+/* The entrance waits for the old question to be most of the way out. Without
+   the delay the two sat on top of each other at full opacity and read as a
+   smear rather than a swap. */
+.problem-in { animation: problemIn var(--dur-enter) var(--ease-out) both; animation-delay: 110ms; }
 @keyframes problemIn {
-  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.985); }
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.9) rotate(1.5deg); }
+  60% { transform: translate3d(0, -3px, 0) scale(1.02) rotate(-0.4deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The old question leaves in the direction the run is going: a solved one gets
+   flung up and out, a missed one drops away. Both share the card's grid cell
+   with the arriving question, so nothing reflows between them. */
+.problem-out {
+  grid-area: 1 / 1;
+  pointer-events: none;
+  animation: problemOut 220ms var(--ease-out) both;
+}
+@keyframes problemOut {
+  to { opacity: 0; transform: translate3d(0, 34px, 0) scale(0.8) rotate(-3deg); }
+}
+.problem-out--won { animation-name: problemOutWon; }
+@keyframes problemOutWon {
+  20% { transform: translate3d(0, -8px, 0) scale(1.1); opacity: 1; }
+  to { opacity: 0; transform: translate3d(0, -96px, 0) scale(0.62) rotate(5deg); }
 }
 
 /* A digit landing in a slot. */
@@ -609,8 +667,22 @@ textarea.io {
   80% { transform: translate3d(-2px, 1px, 0); }
 }
 
-.flash { position: fixed; inset: 0; z-index: 35; pointer-events: none; animation: flash var(--dur-enter) var(--ease-in) forwards; }
-@keyframes flash { from { opacity: 0.32; } to { opacity: 0; } }
+/* There used to be a full-screen tint here on every combo step and every miss.
+   At 240ms it did not read as a hit, it read as the app blinking, so the
+   celebration now lives on the card itself where he is already looking. */
+.problemcard__glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 2px solid var(--lime);
+  box-shadow: 0 0 34px rgba(110, 224, 95, 0.4), inset 0 0 22px rgba(110, 224, 95, 0.18);
+  animation: cardGlow var(--dur-celebrate) var(--ease-out) both;
+}
+@keyframes cardGlow {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.035); }
+}
 
 /* Feedback: the word lands first, the splat blooms a beat behind it. */
 .fb-word { animation: fbWord var(--dur-enter) var(--ease-spring) both; }

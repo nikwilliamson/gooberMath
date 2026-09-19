@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { audio } from '@/audio/engine'
 import { questById, questsIn } from '@/engine/quests'
+import { UNLOCK_SCORE } from '@/engine/scoring'
 import { COSMETICS } from '@/store/cosmetics'
 import { questMastery, questProgress, questStatus, useGame } from '@/store/game'
 import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
@@ -53,11 +54,17 @@ export function ResultsScreen() {
   const showReward = rewardIdx < rewards.length
   const reward = showReward ? COSMETICS.find((c) => c.id === rewards[rewardIdx]) : null
 
-  const title = awards.cleared
-    ? 'Quest Clear'
-    : summary.untimed
-      ? 'Warm-up Done'
-      : 'Run Complete'
+  // Unlocking is the gate; mastery is the achievement, so it takes the headline.
+  const unlockScore = quest.unlockScore ?? UNLOCK_SCORE
+  const unlockPct = Math.min(100, Math.round((summary.score / unlockScore) * 100))
+
+  const title = awards.mastered
+    ? 'Facts Mastered'
+    : awards.cleared
+      ? 'Quest Clear'
+      : summary.untimed
+        ? 'Warm-up Done'
+        : 'Run Complete'
 
   return (
     <div className="app" data-region={quest.region}>
@@ -78,7 +85,8 @@ export function ResultsScreen() {
                   <span className="statrow__v tnum">
                     {summary.score.toLocaleString()}
                     {awards.newBest && <span className="pill">New best!</span>}
-                    {awards.cleared && <span className="pill">Cleared</span>}
+                    {awards.cleared && <span className="pill">Unlocked next</span>}
+                    {awards.mastered && <span className="pill">Mastered</span>}
                   </span>
                 </div>
               </div>
@@ -135,14 +143,28 @@ export function ResultsScreen() {
             </div>
           </div>
 
-          {!summary.untimed && !prog.cleared && (
-            <div style={{ display: 'grid', gap: 6 }}>
-              <span className="label">
-                {mastery.learned} of {mastery.required} facts learned
-              </span>
-              <div className="targetbar">
-                <div className="targetbar__fill" style={{ width: `${pct}%` }} />
-              </div>
+          {!summary.untimed && (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {!prog.cleared && (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <span className="label">
+                    {summary.score.toLocaleString()} of {unlockScore.toLocaleString()} to unlock
+                  </span>
+                  <div className="targetbar">
+                    <div className="targetbar__fill" style={{ width: `${unlockPct}%` }} />
+                  </div>
+                </div>
+              )}
+              {!prog.mastered && (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <span className="label">
+                    {mastery.learned} of {mastery.required} facts learned
+                  </span>
+                  <div className="targetbar">
+                    <div className="targetbar__fill" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

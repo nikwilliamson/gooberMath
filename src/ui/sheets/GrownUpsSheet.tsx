@@ -2,13 +2,11 @@ import { useMemo, useState } from 'react'
 import { statFor, tierCounts, tierOf } from '@/engine/mastery'
 import { QUESTS, REGIONS } from '@/engine/quests'
 import { exportSave, importSave } from '@/store/persist'
-import { factKeysOf, questMastery, questProgress, regionFactKeys, regionOpen, useGame } from '@/store/game'
-import type { Op } from '@/engine/types'
+import { factKeysOf, questMastery, questProgress, regionFactKeys, useGame } from '@/store/game'
 
 export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
   const save = useGame((s) => s.save)
   const replaceSave = useGame((s) => s.replaceSave)
-  const toggleForcedRegion = useGame((s) => s.toggleForcedRegion)
   const [io, setIo] = useState('')
   const [msg, setMsg] = useState('')
 
@@ -66,7 +64,8 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
               {rows.map(({ q, counts, prog, median, total }) => (
                 <tr key={q.id}>
                   <td>
-                    {prog.cleared ? '⭐ ' : ''}
+                    {/* ⭐ is mastery of the facts; ✓ only means he unlocked the next quest. */}
+                    {prog.mastered ? '⭐ ' : prog.cleared ? '✓ ' : ''}
                     {q.name}
                   </td>
                   <td className="num">
@@ -102,24 +101,6 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
             </table>
           </div>
         )}
-
-        <div className="sheet__section">
-          <span className="sheet__label">Open a region by hand</span>
-          <div className="toggles">
-            {REGIONS.map((r) => (
-              <button
-                key={r.id}
-                className={`toggle${regionOpen(save, r.id) ? ' toggle--on' : ''}`}
-                onClick={() => toggleForcedRegion(r.id as Op)}
-              >
-                {r.name.split(' ')[0]}
-              </button>
-            ))}
-          </div>
-          <span className="sheet__label">
-            Regions normally open when the previous boss is cleared. Forcing one open is fine if he is ready.
-          </span>
-        </div>
 
         <div className="sheet__section">
           <span className="sheet__label">Move progress between devices</span>

@@ -3,7 +3,7 @@ import { factsFor, formatFact, pairsFor } from './facts'
 import { emptyStat, learnedRatio, recordAnswer, statFor, tierOf } from './mastery'
 import { DEFAULT_CLEAR_RATIO, QUESTS, questById } from './quests'
 import { IDLE_MS, runReducer, startRun, summarize } from './run'
-import { comboMult, scoreAnswer, speedBonus } from './scoring'
+import { UNLOCK_SCORE, comboMult, scoreAnswer, speedBonus } from './scoring'
 import { RETRY_MAX, createSelector, recordSelection, selectNext } from './selector'
 import type { FactKey, StatsMap } from './types'
 
@@ -339,5 +339,61 @@ describe('run loop', () => {
     let s = answer(state, ctx, 900, false)
     s = runReducer(s, { type: 'TICK', now: 2000 }, ctx)
     expect(s.phase).not.toBe('over')
+  })
+})
+
+describe('unlocking', () => {
+  const quest = questById('add-3')!
+
+  /** A full 60s sniper run: one answer every `gapMs`, missing one in `missEvery`. */
+  const playRun = (gapMs: number, missEvery: number, seed: number) => {
+    const { state, ctx } = startRun(quest, {}, { mode: 'sniper', untimed: false, seed }, 0)
+    let s = state
+    let n = 0
+    for (let t = gapMs; t < 60_000 && s.phase !== 'over'; t += gapMs) {
+      const fact = ctx.byKey.get(s.currentKey)!
+      const value = missEvery > 0 && n % missEvery === 0 ? fact.answer + 1 : fact.answer
+      for (const ch of String(value)) s = runReducer(s, { type: 'DIGIT', d: Number(ch), now: t }, ctx)
+      // A miss waits for a tap now, so the simulated player taps through it.
+      if (s.phase === 'feedback' && s.lastCorrect === false) {
+        s = runReducer(s, { type: 'RESOLVE', now: t + 400 }, ctx)
+      }
+      s = runReducer(s, { type: 'TICK', now: t + gapMs / 2 }, ctx)
+      n += 1
+    }
+    return summarize(runReducer(s, { type: 'TICK', now: 61_000 }, ctx))
+  }
+
+  it('is passable on a first careful run', () => {
+    // A slow-but-careful pace, which is exactly the player this game is for.
+    // If this fails, the gate is stalling his progress rather than pacing it.
+    expect(playRun(3500, 20, 11).score).toBeGreaterThanOrEqual(UNLOCK_SCORE)
+    expect(playRun(3000, 12, 3).score).toBeGreaterThanOrEqual(UNLOCK_SCORE)
+  })
+
+  it('is not passable by mashing through a run', () => {
+    expect(playRun(4000, 3, 12).score).toBeLessThan(UNLOCK_SCORE)
+  })
+
+  it('holds a wrong answer on screen, clock stopped, until it is dismissed', () => {
+    const { state, ctx } = startRun(quest, {}, { mode: 'sniper', untimed: false, seed: 9 }, 0)
+    const fact = ctx.byKey.get(state.currentKey)!
+    let s = state
+    for (const ch of String(fact.answer + 1)) s = runReducer(s, { type: 'DIGIT', d: Number(ch), now: 800 }, ctx)
+    expect(s.phase).toBe('feedback')
+    expect(s.clockRunning).toBe(false)
+
+    const before = s.msLeft
+    s = runReducer(s, { type: 'TICK', now: 30_000 }, ctx)
+    expect(s.phase).toBe('feedback')
+    expect(s.msLeft).toBe(before)
+
+    s = runReducer(s, { type: 'RESOLVE', now: 30_100 }, ctx)
+    expect(s.phase).toBe('playing')
+    expect(s.clockRunning).toBe(true)
+  })
+
+  it('never depends on another quest, so a big score cannot raise a later bar', () => {
+    for (const q of QUESTS) expect(q.unlockScore ?? UNLOCK_SCORE).toBe(UNLOCK_SCORE)
   })
 })

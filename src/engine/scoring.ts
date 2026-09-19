@@ -45,3 +45,16 @@ export function scoreAnswer({ mode, ms, streak, accuracy }: ScoreInput): number 
   // Sniper trades the speed bonus for an accuracy multiplier, so precision compounds.
   return Math.round(BASE_POINTS * mult * (0.5 + accuracy))
 }
+
+/**
+ * One decent Sniper run unlocks the next quest. Fixed on purpose: the previous
+ * rule scaled the bar to his last score, so doing well made the next quest
+ * harder. Mastery is tracked separately and is the real achievement.
+ *
+ * 2500, not a rounder number, because the Sniper curve is steep: simulated
+ * 60s runs put a careful ~3.5s-per-answer pace with a miss or two at
+ * 2400-3400, mashing at 4s with frequent misses under 1700, and a clean 2.5s
+ * pace over 6000. 5000 would have demanded a near-perfect sub-3s run, which is
+ * the opposite of letting him through on the first try.
+ */
+export const UNLOCK_SCORE = 2500

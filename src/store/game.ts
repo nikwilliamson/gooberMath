@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { factsFor } from '@/engine/facts'
 import { DEFAULT_CLEAR_RATIO, QUESTS, REGIONS, questById, questsIn, type QuestDef } from '@/engine/quests'
 import { learnedCount, learnedRatio } from '@/engine/mastery'
+import { UNLOCK_SCORE } from '@/engine/scoring'
 import {
   buildCtx, runReducer, startRun, summarize,
   type RunCtx, type RunState, type RunSummary,
@@ -14,19 +15,19 @@ import { DEFAULT_SAVE, emptyQuest, today, type SaveData, type Settings } from '.
 export type Screen = 'title' | 'map' | 'run' | 'results' | 'stats'
 export type QuestStatus = 'locked' | 'open' | 'cleared'
 
-const REGION_ORDER: Op[] = ['add', 'sub', 'mul', 'div']
-
 /** Facts live outside the store: they are static per quest and never re-render. */
 let ctx: RunCtx | null = null
 
 export const questProgress = (save: SaveData, id: string) => save.quests[id] ?? emptyQuest()
 
-export function regionOpen(save: SaveData, region: Op): boolean {
-  if (save.forcedRegions.includes(region)) return true
-  const i = REGION_ORDER.indexOf(region)
-  if (i <= 0) return true
-  const prevBoss = questsIn(REGION_ORDER[i - 1]).find((q) => q.boss)
-  return prevBoss ? questProgress(save, prevBoss.id).cleared : false
+/**
+ * Every region is open from the start. Gating subtraction behind all of
+ * addition meant three of the four worlds were a locked screen he could not
+ * touch, and his teachers do not teach them in that order either. Quests
+ * within a region still unlock in sequence.
+ */
+export function regionOpen(_save: SaveData, _region: Op): boolean {
+  return true
 }
 
 export function questStatus(save: SaveData, quest: QuestDef): QuestStatus {
@@ -39,9 +40,10 @@ export function questStatus(save: SaveData, quest: QuestDef): QuestStatus {
 }
 
 /**
- * How close a quest is to clearing: the share of its own facts he has learned.
- * Nothing here depends on any other quest, so a big score can never raise a
- * later bar and a weak run can never lower one.
+ * How much of a quest he has actually learned: the share of its own facts at
+ * a mastered tier. This is the completion metric, not the unlock gate — the
+ * gate is a fixed Sniper score (UNLOCK_SCORE). Nothing here depends on any
+ * other quest, so one quest's result can never move another's bar.
  */
 export const factKeysOf = (quest: QuestDef) => factsFor(quest.spec).map((f) => f.key)
 
@@ -66,7 +68,10 @@ export function regionFactKeys(region: Op): string[] {
 }
 
 export interface Awards {
+  /** Unlocked the next quest on this run. */
   cleared: boolean
+  /** Learned enough of this quest's facts on this run. Gates nothing. */
+  mastered: boolean
   newBest: boolean
   perfect: boolean
   xpGained: number
@@ -98,6 +103,8 @@ interface GameStore {
   tick: (now: number) => void
   digit: (d: number) => void
   backspace: () => void
+  /** Dismiss the held wrong-answer reveal and move to the next problem. */
+  advance: () => void
   quit: () => void
 }
 
@@ -181,6 +188,14 @@ export const useGame = create<GameStore>((set, get) => ({
     set({ run: runReducer(run, { type: 'BACKSPACE' }, ctx) })
   },
 
+  advance: () => {
+    const { run } = get()
+    if (!run || !ctx || run.phase !== 'feedback') return
+    const next = runReducer(run, { type: 'RESOLVE', now: performance.now() }, ctx)
+    if (next.phase === 'over') finish(next, set, get)
+    else set({ run: next })
+  },
+
   quit: () => {
     const { run } = get()
     if (!run || !ctx) return set({ screen: 'map', run: null })
@@ -209,15 +224,26 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
 
   const stats: StatsMap = { ...save.stats, ...state.stats }
 
-  // Clearing is mastery of this quest's own facts, measured after the run.
-  // A run still has to happen: mastery carried in from overlapping fact
-  // families should not clear a quest he has never actually played.
-  const played = prog.plays > 0 || !state.untimed
+  // Two separate ideas, on purpose.
+  // Unlocking is a fixed score on a real Sniper run, so one good attempt opens
+  // the next quest and doing well never raises a later bar.
   const clearedNow =
-    !prog.cleared && played && questMastery({ ...save, stats }, quest).met
+    !prog.cleared &&
+    state.mode === 'sniper' &&
+    !state.untimed &&
+    summary.score >= (quest.unlockScore ?? UNLOCK_SCORE)
+
+  // Mastery is whether he has actually learned this quest's facts. It gates
+  // nothing; it is the thing worth being proud of. A run still has to happen,
+  // so mastery carried in from overlapping fact families cannot award a quest
+  // he has never played.
+  const played = prog.plays > 0 || !state.untimed
+  const masteredNow =
+    !prog.mastered && played && questMastery({ ...save, stats }, quest).met
 
   let xpGained = 20 + summary.correct * 2
   if (clearedNow) xpGained += 50
+  if (masteredNow) xpGained += 80
   if (summary.perfect && summary.correct > 5) xpGained += 30
 
   const beforeLevel = levelFromXp(save.xp).level
@@ -243,6 +269,7 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
       [quest.id]: {
         ...prog,
         cleared: prog.cleared || clearedNow,
+        mastered: prog.mastered || masteredNow,
         practiced: prog.practiced || state.untimed,
         bestSniper,
         bestBlitz,
@@ -263,6 +290,7 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
     save: commit(nextSave),
     awards: {
       cleared: clearedNow,
+      mastered: masteredNow,
       newBest,
       perfect: summary.perfect && summary.correct > 5,
       xpGained,

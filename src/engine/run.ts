@@ -6,7 +6,12 @@ import { createSelector, recordSelection, selectNext, type SelectorState } from 
 import type { AnswerLog, Fact, FactKey, Mode, StatsMap } from './types'
 
 export const FEEDBACK_CORRECT_MS = 200
-export const FEEDBACK_WRONG_MS = 900
+/**
+ * A wrong answer does not time out. The problem and its answer stay on screen,
+ * clock paused, until he taps to move on — reading it is the whole point, and
+ * a 900ms window was gone before he had finished looking.
+ */
+export const FEEDBACK_WRONG_MS = Infinity
 /**
  * A half-typed answer that sits this long is CLEARED, so input never jams.
  * It is deliberately not scored: inventing a wrong answer out of a partial
@@ -131,7 +136,7 @@ function resolveAnswer(s: RunState, ctx: RunCtx, now: number, value: string): Ru
     lastCorrect: correct,
     // The reveal is instructional, so the clock waits through it; the penalty is the cost.
     clockRunning: correct,
-    feedbackUntil: now + (correct ? FEEDBACK_CORRECT_MS : FEEDBACK_WRONG_MS),
+    feedbackUntil: correct ? now + FEEDBACK_CORRECT_MS : FEEDBACK_WRONG_MS,
     score: s.score + points,
     streak,
     bestStreak: Math.max(s.bestStreak, streak),
