@@ -660,10 +660,12 @@ textarea.io {
   from { transform: scale(0.5); opacity: 0; }
 }
 
+/* Scoped to the board. Shaking the whole app moved the clock and the keypad
+   under his finger, which read as the page glitching rather than as a miss. */
 .shake { animation: shake var(--dur-enter) var(--ease-out); }
 @keyframes shake {
-  20% { transform: translate3d(-5px, 2px, 0); }
-  50% { transform: translate3d(4px, -2px, 0); }
+  20% { transform: translate3d(-4px, 1px, 0); }
+  50% { transform: translate3d(3px, -1px, 0); }
   80% { transform: translate3d(-2px, 1px, 0); }
 }
 

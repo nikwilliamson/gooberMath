@@ -32,8 +32,11 @@ export function RunScreen() {
   const [lastCorrectAt, setLastCorrectAt] = useState(0)
   const [lastMissAt, setLastMissAt] = useState(0)
   /** The question he just answered, kept on screen long enough to leave. */
-  const [outgoing, setOutgoing] = useState<{ key: string; text: string; won: boolean } | null>(null)
-  const prevProblem = useRef<{ key: string; text: string } | null>(null)
+  const [outgoing, setOutgoing] = useState<
+    { key: string; left: string; answer: string; won: boolean } | null
+  >(null)
+  const prevProblem = useRef<{ key: string; left: string; answer: string } | null>(null)
+  const lastWasCorrect = useRef(false)
 
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
@@ -93,6 +96,7 @@ export function RunScreen() {
     seenAnswers.current = run.answers.length
     const last = run.answers[run.answers.length - 1]
     if (!last) return
+    lastWasCorrect.current = last.correct
     if (last.correct) {
       setLastCorrectAt(run.answers.length)
       audio.hit(run.streak)
@@ -112,21 +116,29 @@ export function RunScreen() {
 
   // A question swaps out only when the next one is actually on screen, so the
   // exit and entrance overlap instead of leaving a hole where the problem was.
+  // This keys on the fact itself, not on `run`: depending on the whole run
+  // object re-ran the effect on every animation frame, and each re-run's
+  // cleanup cancelled the timer that was supposed to retire the old question.
   useEffect(() => {
-    if (!run || run.phase !== 'playing') return
-    const prev = prevProblem.current
+    if (!run) return
     const fact = factsByKey.get(run.currentKey)
     if (!fact) return
-    const text = `${formatFact(fact)} = ${fact.answer}`
-    if (prev && prev.key !== run.currentKey) {
-      const won = run.answers[run.answers.length - 1]?.correct ?? false
-      setOutgoing({ ...prev, won })
-      const id = window.setTimeout(() => setOutgoing(null), 320)
-      prevProblem.current = { key: run.currentKey, text }
-      return () => window.clearTimeout(id)
+    const prev = prevProblem.current
+    prevProblem.current = {
+      key: run.currentKey,
+      left: `${formatFact(fact)} = `,
+      answer: String(fact.answer),
     }
-    prevProblem.current = { key: run.currentKey, text }
-  }, [run?.currentKey, run?.phase, run, factsByKey])
+    if (!prev || prev.key === run.currentKey) return
+    setOutgoing({ ...prev, won: lastWasCorrect.current })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run?.currentKey, factsByKey])
+
+  useEffect(() => {
+    if (!outgoing) return
+    const id = window.setTimeout(() => setOutgoing(null), 320)
+    return () => window.clearTimeout(id)
+  }, [outgoing])
 
   useEffect(() => {
     if (!run) return
@@ -151,6 +163,14 @@ export function RunScreen() {
   const stickerIdx = stickerAt + (run.startedAt | 0)
   const anchor = STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length]
   const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
+  // Derived during render, not waited for in an effect: the state update lands
+  // a frame after the key changes, and that one frame had the old question
+  // already unmounted and the new one still at zero opacity — an empty card for
+  // 16ms. Same key either way, so the element is never remounted mid-exit.
+  const ref = prevProblem.current
+  const leaving =
+    outgoing ??
+    (ref && ref.key !== run.currentKey ? { ...ref, won: lastWasCorrect.current } : null)
   const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
 
   return (
@@ -159,7 +179,7 @@ export function RunScreen() {
         {settings.particles && <SplatField count={3} seed={11} color="#5b7bb5" opacity={0.08} />}
       </div>
 
-      <div className={`run${shake ? ' shake' : ''}`}>
+      <div className="run">
         <div className="hud">
           <button className="btn btn--ghost" onClick={quit} aria-label="Stop this run" style={{ padding: '0.5em 0.8em' }}>
             &#10005;
@@ -188,7 +208,7 @@ export function RunScreen() {
           </div>
         </div>
 
-        <div className="board">
+        <div className={`board${shake ? ' shake' : ''}`}>
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
           <div className="board__zone">
@@ -219,16 +239,27 @@ export function RunScreen() {
             )}
             {/* The old question leaves while the new one arrives: both sit in
                 the same grid cell so the card never jumps between them. */}
-            {outgoing && (
+            {leaving && (
               <span
-                key={outgoing.key}
-                className={`problem tnum problem-out${outgoing.won ? ' problem-out--won' : ''}`}
+                key={leaving.key}
+                className={`problem tnum problem-out${leaving.won ? ' problem-out--won' : ''}`}
                 aria-hidden
               >
-                {outgoing.text}
+                {leaving.left}
+                <span className="problem__answer">
+                  {leaving.answer.split('').map((d, i) => (
+                    <span key={i} className="problem__slot">
+                      {d}
+                    </span>
+                  ))}
+                </span>
               </span>
             )}
-            <span key={`${run.currentKey}:${run.answers.length}`} className="problem tnum problem-in">
+            {/* Keyed on the fact alone. Including the answer count remounted
+                this span the instant he typed the last digit, so the whole
+                equation blinked out and faded back in before the old question
+                had even started leaving — that was the flash before the swap. */}
+            <span key={run.currentKey} className="problem tnum problem-in">
               {formatFact(fact)} ={' '}
               <span className="problem__answer">
                 {slots.map((d, i) => (
