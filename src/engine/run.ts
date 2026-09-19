@@ -7,7 +7,11 @@ import type { AnswerLog, Fact, FactKey, Mode, StatsMap } from './types'
 
 export const FEEDBACK_CORRECT_MS = 200
 export const FEEDBACK_WRONG_MS = 900
-/** A half-typed answer that sits this long resolves itself, so input never jams. */
+/**
+ * A half-typed answer that sits this long is CLEARED, so input never jams.
+ * It is deliberately not scored: inventing a wrong answer out of a partial
+ * entry punishes hesitation, which is the opposite of the point.
+ */
 export const IDLE_MS = 3000
 export const PRACTICE_PROBLEMS = 12
 
@@ -35,6 +39,8 @@ export interface RunState {
   msLeft: number
   clockRunning: boolean
   shownAt: number
+  /** When he last pressed a key, which is what the idle timeout measures from. */
+  lastInputAt: number
   lastTickAt: number
   feedbackUntil: number
   score: number
@@ -85,6 +91,7 @@ export function startRun(quest: QuestDef, stats: StatsMap, cfg: RunConfig, now: 
       msLeft: cfg.untimed ? Infinity : RUN_MS,
       clockRunning: true,
       shownAt: now,
+      lastInputAt: now,
       lastTickAt: now,
       feedbackUntil: 0,
       score: 0,
@@ -146,9 +153,13 @@ export function runReducer(s: RunState, e: RunEvent, ctx: RunCtx): RunState {
       const msLeft = s.clockRunning && !s.untimed ? Math.max(0, s.msLeft - dt) : s.msLeft
       let next: RunState = { ...s, msLeft, lastTickAt: e.now }
 
-      // A half-typed answer that stalls resolves itself rather than jamming input.
-      if (next.phase === 'playing' && next.entry !== '' && e.now - next.shownAt > IDLE_MS) {
-        next = resolveAnswer(next, ctx, e.now, next.entry)
+      // A half-typed answer that stalls is CLEARED, not scored, and the idle
+      // window runs from the last keypress. Measuring it from when the problem
+      // appeared marked a two-digit answer wrong the instant the first digit
+      // was pressed, whenever he had taken more than IDLE_MS to start typing —
+      // which is exactly the player this game is for.
+      if (next.phase === 'playing' && next.entry !== '' && e.now - next.lastInputAt > IDLE_MS) {
+        next = { ...next, entry: '' }
       }
       if (next.phase === 'feedback' && e.now >= next.feedbackUntil) {
         next = runReducer(next, { type: 'RESOLVE', now: e.now }, ctx)
@@ -167,7 +178,7 @@ export function runReducer(s: RunState, e: RunEvent, ctx: RunCtx): RunState {
       const entry = s.entry + String(e.d)
       // Auto-submit on digit count: no Enter key for a second grader to find.
       if (entry.length === width) return resolveAnswer(s, ctx, e.now, entry)
-      return { ...s, entry }
+      return { ...s, entry, lastInputAt: e.now }
     }
 
     case 'BACKSPACE':
@@ -187,6 +198,7 @@ export function runReducer(s: RunState, e: RunEvent, ctx: RunCtx): RunState {
         lastCorrect: null,
         clockRunning: true,
         shownAt: e.now,
+        lastInputAt: e.now,
         lastTickAt: e.now,
       }
     }

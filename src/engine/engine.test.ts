@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { factsFor, formatFact, pairsFor } from './facts'
 import { emptyStat, recordAnswer, statFor, tierOf } from './mastery'
 import { QUESTS, questById } from './quests'
-import { runReducer, startRun, summarize } from './run'
+import { IDLE_MS, runReducer, startRun, summarize } from './run'
 import { clearTarget, comboMult, scoreAnswer, speedBonus } from './scoring'
 import { RETRY_MAX, createSelector, recordSelection, selectNext } from './selector'
 import type { FactKey, StatsMap } from './types'
@@ -230,6 +230,57 @@ describe('run loop', () => {
     const { state, ctx } = startRun(quest, {}, { mode: 'blitz', untimed: false, seed: 9 }, 0)
     const s = answer(state, ctx, 800, false)
     expect(s.msLeft).toBe(60_000)
+  })
+
+  it('does not mark a two-digit answer wrong after only the first digit', () => {
+    // The reported bug: idle was measured from when the PROBLEM appeared, so
+    // taking longer than IDLE_MS to start typing made the first digit of a
+    // two-digit answer resolve instantly as a wrong answer.
+    const boss = questById('add-boss')!
+    const { state, ctx } = startRun(boss, {}, { mode: 'sniper', untimed: false, seed: 3 }, 0)
+
+    // Walk to a problem that actually needs two digits.
+    let s = state
+    for (let i = 0; i < 40 && String(ctx.byKey.get(s.currentKey)!.answer).length < 2; i++) {
+      const f = ctx.byKey.get(s.currentKey)!
+      for (const ch of String(f.answer)) s = runReducer(s, { type: 'DIGIT', d: Number(ch), now: 100 }, ctx)
+      s = runReducer(s, { type: 'RESOLVE', now: 200 }, ctx)
+    }
+    const fact = ctx.byKey.get(s.currentKey)!
+    expect(String(fact.answer).length, 'needed a two-digit answer to test').toBe(2)
+
+    const wrongBefore = s.wrongCount
+    // He thinks for four seconds, then presses the first digit.
+    s = runReducer(s, { type: 'TICK', now: 4000 }, ctx)
+    s = runReducer(s, { type: 'DIGIT', d: Number(String(fact.answer)[0]), now: 4200 }, ctx)
+    expect(s.entry).toBe(String(fact.answer)[0])
+    // The next frame must not turn that single digit into a wrong answer.
+    s = runReducer(s, { type: 'TICK', now: 4230 }, ctx)
+    expect(s.wrongCount).toBe(wrongBefore)
+    expect(s.phase).toBe('playing')
+
+    // Finishing the answer still scores it correct.
+    s = runReducer(s, { type: 'DIGIT', d: Number(String(fact.answer)[1]), now: 4400 }, ctx)
+    expect(s.lastCorrect).toBe(true)
+    expect(s.wrongCount).toBe(wrongBefore)
+  })
+
+  it('clears a stalled partial entry rather than scoring it', () => {
+    const boss = questById('add-boss')!
+    const { state, ctx } = startRun(boss, {}, { mode: 'sniper', untimed: false, seed: 8 }, 0)
+    let s = state
+    for (let i = 0; i < 40 && String(ctx.byKey.get(s.currentKey)!.answer).length < 2; i++) {
+      const f = ctx.byKey.get(s.currentKey)!
+      for (const ch of String(f.answer)) s = runReducer(s, { type: 'DIGIT', d: Number(ch), now: 100 }, ctx)
+      s = runReducer(s, { type: 'RESOLVE', now: 200 }, ctx)
+    }
+    s = runReducer(s, { type: 'DIGIT', d: 1, now: 1000 }, ctx)
+    expect(s.entry).toBe('1')
+    const wrongBefore = s.wrongCount
+    s = runReducer(s, { type: 'TICK', now: 1000 + IDLE_MS + 50 }, ctx)
+    expect(s.entry).toBe('')
+    expect(s.wrongCount).toBe(wrongBefore)
+    expect(s.phase).toBe('playing')
   })
 
   it('resolves a stalled half-typed answer instead of jamming', () => {

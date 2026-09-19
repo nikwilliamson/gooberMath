@@ -245,17 +245,9 @@ export function RunScreen() {
                 color2="#ff8a1f"
                 seed={count * 3}
               />
-              <RoughText
-                key={count}
-                text={String(count)}
-                size={210}
-                color="#ffffff"
-                seed={count}
-                className="count-in countdown__digit"
-                // RoughText caps its width by character count, which pins a
-                // single digit at ~130px. Let it take the space instead.
-                style={{ maxWidth: 'none', width: 'min(52vmin, 400px)' }}
-              />
+              <span key={count} className="count-in countdown__digit">
+                {count}
+              </span>
             </div>
 
             <div className="countdown__foot">
