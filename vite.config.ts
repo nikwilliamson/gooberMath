@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 
-// GitHub Pages serves a project site from /<repo>/. CI passes the repo name in;
-// override with BASE_PATH='/' for a custom domain or a <user>.github.io repo.
-const base = process.env.BASE_PATH ?? '/gooberMath/'
+// goobermath.com serves from the root. Override with BASE_PATH='/<repo>/' to
+// build for the bare github.io project URL instead.
+const base = process.env.BASE_PATH ?? '/'
 
 export default defineConfig({
   base,
