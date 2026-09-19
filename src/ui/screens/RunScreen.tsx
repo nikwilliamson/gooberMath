@@ -6,11 +6,11 @@ import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
 import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
+import { CorrectSticker } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
 
-const CHEERS = ['Yes!', 'Nice!', 'Boom!', 'Fast!', 'Clean!']
 
 export function RunScreen() {
   const run = useGame((s) => s.run)
@@ -105,7 +105,9 @@ export function RunScreen() {
   const showWrong = run.phase === 'feedback' && run.lastCorrect === false
   const showRight = run.phase === 'feedback' && run.lastCorrect === true
   const lastPoints = run.answers[run.answers.length - 1]?.points ?? 0
-  const cheer = CHEERS[run.answers.length % CHEERS.length]
+  // Rotate through the 20 sticker phrases, offset per run so it is not always
+  // the same opener.
+  const stickerIdx = run.answers.length + (run.startedAt | 0)
   const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
   const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
 
@@ -169,21 +171,7 @@ export function RunScreen() {
 
           {showRight && (
             <div className="fb">
-              {settings.particles && (
-                <SplatBurst
-                  className="fb__splat fb-splat"
-                  color="#6ee05f"
-                  color2="#a8f58c"
-                  seed={run.answers.length}
-                />
-              )}
-              <RoughText
-                text={cheer}
-                size={140}
-                color="#ffffff"
-                seed={run.answers.length}
-                className="fb__word fb-word"
-              />
+              <CorrectSticker index={stickerIdx} className="fb__sticker fb-word" />
               <span className="fb__points fb__points--good fb-points">+{lastPoints.toLocaleString()}</span>
             </div>
           )}

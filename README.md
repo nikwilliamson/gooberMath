@@ -120,3 +120,28 @@ Pad skins and sound packs unlock as cosmetics but only the goober variants chang
 anything visible. Daily-ring streaks are tracked in the save but not surfaced.
 No rhythm mechanic — hit sounds follow a pentatonic ladder and the music lifts
 with the combo, but nothing requires answering on the beat.
+
+## Art pipeline
+
+Source PNGs live in `art-src/` and are **not** served. `public/img/*.webp` is
+generated from them and is what ships:
+
+```bash
+python3 scripts/optimize-art.py     # art-src/*.png -> public/img/*.webp
+```
+
+The sources are ~22MB, which is unusable on a phone; the WebP output is ~2.9MB.
+Outputs are committed, so CI never runs this.
+
+Two notes on the source art:
+
+- Most sheets carry real alpha, including a soft coloured glow at partial alpha.
+  That glow is wanted — it is what makes the splats sit in the scene — so the
+  pipeline never keys it out.
+- A sheet exported *without* an alpha channel is assumed to have the
+  transparency checkerboard baked in, and `dechecker()` recovers alpha by
+  flooding inward from the border through near-neutral pixels. It relies on
+  artwork having a solid dark outline. Exporting with real alpha is better;
+  this is a rescue, not a preference.
+
+Sheets and their grids are declared in `src/ui/sprites.tsx`.

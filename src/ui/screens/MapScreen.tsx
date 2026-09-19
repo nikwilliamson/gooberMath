@@ -6,6 +6,7 @@ import {
   allRegions, factKeysOf, questProgress, questStatus, regionOpen, targetFor, useGame,
 } from '@/store/game'
 import { OP_ACCENT, SplatField } from '../art'
+import { ART } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
 
 const OP_NAME: Record<Op, string> = { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division' }
@@ -43,8 +44,11 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
   return (
     <div className="app" data-region={region}>
-      <div className="scene scene--deep">
-        <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.055} />
+      <div
+        className="scene scene--art"
+        style={{ backgroundImage: `url(${region === 'add' ? ART.additionFields : ART.world})` }}
+      >
+        <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.07} />
       </div>
 
       <div className="map screen-in">

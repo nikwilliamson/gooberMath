@@ -43,7 +43,7 @@ export function ResultsScreen() {
 
   return (
     <div className="app" data-region={quest.region}>
-      <div className="scene scene--deep">
+      <div className="scene scene--deep scene--vignette">
         <SplatField count={2} seed={summary.score % 13} color="#f5b21f" opacity={0.05} />
       </div>
 

@@ -19,7 +19,23 @@ export default defineConfig({
       // A stale worker must never be able to pin a broken build on a device.
       workbox: {
         // The default glob misses audio, which would leave offline runs silent.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,m4a}'],
+        // Precache the shell only. The art and the 60s track are several MB
+        // together, and blocking first paint on them over cellular is worse
+        // than fetching them once and keeping them.
+        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }: { request: Request }) =>
+              request.destination === 'image' || request.destination === 'audio',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'goobermath-media',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+              rangeRequests: true,
+            },
+          },
+        ],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
