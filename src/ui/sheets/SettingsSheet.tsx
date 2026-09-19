@@ -71,7 +71,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   disabled={!owned}
                   onClick={() => setCosmetic(c.id)}
                 >
-                  <Goober hue={c.hue ?? 222} size={48} mood="happy" />
+                  <Goober tint={c.tint} size={46} mood="idle" />
                   {owned ? c.name : `Lv ${c.level}`}
                 </button>
               )

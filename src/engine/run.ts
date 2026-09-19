@@ -208,6 +208,7 @@ export interface RunSummary {
   /** Answers per minute of clock actually played. */
   pace: number
   fastestMs: number | null
+  avgMs: number | null
   perfect: boolean
   answers: AnswerLog[]
 }
@@ -227,6 +228,7 @@ export function summarize(s: RunState): RunSummary {
     bestStreak: s.bestStreak,
     pace: Math.round(s.correctCount / elapsedMin),
     fastestMs: correctMs.length ? Math.min(...correctMs) : null,
+    avgMs: correctMs.length ? Math.round(correctMs.reduce((a, b) => a + b, 0) / correctMs.length) : null,
     perfect: total > 0 && s.wrongCount === 0,
     answers: s.answers,
   }

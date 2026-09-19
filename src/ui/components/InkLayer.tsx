@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { INKS } from '../art'
+
+
+/** Flecks thrown on a correct answer; amber and green to match the splats. */
+const FLECKS = ['#f5b21f', '#ffcd55', '#6ee05f', '#a8f58c', '#ffffff']
 
 interface Blob {
   x: number
@@ -42,7 +45,7 @@ export function InkLayer({ pulse, enabled, intensity = 1 }: { pulse: number; ena
         r: 2.5 + Math.random() * 7,
         life: 0,
         max: 26 + Math.random() * 24,
-        color: INKS[Math.floor(Math.random() * INKS.length)],
+        color: FLECKS[Math.floor(Math.random() * FLECKS.length)],
       })
     }
   }, [pulse, enabled, intensity])

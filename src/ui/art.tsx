@@ -1,131 +1,87 @@
 import type { CSSProperties } from 'react'
 
-export type Mood = 'happy' | 'sad' | 'wow' | 'cheer'
+export type Mood = 'idle' | 'sad' | 'cheer'
 
-/** Deterministic PRNG so every decorative shape is stable across renders. */
 const prng = (seed: number) => {
   let t = seed * 9301 + 49297
   return () => ((t = (t * 9301 + 49297) % 233280) / 233280)
 }
 
+const DISPLAY_STACK =
+  "'Inter Tight','SF Pro Display',system-ui,-apple-system,'Segoe UI',sans-serif"
+
 /* ========================================================================== */
-/* Goober                                                                      */
+/* Brush-textured display type                                                 */
 /* ========================================================================== */
 
-export function Goober({
-  mood = 'happy',
-  hue = 222,
-  size = 120,
+/**
+ * No brush webfont is reachable from this environment, so the painted edge is
+ * made with turbulence + displacement over heavy italic text. Swap this whole
+ * component for real lettering art when there is some.
+ */
+export function RoughText({
+  text,
+  size = 96,
+  color = '#fff',
+  seed = 3,
+  roughness = 1,
   className,
   style,
 }: {
-  mood?: Mood
-  hue?: number
+  text: string
   size?: number
+  color?: string
+  seed?: number
+  roughness?: number
   className?: string
   style?: CSSProperties
 }) {
-  const body = `hsl(${hue} 82% 58%)`
-  const bodyMid = `hsl(${hue} 76% 50%)`
-  const bodyDark = `hsl(${hue} 70% 40%)`
-  const armUp = mood === 'cheer'
-  const eyeY = mood === 'sad' ? 80 : 76
-  const id = `g${hue}-${mood}`
-
+  const w = Math.max(1, text.length) * size * 0.64
+  const h = size * 1.32
+  const fid = `rt-${seed}-${text.length}-${Math.round(size)}`
   return (
     <svg
-      viewBox="0 0 140 178"
-      width={size}
-      height={(size * 178) / 140}
+      viewBox={`0 0 ${w} ${h}`}
       className={className}
-      style={style}
-      aria-hidden
+      style={{ width: '100%', maxWidth: w, height: 'auto', overflow: 'visible', ...style }}
+      role="img"
+      aria-label={text}
     >
       <defs>
-        <radialGradient id={id} cx="36%" cy="26%" r="78%">
-          <stop offset="0%" stopColor={`hsl(${hue} 92% 72%)`} />
-          <stop offset="62%" stopColor={body} />
-          <stop offset="100%" stopColor={bodyDark} />
-        </radialGradient>
+        <filter id={fid} x="-15%" y="-30%" width="130%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.018 0.07" numOctaves="3" seed={seed} result="n" />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="n"
+            scale={size * 0.055 * roughness}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
       </defs>
-
-      {/* legs, then shoes, so the shoes sit on the ends of the legs */}
-      <path d="M56 138 L52 158 M84 138 L88 158" stroke={bodyMid} strokeWidth="13" strokeLinecap="round" />
-      <ellipse cx="48" cy="164" rx="20" ry="10" fill="#f7f7fa" stroke="#16233d" strokeWidth="4" />
-      <ellipse cx="92" cy="164" rx="20" ry="10" fill="#f7f7fa" stroke="#16233d" strokeWidth="4" />
-
-      {/* arms: mitts on the ends so they do not read as antennae */}
-      <path
-        d={armUp ? 'M28 92 C14 80 10 62 14 48' : 'M28 96 C14 104 9 116 12 126'}
-        stroke={bodyMid} strokeWidth="13" strokeLinecap="round" fill="none"
-      />
-      <path
-        d={armUp ? 'M112 92 C126 80 130 62 126 48' : 'M112 96 C126 104 131 116 128 126'}
-        stroke={bodyMid} strokeWidth="13" strokeLinecap="round" fill="none"
-      />
-      <circle cx={armUp ? 14 : 12} cy={armUp ? 46 : 128} r="10" fill={bodyMid} stroke="#16233d" strokeWidth="3.5" />
-      <circle cx={armUp ? 126 : 128} cy={armUp ? 46 : 128} r="10" fill={bodyMid} stroke="#16233d" strokeWidth="3.5" />
-
-      {/* body: a tall blob, heavier at the bottom */}
-      <path
-        d="M70 14 C108 14 126 44 123 86 C120 124 99 146 70 146 C41 146 20 124 17 86 C14 44 32 14 70 14 Z"
-        fill={`url(#${id})`}
-        stroke="#16233d"
-        strokeWidth="4.5"
-      />
-      <ellipse cx="50" cy="48" rx="18" ry="12" fill="#fff" opacity="0.28" transform="rotate(-24 50 48)" />
-
-      {/* cap: crown over the top, brim pointing back to the left */}
-      <path
-        d="M20 52 C22 26 42 12 70 12 C98 12 118 26 120 52 Z"
-        fill="#ff9f3d" stroke="#16233d" strokeWidth="4.5" strokeLinejoin="round"
-      />
-      <path
-        d="M20 52 C6 53 0 58 2 64 C5 70 15 66 26 60 Z"
-        fill="#f2731f" stroke="#16233d" strokeWidth="4.5" strokeLinejoin="round"
-      />
-      <path d="M20 52 H120" stroke="#16233d" strokeWidth="4" />
-      <circle cx="70" cy="12" r="6" fill="#ffd45e" stroke="#16233d" strokeWidth="3.5" />
-
-      {/* eyes */}
-      <ellipse cx="53" cy={eyeY} rx="16" ry="18" fill="#fff" stroke="#16233d" strokeWidth="4" />
-      <ellipse cx="88" cy={eyeY} rx="16" ry="18" fill="#fff" stroke="#16233d" strokeWidth="4" />
-      {mood === 'cheer' ? (
-        <>
-          <path d="M43 74 q10 -11 20 0" stroke="#16233d" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <circle cx="89" cy={eyeY + 2} r="7.5" fill="#16233d" />
-          <circle cx="92" cy={eyeY - 3} r="2.6" fill="#fff" />
-        </>
-      ) : (
-        <>
-          <circle cx="55" cy={eyeY + (mood === 'sad' ? 5 : 2)} r="7.5" fill="#16233d" />
-          <circle cx="90" cy={eyeY + (mood === 'sad' ? 5 : 2)} r="7.5" fill="#16233d" />
-          <circle cx="58" cy={eyeY + (mood === 'sad' ? 1 : -3)} r="2.6" fill="#fff" />
-          <circle cx="93" cy={eyeY + (mood === 'sad' ? 1 : -3)} r="2.6" fill="#fff" />
-        </>
-      )}
-
-      {/* mouth */}
-      {mood === 'sad' ? (
-        <path d="M56 116 q14 -12 28 0" stroke="#16233d" strokeWidth="4.5" fill="none" strokeLinecap="round" />
-      ) : mood === 'wow' ? (
-        <ellipse cx="70" cy="112" rx="11" ry="14" fill="#7a1f3a" stroke="#16233d" strokeWidth="4" />
-      ) : (
-        <path
-          d="M52 104 q18 26 36 0 z"
-          fill="#7a1f3a" stroke="#16233d" strokeWidth="4" strokeLinejoin="round"
-        />
-      )}
+      <text
+        x={w / 2}
+        y={size}
+        textAnchor="middle"
+        fontFamily={DISPLAY_STACK}
+        fontSize={size}
+        fontWeight={900}
+        fontStyle="italic"
+        letterSpacing={-size * 0.03}
+        fill={color}
+        filter={`url(#${fid})`}
+      >
+        {text}
+      </text>
     </svg>
   )
 }
 
 /* ========================================================================== */
-/* Ink splats                                                                  */
+/* Paint splatter                                                              */
 /* ========================================================================== */
 
-/** Closed Catmull-Rom through polar points: organic, never a flower. */
-function blobPath(seed: number, points = 11, base = 30, jitter = 22) {
+function blobPath(seed: number, points = 12, base = 26, jitter = 24) {
   const rnd = prng(seed)
   const pts: Array<[number, number]> = []
   for (let i = 0; i < points; i++) {
@@ -147,67 +103,106 @@ function blobPath(seed: number, points = 11, base = 30, jitter = 22) {
   return `${d} Z`
 }
 
-export function Splat({
+/** A thrown-paint burst: irregular lobes plus flecks stretched along their throw. */
+export function SplatBurst({
   color,
-  size = 80,
-  seed = 0,
-  opacity = 1,
-  style,
+  color2,
+  seed = 1,
+  density = 1,
   className,
+  style,
 }: {
   color: string
-  size?: number
+  color2?: string
   seed?: number
-  opacity?: number
-  style?: CSSProperties
+  density?: number
   className?: string
+  style?: CSSProperties
 }) {
-  const rnd = prng(seed + 31)
-  const drops = Array.from({ length: 5 }, () => {
+  const rnd = prng(seed)
+  const pick = (c2?: string) => (c2 && rnd() > 0.62 ? c2 : color)
+
+  const lobes = Array.from({ length: Math.round(5 * density) }, (_, i) => ({
+    // High jitter relative to base is what keeps a lobe from reading as a disc.
+    d: blobPath(seed * 7 + i * 13, 13, 10 + rnd() * 14, 20 + rnd() * 22),
+    x: (rnd() - 0.5) * 60,
+    y: (rnd() - 0.5) * 40,
+    s: 0.45 + rnd() * 0.9,
+    rot: rnd() * 360,
+    c: pick(color2),
+  }))
+
+  const flecks = Array.from({ length: Math.round(44 * density) }, () => {
     const a = rnd() * Math.PI * 2
-    const dist = 46 + rnd() * 22
-    return { cx: 60 + Math.cos(a) * dist, cy: 60 + Math.sin(a) * dist, r: 2.5 + rnd() * 6 }
+    const dist = 26 + rnd() * 62
+    const r = 0.7 + rnd() * 3
+    return {
+      cx: 60 + Math.cos(a) * dist * 1.35,
+      cy: 60 + Math.sin(a) * dist * 0.85,
+      // Stretched along the throw direction so it reads as motion, not bubbles.
+      rx: r * (1 + dist / 46),
+      ry: r,
+      rot: (a * 180) / Math.PI,
+      o: 0.45 + rnd() * 0.55,
+      c: pick(color2),
+    }
   })
+
   return (
-    <svg viewBox="0 0 120 120" width={size} height={size} style={style} className={className} opacity={opacity} aria-hidden>
-      <path d={blobPath(seed + 1)} fill={color} />
-      {drops.map((d, i) => (
-        <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill={color} />
+    <svg viewBox="-40 0 200 120" className={className} style={style} aria-hidden>
+      {lobes.map((l, i) => (
+        <path
+          key={i}
+          d={l.d}
+          fill={l.c}
+          transform={`translate(${l.x} ${l.y}) rotate(${l.rot} 60 60) scale(${l.s})`}
+          style={{ transformOrigin: '60px 60px' }}
+        />
+      ))}
+      {flecks.map((f, i) => (
+        <ellipse
+          key={`f${i}`}
+          cx={f.cx}
+          cy={f.cy}
+          rx={f.rx}
+          ry={f.ry}
+          fill={f.c}
+          opacity={f.o}
+          transform={`rotate(${f.rot} ${f.cx} ${f.cy})`}
+        />
       ))}
     </svg>
   )
 }
 
-export const INKS = ['#22d3ee', '#ff3ea5', '#a3e635', '#fb923c', '#a855f7', '#fde047', '#3ddc84']
-/** Warm inks turn to mud over the dark arena, so it gets the cool set. */
-export const ARENA_INKS = ['#22d3ee', '#ff3ea5', '#a855f7', '#3ddc84', '#60a5fa']
-
+/** Sparse splatter used as page texture. */
 export function SplatField({
-  count = 10,
+  count = 5,
   seed = 1,
-  opacity = 0.5,
-  palette = INKS,
+  color = '#f5b21f',
+  opacity = 0.12,
 }: {
   count?: number
   seed?: number
+  color?: string
   opacity?: number
-  palette?: string[]
 }) {
   const rnd = prng(seed)
   return (
     <div className="scene__splats" aria-hidden>
       {Array.from({ length: count }, (_, i) => (
-        <Splat
+        <SplatBurst
           key={i}
-          seed={seed * 13 + i * 7}
-          color={palette[Math.floor(rnd() * palette.length)]}
-          size={70 + rnd() * 130}
-          opacity={opacity}
+          color={color}
+          seed={seed * 5 + i * 11}
+          density={0.7}
           style={{
             position: 'absolute',
+            width: `${28 + rnd() * 40}%`,
             left: `${rnd() * 100}%`,
             top: `${rnd() * 100}%`,
             transform: `translate(-50%,-50%) rotate(${rnd() * 360}deg)`,
+            opacity,
           }}
         />
       ))}
@@ -216,64 +211,130 @@ export function SplatField({
 }
 
 /* ========================================================================== */
-/* Scenery + badges                                                            */
+/* Goober: dark vinyl-toy mascot, capped, crowned                              */
 /* ========================================================================== */
 
-export function Cloud({ style }: { style?: CSSProperties }) {
-  return (
-    <svg viewBox="0 0 200 90" className="cloud" style={style} aria-hidden>
-      <g fill="#ffffff">
-        <ellipse cx="60" cy="56" rx="44" ry="30" />
-        <ellipse cx="104" cy="42" rx="38" ry="34" />
-        <ellipse cx="144" cy="58" rx="36" ry="26" />
-        <rect x="40" y="56" width="120" height="26" rx="13" />
-      </g>
-    </svg>
-  )
-}
-
-function starPoints(spikes: number, outer: number, inner: number, cx = 60, cy = 60) {
-  const pts: string[] = []
-  for (let i = 0; i < spikes * 2; i++) {
-    const r = i % 2 === 0 ? outer : inner
-    const a = (Math.PI * i) / spikes - Math.PI / 2
-    pts.push(`${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r).toFixed(1)}`)
-  }
-  return pts.join(' ')
-}
-
-export function Starburst({
-  fill = '#f2731f',
-  stroke = '#16233d',
-  spikes = 13,
+export function Goober({
+  mood = 'idle',
+  tint = '#1c2130',
+  size = 130,
   className,
   style,
 }: {
-  fill?: string
-  stroke?: string
-  spikes?: number
+  mood?: Mood
+  tint?: string
+  size?: number
   className?: string
   style?: CSSProperties
 }) {
+  const cheer = mood === 'cheer'
+  const id = tint.replace('#', '')
+  const cap = '#0f131d'
+  // A bright rim on the light side is what stops a dark character reading flat.
+  const rim = 'rgba(190,210,255,0.55)'
+  const rimSoft = 'rgba(160,185,235,0.22)'
+  const eyeY = mood === 'sad' ? 78 : 74
+  const eyeRy = mood === 'sad' ? 7.5 : 12.5
+
   return (
-    <svg viewBox="0 0 120 120" className={className} style={style} aria-hidden>
-      <polygon points={starPoints(spikes, 58, 43)} fill={fill} stroke={stroke} strokeWidth="5" strokeLinejoin="round" />
+    <svg
+      viewBox="0 0 150 182"
+      width={size}
+      height={(size * 182) / 150}
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={`body-${id}`} x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.22)" />
+          <stop offset="45%" stopColor="rgba(255,255,255,0.04)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.45)" />
+        </linearGradient>
+        <linearGradient id={`cap-${id}`} x1="0" y1="0" x2="0.4" y2="1">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.20)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
+        </linearGradient>
+      </defs>
+
+      {/* shoes with visible soles */}
+      <path d="M40 152 h24 a6 6 0 0 1 6 6 v4 a4 4 0 0 1-4 4 H37 a6 6 0 0 1-6-6 v-2 a6 6 0 0 1 9-6z" fill="#0c1018" stroke={rimSoft} strokeWidth="1.6" />
+      <path d="M86 152 h24 a6 6 0 0 1 9 6 v2 a6 6 0 0 1-6 6 H86 a4 4 0 0 1-4-4 v-4 a6 6 0 0 1 4-6z" fill="#0c1018" stroke={rimSoft} strokeWidth="1.6" />
+      <path d="M31 164.5 h39 M82 164.5 h37" stroke="#e8edf8" strokeWidth="3" strokeLinecap="round" />
+
+      {/* legs */}
+      <path d="M62 132 v22 M90 132 v22" stroke={tint} strokeWidth="17" strokeLinecap="round" />
+      <path d="M62 132 v22" stroke={rimSoft} strokeWidth="1.5" />
+
+      {/* arms */}
+      <path
+        d={cheer ? 'M36 100 C20 90 15 68 22 50' : 'M36 102 C23 110 19 122 23 132'}
+        stroke={tint} strokeWidth="16" strokeLinecap="round" fill="none"
+      />
+      <path
+        d={cheer ? 'M114 100 C130 92 136 76 134 62' : 'M114 102 C127 110 131 122 127 132'}
+        stroke={tint} strokeWidth="16" strokeLinecap="round" fill="none"
+      />
+
+      {/* torso: chunky, gradient-shaded */}
+      <path
+        d="M75 86 c25 0 37 13 37 30 v12 c0 11-16 16-37 16 s-37-5-37-16 v-12 c0-17 12-30 37-30z"
+        fill={tint}
+      />
+      <path
+        d="M75 86 c25 0 37 13 37 30 v12 c0 11-16 16-37 16 s-37-5-37-16 v-12 c0-17 12-30 37-30z"
+        fill={`url(#body-${id})`} stroke={rimSoft} strokeWidth="1.8"
+      />
+      <path d="M45 96 C40 106 38 116 38 128" stroke={rim} strokeWidth="2.2" fill="none" strokeLinecap="round" opacity="0.8" />
+
+      {/* head */}
+      <rect x="33" y="34" width="84" height="64" rx="27" fill={tint} />
+      <rect x="33" y="34" width="84" height="64" rx="27" fill={`url(#body-${id})`} stroke={rimSoft} strokeWidth="1.8" />
+
+      {/* cap */}
+      <path d="M33 60 C34 35 50 22 75 22 C100 22 116 35 117 60 Z" fill={cap} />
+      <path d="M33 60 C34 35 50 22 75 22 C100 22 116 35 117 60 Z" fill={`url(#cap-${id})`} stroke={rimSoft} strokeWidth="1.8" />
+      <path d="M113 60 c17 0 28 4 28 10 c0 5-12 7-28 7 l-14 0 z" fill={cap} stroke={rimSoft} strokeWidth="1.8" />
+      <path d="M50 30 C58 25 66 23 75 23" stroke={rim} strokeWidth="2.4" fill="none" strokeLinecap="round" opacity="0.85" />
+      <path d="M33 60 H117" stroke="rgba(0,0,0,0.5)" strokeWidth="2.5" />
+      <path d="M61 46 l5-11 l6 7 l3-11 l3 11 l6-7 l5 11 z" fill="var(--amber, #f5b21f)" />
+
+      {/* eyes */}
+      <ellipse cx="60" cy={eyeY} rx="9.5" ry={eyeRy} fill="#fff" />
+      <ellipse cx="90" cy={eyeY} rx="9.5" ry={eyeRy} fill="#fff" />
     </svg>
   )
 }
 
-export function Rays({ className }: { className?: string }) {
-  const wedges = Array.from({ length: 16 }, (_, i) => {
-    const a0 = (i * Math.PI * 2) / 16
-    const a1 = a0 + Math.PI / 16
-    const R = 60
-    return `M60,60 L${60 + Math.cos(a0) * R},${60 + Math.sin(a0) * R} L${60 + Math.cos(a1) * R},${60 + Math.sin(a1) * R} Z`
-  })
+/** Just the cap, for the countdown and reward screens. */
+export function GooberCap({ size = 160, className, style }: { size?: number; className?: string; style?: CSSProperties }) {
   return (
-    <svg viewBox="0 0 120 120" className={className} aria-hidden>
-      {wedges.map((d, i) => (
-        <path key={i} d={d} fill="rgba(255,214,96,0.5)" />
-      ))}
+    <svg viewBox="0 0 160 110" width={size} height={(size * 110) / 160} className={className} style={style} aria-hidden>
+      <defs>
+        <linearGradient id="capg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#252b3a" />
+          <stop offset="100%" stopColor="#0d1017" />
+        </linearGradient>
+      </defs>
+      <path d="M24 74 C26 34 48 14 80 14 C112 14 134 34 136 74 Z" fill="url(#capg)" stroke="rgba(255,255,255,0.18)" strokeWidth="2" />
+      <path d="M132 74 c16 1 26 5 26 12 c0 6-14 8-32 8 l-22 0 z" fill="#0d1017" stroke="rgba(255,255,255,0.18)" strokeWidth="2" />
+      <path d="M80 14 v60" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+      <path d="M64 56 l5-13 l6 8 l5-13 l5 13 l6-8 l5 13 z" fill="var(--amber, #f5b21f)" />
+    </svg>
+  )
+}
+
+export const OP_ACCENT: Record<string, string> = {
+  add: '#f5b21f',
+  sub: '#e6ebf5',
+  mul: '#b06bff',
+  div: '#35d6ef',
+}
+
+export function Crown({ size = 40, color = 'var(--amber, #f5b21f)', className, style }: { size?: number; color?: string; className?: string; style?: CSSProperties }) {
+  return (
+    <svg viewBox="0 0 60 34" width={size} height={(size * 34) / 60} className={className} style={style} aria-hidden>
+      <path d="M6 30 L2 6 l14 10 L30 2 l14 14 L58 6 l-4 24 z" fill={color} />
     </svg>
   )
 }

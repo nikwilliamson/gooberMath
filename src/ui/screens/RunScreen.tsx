@@ -5,13 +5,12 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { ARENA_INKS, Goober, SplatField, Starburst } from '../art'
+import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
 
-const CHEERS = ['YES!', 'NICE!', 'BOOM!', 'FAST!', 'GOT IT!']
-const NUDGES = ['Shake it off! Next one!', 'No worries. Keep going!', 'Now you know it!', "That one's tricky!"]
+const CHEERS = ['Yes!', 'Nice!', 'Boom!', 'Fast!', 'Clean!']
 
 export function RunScreen() {
   const run = useGame((s) => s.run)
@@ -31,10 +30,8 @@ export function RunScreen() {
   const lastMult = useRef(1)
 
   const quest = run ? questById(run.questId) : null
-  // Rebuilding the fact table every frame would be a real cost at 60fps.
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
 
-  // Countdown, then anchor the clock so the 3-2-1 does not cost him time.
   useEffect(() => {
     if (!quest) return
     let n = 3
@@ -57,16 +54,9 @@ export function RunScreen() {
   }, [quest, arm, settings.music])
 
   useEffect(() => () => audio.stopMusic(), [])
-
   useRaf((now) => tick(now), live)
+  useKeypad(live && run?.phase === 'playing', { digit, backspace, escape: quit })
 
-  useKeypad(live && run?.phase === 'playing', {
-    digit,
-    backspace,
-    escape: quit,
-  })
-
-  // React to each resolved answer: sound, shake, flash.
   useEffect(() => {
     if (!run || run.answers.length === seenAnswers.current) return
     seenAnswers.current = run.answers.length
@@ -76,8 +66,8 @@ export function RunScreen() {
       audio.hit(run.streak)
       const mult = comboMult(run.streak)
       if (mult > lastMult.current && settings.flashes) {
-        setFlash('rgba(255,255,255,0.55)')
-        window.setTimeout(() => setFlash(null), 260)
+        setFlash('rgba(110,224,95,0.4)')
+        window.setTimeout(() => setFlash(null), 240)
       }
       lastMult.current = mult
     } else {
@@ -85,16 +75,15 @@ export function RunScreen() {
       lastMult.current = 1
       if (settings.shake) {
         setShake(true)
-        window.setTimeout(() => setShake(false), 260)
+        window.setTimeout(() => setShake(false), 240)
       }
       if (settings.flashes) {
-        setFlash('rgba(255,77,109,0.5)')
-        window.setTimeout(() => setFlash(null), 260)
+        setFlash('rgba(255,77,94,0.35)')
+        window.setTimeout(() => setFlash(null), 240)
       }
     }
   }, [pulse, run, settings.flashes, settings.shake])
 
-  // Music intensity follows the combo.
   useEffect(() => {
     if (!run) return
     const m = comboMult(run.streak)
@@ -107,109 +96,143 @@ export function RunScreen() {
   const width = String(fact.answer).length
   const frac = run.untimed ? 1 : clamp01(run.msLeft / 60_000)
   const urgent = !run.untimed && run.msLeft <= 10_000
-  const warn = !run.untimed && run.msLeft <= 20_000 && !urgent
+  const healthy = !run.untimed && run.msLeft > 30_000
   const mult = comboMult(run.streak)
   const showWrong = run.phase === 'feedback' && run.lastCorrect === false
   const showRight = run.phase === 'feedback' && run.lastCorrect === true
   const lastPoints = run.answers[run.answers.length - 1]?.points ?? 0
   const cheer = CHEERS[run.answers.length % CHEERS.length]
-  const nudge = NUDGES[run.answers.length % NUDGES.length]
-
   const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
+  const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
 
   return (
     <div className="app" data-region={quest.region}>
-      <div className="scene scene--arena">{settings.particles && <SplatField count={7} seed={7} opacity={0.3} palette={ARENA_INKS} />}</div>
+      <div className="scene scene--arena">
+        {settings.particles && <SplatField count={3} seed={11} color="#5b7bb5" opacity={0.08} />}
+      </div>
       {flash && <div className="flash" style={{ background: flash }} />}
 
       <div className={`run${shake ? ' shake' : ''}`}>
         <div className="hud">
-          <button className="hud__quit" onClick={quit} aria-label="Stop this run">
+          <button className="btn btn--ghost" onClick={quit} aria-label="Stop this run" style={{ padding: '0.5em 0.8em' }}>
             &#10005;
           </button>
           <div className="hud__time">
-            <span className="hud__label">{run.untimed ? 'Warm-up' : 'Time'}</span>
+            <span className="label">{run.untimed ? 'Warm-up' : 'Time'}</span>
             <div className="hud__clock">
-              <span className="hud__digits outline">
+              <span className="hud__digits tnum">
                 {run.untimed ? `${run.problemsLeft} left` : formatClock(run.msLeft)}
               </span>
               {!run.untimed && (
-                <div className={`timer${urgent ? ' timer--urgent' : warn ? ' timer--warn' : ''}`}>
+                <div className={`timer${urgent ? ' timer--urgent' : healthy ? ' timer--ok' : ''}`}>
                   <div className="timer__fill" style={{ transform: `scaleX(${frac})` }} />
                 </div>
               )}
             </div>
-            <span className="hud__label">
-              {quest.name} &middot; {run.untimed ? 'practice' : run.mode === 'blitz' ? 'Blitz' : 'Sniper'} &middot;{' '}
-              <span className="tnum">{run.score.toLocaleString()}</span> pts
-            </span>
           </div>
-
-          <div className="combowrap">
-            <div className="combobadge">
-              <Starburst fill={run.streak > 0 ? '#f2731f' : '#4a5a7a'} />
-              <span className="combobadge__text outline">
-                <span className="combobadge__k">COMBO</span>
-                <span className="combobadge__v">x{run.streak}</span>
-              </span>
-            </div>
-            {mult > 1 && <span className="combomult">{mult}&times; pts</span>}
+          <div className={`combo${mult >= 2 ? ' combo--hot' : run.streak === 0 ? ' combo--cold' : ''}`}>
+            <span className="label">Combo</span>
+            <span className="combo__v tnum">x{run.streak}</span>
+            {mult > 1 && <span className="combo__mult">{mult}&times; points</span>}
           </div>
         </div>
 
         <div className="board">
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
-          {showRight ? (
-            <div className="pop" style={{ display: 'grid', justifyItems: 'center', gap: 6 }}>
-              <span className="verdict outline outline--thick">{cheer}</span>
-              <span className="verdict__points outline">+{lastPoints.toLocaleString()}</span>
+          <div className="panel problemcard">
+            <span className="problem tnum">
+              {formatFact(fact)} ={' '}
+              {slots.map((d, i) => (
+                <span key={i} className="problem__slot">
+                  {d || '?'}
+                </span>
+              ))}
+            </span>
+            <span className="problem__rule" />
+          </div>
+
+          {showRight && (
+            <div className="fb pop">
+              {settings.particles && (
+                <SplatBurst className="fb__splat" color="#6ee05f" color2="#a8f58c" seed={run.answers.length} />
+              )}
+              <RoughText text={cheer} size={140} color="#ffffff" seed={run.answers.length} className="fb__word" />
+              <span className="fb__points fb__points--good">+{lastPoints.toLocaleString()}</span>
             </div>
-          ) : showWrong ? (
-            <>
-              <div className="parch problemcard pop">
-                <div className="oops">
-                  <span className="oops__label">Oops!</span>
-                  <span className="oops__sub">The answer was</span>
-                  <span className="oops__answer tnum">{fact.answer}</span>
-                </div>
+          )}
+
+          {showWrong && (
+            <div className="fb pop">
+              {settings.particles && (
+                <SplatBurst className="fb__splat" color="#ff4d5e" color2="#7a1020" seed={run.answers.length + 5} />
+              )}
+              <RoughText text="Oops" size={130} color="#ff4d5e" seed={run.answers.length + 2} className="fb__word" />
+              <div className="fb__answer">
+                <span className="fb__answersub">The answer was</span>
+                <span className="fb__answerv tnum">{fact.answer}</span>
               </div>
-              <div className="mascotline">
-                <Goober mood="sad" hue={222} size={72} />
-                <span className="bubble">{nudge}</span>
-              </div>
-            </>
-          ) : (
-            <div className="parch problemcard">
-              <span className="problem tnum">
-                {formatFact(fact)} ={' '}
-                {slots.map((d, i) => (
-                  <span key={i} className={`problem__slot${d ? ' problem__slot--filled' : ''}`}>
-                    {d || '?'}
-                  </span>
-                ))}
-              </span>
             </div>
           )}
         </div>
 
         <div className="padwrap">
-          <NumberPad onDigit={digit} onBackspace={backspace} disabled={run.phase !== 'playing'} />
+          <div className={showRight || showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
+            <NumberPad onDigit={digit} onBackspace={backspace} disabled={run.phase !== 'playing'} />
+          </div>
         </div>
 
         {count > 0 && (
           <div className="countdown">
-            <span className="countdown__mode outline">
-              {run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'}
+            <span className="countdown__mode">{modeName}</span>
+            <div className="countdown__n">
+              <SplatBurst className="countdown__splat" color="#f5b21f" color2="#ff8a1f" seed={count * 3} />
+              <RoughText text={String(count)} size={210} color="var(--amber)" seed={count} />
+            </div>
+            <span className="label">
+              {run.mode === 'blitz' ? 'Same facts. Faster you.' : 'Misses cost three seconds.'}
             </span>
-            <span className="countdown__n outline outline--thick">{count}</span>
-            <span className="countdown__sub">
-              {run.mode === 'blitz' ? 'Fast answers = bigger combos' : 'Misses cost 3 seconds'}
-            </span>
+            <div className="countdown__dots">
+              {[3, 2, 1].map((n) => (
+                <span key={n} className={`countdown__dot${count <= n ? ' countdown__dot--on' : ''}`} />
+              ))}
+            </div>
+            <GooberCap size={112} style={{ marginTop: 18, opacity: 0.85 }} />
           </div>
         )}
       </div>
 
+      {count === 0 && (
+        <span className="micro micro--br micro--run">
+          {run.mode === 'blitz' ? (
+            <>
+              Focus
+              <br />
+              Solve
+              <br />
+              Repeat
+            </>
+          ) : showWrong ? (
+            <>
+              Learn
+              <br />
+              Adapt
+              <br />
+              Come back
+              <br />
+              stronger
+            </>
+          ) : (
+            <>
+              Keep
+              <br />
+              the
+              <br />
+              streak
+            </>
+          )}
+        </span>
+      )}
     </div>
   )
 }

@@ -1,12 +1,9 @@
 import { audio } from '@/audio/engine'
-import { cosmeticById } from '@/store/cosmetics'
 import { useGame } from '@/store/game'
-import { Cloud, Goober, SplatField } from '../art'
+import { Crown, Goober, RoughText, SplatField } from '../art'
 
 export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void; onGrownUps: () => void }) {
   const go = useGame((s) => s.go)
-  const gooberId = useGame((s) => s.save.goober)
-  const hue = cosmeticById(gooberId)?.hue ?? 222
 
   const play = () => {
     audio.unlock()
@@ -16,35 +13,49 @@ export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void
 
   return (
     <div className="app">
-      <div className="scene scene--sky">
-        <Cloud style={{ left: '4%', top: '9%', width: 150 }} />
-        <Cloud style={{ left: '58%', top: '5%', width: 210 }} />
-        <Cloud style={{ left: '30%', top: '21%', width: 110, opacity: 0.8 }} />
-        <SplatField count={8} seed={3} opacity={0.42} />
+      <div className="scene scene--deep">
+        <SplatField count={3} seed={5} color="#f5b21f" opacity={0.06} />
       </div>
 
+      <span className="micro micro--tl">
+        Practice
+        <br />
+        today.
+        <br />
+        Bigger
+        <br />
+        tomorrow.
+      </span>
+      <span className="micro micro--tr">
+        Math
+        <br />
+        adventures
+        <br />
+        Real progress
+        <br />
+        More goobers
+      </span>
+
       <div className="title">
-        <div className="title__top">
-          <h1 className="logo outline outline--thick">
-            <span>Goober</span>
-            <b>Math</b>
-          </h1>
-          <p className="tagline">Practice today. Bigger tomorrow.</p>
-          <Goober mood="cheer" hue={hue} size={190} className="bob" />
+        <div className="title__hero">
+          <div className="wordmark">
+            <Crown className="wordmark__crown" size={44} />
+            <RoughText text="Goober" size={120} color="#ffffff" seed={4} className="wordmark__a" />
+            <RoughText text="Math" size={120} color="var(--amber)" seed={9} className="wordmark__b" />
+          </div>
+          <Goober mood="idle" size={160} className="title__mascot bob" />
         </div>
 
         <div className="title__actions">
-          <button className="btn btn--yellow btn--big" onClick={play}>
-            Play
+          <button className="btn btn--amber btn--big" onClick={play}>
+            Play <span className="btn__icon">&#8594;</span>
           </button>
-          <div className="title__row">
-            <button className="btn" onClick={onSettings}>
-              <span className="btn__icon">&#9881;</span> Settings
-            </button>
-            <button className="btn" onClick={onGrownUps}>
-              <span className="btn__icon">&#128101;</span> Grown-ups
-            </button>
-          </div>
+          <button className="btn btn--ghost" onClick={onSettings}>
+            <span className="btn__icon">&#9881;</span> Settings
+          </button>
+          <button className="btn btn--ghost" onClick={onGrownUps}>
+            <span className="btn__icon">&#128101;</span> Grown-ups
+          </button>
         </div>
       </div>
     </div>
