@@ -5,7 +5,7 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
+import { RoughText, SplatBurst, SplatField } from '../art'
 import { CorrectSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
@@ -240,7 +240,7 @@ export function RunScreen() {
             <div className="countdown__n">
               <SplatBurst
                 key={`s${count}`}
-                className="countdown__splat fb-splat"
+                className="countdown__splat count-splat-in"
                 color="#f5b21f"
                 color2="#ff8a1f"
                 seed={count * 3}
@@ -249,20 +249,25 @@ export function RunScreen() {
                 key={count}
                 text={String(count)}
                 size={210}
-                color="var(--amber)"
+                color="#ffffff"
                 seed={count}
-                className="count-in"
+                className="count-in countdown__digit"
+                // RoughText caps its width by character count, which pins a
+                // single digit at ~130px. Let it take the space instead.
+                style={{ maxWidth: 'none', width: 'min(52vmin, 400px)' }}
               />
             </div>
-            <span className="label">
-              {run.mode === 'blitz' ? 'Same facts. Faster you.' : 'Misses cost three seconds.'}
-            </span>
-            <div className="countdown__dots">
-              {[3, 2, 1].map((n) => (
-                <span key={n} className={`countdown__dot${count <= n ? ' countdown__dot--on' : ''}`} />
-              ))}
+
+            <div className="countdown__foot">
+              <span className="label">
+                {run.mode === 'blitz' ? 'Same facts. Faster you.' : 'Misses cost three seconds.'}
+              </span>
+              <div className="countdown__dots">
+                {[3, 2, 1].map((n) => (
+                  <span key={n} className={`countdown__dot${count <= n ? ' countdown__dot--on' : ''}`} />
+                ))}
+              </div>
             </div>
-            <GooberCap size={112} style={{ marginTop: 18, opacity: 0.85 }} />
           </div>
         )}
       </div>
