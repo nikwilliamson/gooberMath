@@ -200,23 +200,54 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 /* ========================================================================== */
 /* Map                                                                         */
 /* ========================================================================== */
-.map { position: relative; z-index: 1; flex: 1; display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
-.map__head { padding: clamp(12px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px) 0; display: flex; align-items: flex-start; gap: 14px; }
-.map__world { display: grid; gap: 2px; }
+/* min-width: 0 all the way down. A grid or flex child sizes to its content by
+   default, so the h1 set the width of the whole column: on Multiplication it
+   pushed the map ~55px past the viewport and took the Divide tab off screen
+   with it. Every track below is explicitly allowed to be narrower than its
+   contents. */
+.map {
+  position: relative; z-index: 1; flex: 1;
+  display: grid; grid-template-rows: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0; min-width: 0;
+}
+.map__head {
+  padding: clamp(12px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px) 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+}
+.map__world { display: grid; gap: 2px; min-width: 0; }
 .map__op {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 5.4vmin, 2.6rem);
+  /* Keyed to vw, not vmin: on a short landscape phone vmin is the height, and
+     the title has nothing to do with the height. */
+  font-size: clamp(1.15rem, 5.4vw, 2.6rem);
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--ink);
 }
-.map__sub { font-size: clamp(0.66rem, 1.8vmin, 0.8rem); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.map__sub {
+  font-size: clamp(0.66rem, 1.8vmin, 0.8rem);
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim);
+  min-width: 0; overflow-wrap: anywhere;
+}
+/* On the narrowest phones the star count is what gives: the tab row underneath
+   already shows cleared counts per region, so nothing is lost. */
+@media (max-width: 400px) {
+  .map__head { gap: 10px; }
+  .map__head .chip { display: none; }
+}
 .map__blurb { font-size: clamp(0.72rem, 1.9vmin, 0.86rem); color: var(--dim); font-weight: 400; margin-top: 10px; max-width: 42ch; }
 
-.nodes { overflow-y: auto; padding: clamp(14px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
-.node { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.nodes { min-width: 0; overflow-y: auto; padding: clamp(14px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
+.node { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; min-width: 0; }
 .node__rail { display: grid; justify-items: center; gap: 0; }
 .node__dot {
   width: clamp(34px, 8vmin, 44px); aspect-ratio: 1;
@@ -239,16 +270,19 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 400; display: flex; gap: 12px; flex-wrap: wrap; }
 .node__grid { margin-top: 5px; }
 
-.questbar { padding: clamp(12px, 2.6vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 12px; background: linear-gradient(180deg, transparent, rgba(6, 9, 15, 0.9) 30%); }
+.questbar { min-width: 0; padding: clamp(12px, 2.6vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 12px; background: linear-gradient(180deg, transparent, rgba(6, 9, 15, 0.9) 30%); }
 .questbar__card { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: clamp(12px, 2.4vmin, 18px); }
-.questbar__info { display: grid; gap: 2px; flex: 1; min-width: 150px; }
+/* A floor, so the quest name and blurb wrap to their own row rather than being
+   squeezed into a one-word-per-line ribbon, but one that can never itself
+   force the card wider than the screen. */
+.questbar__info { display: grid; gap: 2px; flex: 1; min-width: min(100%, 150px); }
 .questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
 .questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; }
 .questbar__target { display: grid; gap: 2px; text-align: right; }
 .questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
 .questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.optabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.optabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-width: 0; }
 
 /* Wide screens: a centred column reads better than full-bleed left-aligned text. */
 @media (min-width: 900px) {
@@ -256,6 +290,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 }
 .optab {
   display: grid; justify-items: center; gap: 5px;
+  min-width: 0;
   padding: 0.7em 0.3em;
   border-radius: var(--r-md);
   border: 1px solid transparent;
