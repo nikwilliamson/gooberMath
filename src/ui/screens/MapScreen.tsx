@@ -3,7 +3,7 @@ import { audio } from '@/audio/engine'
 import { questsIn, type QuestDef } from '@/engine/quests'
 import type { Mode, Op } from '@/engine/types'
 import {
-  allRegions, factKeysOf, questProgress, questStatus, regionOpen, targetFor, useGame,
+  allRegions, factKeysOf, questMastery, questProgress, questStatus, regionOpen, useGame,
 } from '@/store/game'
 import { OP_ACCENT, SplatField } from '../art'
 import { ART } from '../sprites'
@@ -105,7 +105,9 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                     <span>{quest.blurb}</span>
                   </span>
                   <span className="node__meta">
-                    <span>Target {targetFor(save, quest).toLocaleString()}</span>
+                    <span>
+                      {questMastery(save, quest).learned}/{questMastery(save, quest).required} facts
+                    </span>
                     <span>Best {prog.bestSniper.toLocaleString()}</span>
                     {prog.perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
                   </span>
@@ -127,9 +129,9 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                 <span className="questbar__blurb">{current.blurb}</span>
               </div>
               <div className="questbar__target">
-                <span className="label">Target (Sniper)</span>
+                <span className="label">Facts learned</span>
                 <span className="questbar__targetv tnum">
-                  &#9733; {targetFor(save, current).toLocaleString()}
+                  {questMastery(save, current).learned}/{questMastery(save, current).required}
                 </span>
               </div>
               <div className="questbar__modes">

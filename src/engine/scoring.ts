@@ -45,11 +45,3 @@ export function scoreAnswer({ mode, ms, streak, accuracy }: ScoreInput): number 
   // Sniper trades the speed bonus for an accuracy multiplier, so precision compounds.
   return Math.round(BASE_POINTS * mult * (0.5 + accuracy))
 }
-
-/**
- * Live clear target: the quest's floor, raised toward what he has already
- * proved he can do, so difficulty tracks him instead of a fixed table.
- */
-export function clearTarget(baseTarget: number, previousBest: number): number {
-  return Math.max(baseTarget, Math.round((previousBest * 0.8) / 50) * 50)
-}

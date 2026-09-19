@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { audio } from '@/audio/engine'
 import { questById, questsIn } from '@/engine/quests'
 import { COSMETICS } from '@/store/cosmetics'
-import { questProgress, questStatus, targetFor, useGame } from '@/store/game'
+import { questMastery, questProgress, questStatus, useGame } from '@/store/game'
 import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
 import { GooberSprite, type Pose } from '../sprites'
 
@@ -41,9 +41,9 @@ export function ResultsScreen() {
 
   if (!summary || !quest || !awards) return null
 
-  const target = targetFor(save, quest)
   const prog = questProgress(save, quest.id)
-  const pct = Math.min(100, Math.round((summary.score / target) * 100))
+  const mastery = questMastery(save, quest)
+  const pct = Math.min(100, Math.round((mastery.learned / Math.max(1, mastery.required)) * 100))
   const siblings = questsIn(quest.region)
   const idx = siblings.findIndex((q) => q.id === quest.id)
   const nextQuest = siblings[idx + 1]
@@ -138,7 +138,7 @@ export function ResultsScreen() {
           {!summary.untimed && !prog.cleared && (
             <div style={{ display: 'grid', gap: 6 }}>
               <span className="label">
-                {pct}% of {target.toLocaleString()} to clear
+                {mastery.learned} of {mastery.required} facts learned
               </span>
               <div className="targetbar">
                 <div className="targetbar__fill" style={{ width: `${pct}%` }} />

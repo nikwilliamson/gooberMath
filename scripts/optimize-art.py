@@ -32,6 +32,7 @@ PLAN = {
     'world':              (1536, 74, False),
     'additionFields':     (1536, 74, False),
     'positiveSprite':     (1150, 88, False),
+    'incorrectSprite':    (1150, 88, False),
 }
 
 
@@ -78,6 +79,7 @@ GRIDS = {
     'gooberSprite': (5, 3),
     'splatSprite': (6, 4),
     'positiveSprite': (5, 4),
+    'incorrectSprite': (5, 4),
     'itemsSprite': (5, 4),
 }
 

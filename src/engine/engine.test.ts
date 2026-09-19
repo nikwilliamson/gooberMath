@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { factsFor, formatFact, pairsFor } from './facts'
-import { emptyStat, recordAnswer, statFor, tierOf } from './mastery'
-import { QUESTS, questById } from './quests'
+import { emptyStat, learnedRatio, recordAnswer, statFor, tierOf } from './mastery'
+import { DEFAULT_CLEAR_RATIO, QUESTS, questById } from './quests'
 import { IDLE_MS, runReducer, startRun, summarize } from './run'
-import { clearTarget, comboMult, scoreAnswer, speedBonus } from './scoring'
+import { comboMult, scoreAnswer, speedBonus } from './scoring'
 import { RETRY_MAX, createSelector, recordSelection, selectNext } from './selector'
 import type { FactKey, StatsMap } from './types'
 
@@ -187,9 +187,37 @@ describe('scoring', () => {
     expect(scoreAnswer({ mode: 'sniper', ms: 0, streak: 0, accuracy: 0.5 })).toBe(100)
   })
 
-  it('raises the clear target toward his own best', () => {
-    expect(clearTarget(2500, 0)).toBe(2500)
-    expect(clearTarget(2500, 6000)).toBe(4800)
+  it('a score never changes what any quest requires', () => {
+    // The old rule set the next quest's target to 80% of the best score on the
+    // previous one, so a good run raised a later bar. Clearing now depends only
+    // on the facts of the quest itself.
+    const quest = questById('add-2')!
+    const keys = factsFor(quest.spec).map((f) => f.key)
+    const stats: StatsMap = {}
+    for (const k of keys) {
+      let st = emptyStat(k)
+      for (let i = 0; i < 4; i++) st = recordAnswer(st, true, 1000, i)
+      stats[k] = st
+    }
+    expect(learnedRatio(stats, keys)).toBe(1)
+    // Same facts, same verdict, whatever happened on any other quest.
+    expect(learnedRatio(stats, keys) >= DEFAULT_CLEAR_RATIO).toBe(true)
+  })
+
+  it('does not count a fact as learned while it is slow or shaky', () => {
+    const keys = ['a', 'b', 'c', 'd']
+    const stats: StatsMap = {}
+    let fast = emptyStat('a')
+    for (let i = 0; i < 4; i++) fast = recordAnswer(fast, true, 900, i)
+    stats.a = fast
+    let slow = emptyStat('b')
+    for (let i = 0; i < 4; i++) slow = recordAnswer(slow, true, 4200, i)   // over the 3s bar
+    stats.b = slow
+    let shaky = emptyStat('c')
+    for (let i = 0; i < 6; i++) shaky = recordAnswer(shaky, i % 2 === 0, 900, i)
+    stats.c = shaky
+    // 'd' never seen at all.
+    expect(learnedRatio(stats, keys)).toBe(0.25)
   })
 })
 

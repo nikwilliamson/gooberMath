@@ -15,12 +15,24 @@ export interface QuestDef {
   name: string
   blurb: string
   spec: FactSpec
-  /** Floor for the clear target. Live target also tracks his own best. */
-  baseTarget: number
+  /**
+   * Share of this quest's facts that must reach 'known' to clear it.
+   * Defaults to DEFAULT_CLEAR_RATIO.
+   */
+  clearRatio?: number
   /** New content: play it untimed once before the clock starts. */
   untimedFirst: boolean
   boss?: boolean
 }
+
+/**
+ * Quests clear on mastery of their own facts, not on a score.
+ *
+ * The previous rule set each target to 80% of his best on the PREVIOUS quest,
+ * which punished a good run by raising the next bar, compared scores across
+ * fact sets of different sizes and difficulty, and quietly rewarded sandbagging.
+ */
+export const DEFAULT_CLEAR_RATIO = 0.8
 
 export const REGIONS: RegionDef[] = [
   { id: 'add', name: 'Plusfall Coast', ink: 'cyan', blurb: 'Where the numbers wash together.' },
@@ -39,116 +51,98 @@ export const QUESTS: QuestDef[] = [
   {
     id: 'add-1', region: 'add', name: 'First Splash',
     blurb: 'Adding nothing, one, or two. Warm up the ink.',
-    spec: { op: 'add', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } },
-    baseTarget: 2500, untimedFirst: false,
+    spec: { op: 'add', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } }, untimedFirst: false,
   },
   {
     id: 'add-2', region: 'add', name: 'Double Trouble',
     blurb: 'Two of the same. These are the fastest facts you own.',
-    spec: { op: 'add', pairs: { kind: 'doubles', max: 9 } },
-    baseTarget: 3000, untimedFirst: false,
+    spec: { op: 'add', pairs: { kind: 'doubles', max: 9 } }, untimedFirst: false,
   },
   {
     id: 'add-3', region: 'add', name: 'Make Ten',
     blurb: 'Pairs that hit ten, then ten plus the rest. This is how you cross ten.',
-    spec: { op: 'add', pairs: { kind: 'makeTen' } },
-    baseTarget: 3200, untimedFirst: false,
+    spec: { op: 'add', pairs: { kind: 'makeTen' } }, untimedFirst: false,
   },
   {
     id: 'add-4', region: 'add', name: 'Near Miss',
     blurb: 'Almost-doubles, plus eight and plus nine.',
-    spec: { op: 'add', pairs: { kind: 'nearDoubles', max: 9 } },
-    baseTarget: 3500, untimedFirst: false,
+    spec: { op: 'add', pairs: { kind: 'nearDoubles', max: 9 } }, untimedFirst: false,
   },
   {
     id: 'add-5', region: 'add', name: 'Plus Nine Gang',
     blurb: 'Add eight, add nine. Think ten, then step back.',
-    spec: { op: 'add', pairs: { kind: 'addend', values: [8, 9], maxSum: 18, min: 1 } },
-    baseTarget: 3800, untimedFirst: false,
+    spec: { op: 'add', pairs: { kind: 'addend', values: [8, 9], maxSum: 18, min: 1 } }, untimedFirst: false,
   },
   {
     id: 'add-boss', region: 'add', name: 'Coast Guardian',
     blurb: 'Every sum to twenty, all at once. Beat it to open the Marsh.',
-    spec: { op: 'add', pairs: { kind: 'allSums', maxSum: 18 } },
-    baseTarget: 5000, untimedFirst: false, boss: true,
+    spec: { op: 'add', pairs: { kind: 'allSums', maxSum: 18 } }, untimedFirst: false, boss: true,
   },
 
   // --- Minus Marsh ----------------------------------------------------------
   {
     id: 'sub-1', region: 'sub', name: 'Backwash',
     blurb: 'Take away nothing, one, or two.',
-    spec: { op: 'sub', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } },
-    baseTarget: 2500, untimedFirst: false,
+    spec: { op: 'sub', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } }, untimedFirst: false,
   },
   {
     id: 'sub-2', region: 'sub', name: 'Half Back',
     blurb: 'Undo a double. If you know 7+7, you know 14-7.',
-    spec: { op: 'sub', pairs: { kind: 'doubles', max: 9 } },
-    baseTarget: 3000, untimedFirst: false,
+    spec: { op: 'sub', pairs: { kind: 'doubles', max: 9 } }, untimedFirst: false,
   },
   {
     id: 'sub-3', region: 'sub', name: 'Break Ten',
     blurb: 'Take ten apart, then step back down over it.',
-    spec: { op: 'sub', pairs: { kind: 'makeTen' } },
-    baseTarget: 3200, untimedFirst: false,
+    spec: { op: 'sub', pairs: { kind: 'makeTen' } }, untimedFirst: false,
   },
   {
     id: 'sub-4', region: 'sub', name: 'Close Call',
     blurb: 'The near-doubles, running backwards.',
-    spec: { op: 'sub', pairs: { kind: 'nearDoubles', max: 9 } },
-    baseTarget: 3500, untimedFirst: false,
+    spec: { op: 'sub', pairs: { kind: 'nearDoubles', max: 9 } }, untimedFirst: false,
   },
   {
     id: 'sub-boss', region: 'sub', name: 'Marsh Guardian',
     blurb: 'Every difference inside twenty. Beat it to open the Peaks.',
-    spec: { op: 'sub', pairs: { kind: 'allSums', maxSum: 18 } },
-    baseTarget: 5000, untimedFirst: false, boss: true,
+    spec: { op: 'sub', pairs: { kind: 'allSums', maxSum: 18 } }, untimedFirst: false, boss: true,
   },
 
   // --- Multiplex Peaks ------------------------------------------------------
   {
     id: 'mul-1', region: 'mul', name: 'Skip Step',
     blurb: 'Twos, fives and tens. Count the steps, then stop counting.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } },
-    baseTarget: 2000, untimedFirst: true,
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } }, untimedFirst: true,
   },
   {
     id: 'mul-2', region: 'mul', name: 'Square Up',
     blurb: 'Threes, fours, and the squares.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [3, 4], max: 100 } },
-    baseTarget: 2400, untimedFirst: true,
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [3, 4], max: 100 } }, untimedFirst: true,
   },
   {
     id: 'mul-3', region: 'mul', name: 'Perfect Corners',
     blurb: 'Every square from 1x1 to 10x10.',
-    spec: { op: 'mul', pairs: { kind: 'squares', max: 10 } },
-    baseTarget: 2600, untimedFirst: true,
+    spec: { op: 'mul', pairs: { kind: 'squares', max: 10 } }, untimedFirst: true,
   },
   {
     id: 'mul-boss', region: 'mul', name: 'Peak Guardian',
     blurb: 'Sixes through nines, the hard ridge. Beat it to open the Depths.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } },
-    baseTarget: 3600, untimedFirst: true, boss: true,
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } }, untimedFirst: true, boss: true,
   },
 
   // --- Divide Depths --------------------------------------------------------
   {
     id: 'div-1', region: 'div', name: 'Split Step',
     blurb: 'Share into twos, fives and tens.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } },
-    baseTarget: 2000, untimedFirst: true,
+    spec: { op: 'div', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } }, untimedFirst: true,
   },
   {
     id: 'div-2', region: 'div', name: 'Fair Shares',
     blurb: 'Threes and fours, split clean.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [3, 4], max: 100 } },
-    baseTarget: 2400, untimedFirst: true,
+    spec: { op: 'div', pairs: { kind: 'factor', values: [3, 4], max: 100 } }, untimedFirst: true,
   },
   {
     id: 'div-boss', region: 'div', name: 'Depth Guardian',
     blurb: 'Sixes through nines. The last one.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } },
-    baseTarget: 3400, untimedFirst: true, boss: true,
+    spec: { op: 'div', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } }, untimedFirst: true, boss: true,
   },
 ]
 

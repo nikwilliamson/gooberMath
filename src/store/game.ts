@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { factsFor } from '@/engine/facts'
-import { QUESTS, REGIONS, questById, questsIn, type QuestDef } from '@/engine/quests'
-import { clearTarget } from '@/engine/scoring'
+import { DEFAULT_CLEAR_RATIO, QUESTS, REGIONS, questById, questsIn, type QuestDef } from '@/engine/quests'
+import { learnedCount, learnedRatio } from '@/engine/mastery'
 import {
   buildCtx, runReducer, startRun, summarize,
   type RunCtx, type RunState, type RunSummary,
@@ -38,15 +38,26 @@ export function questStatus(save: SaveData, quest: QuestDef): QuestStatus {
   return questProgress(save, siblings[idx - 1].id).cleared ? 'open' : 'locked'
 }
 
-/** Clear target: the quest floor, raised toward what he has already proved. */
-export function targetFor(save: SaveData, quest: QuestDef): number {
-  const siblings = questsIn(quest.region)
-  const idx = siblings.findIndex((q) => q.id === quest.id)
-  const prevBest = idx > 0 ? questProgress(save, siblings[idx - 1].id).bestSniper : 0
-  return clearTarget(quest.baseTarget, prevBest)
-}
-
+/**
+ * How close a quest is to clearing: the share of its own facts he has learned.
+ * Nothing here depends on any other quest, so a big score can never raise a
+ * later bar and a weak run can never lower one.
+ */
 export const factKeysOf = (quest: QuestDef) => factsFor(quest.spec).map((f) => f.key)
+
+export function questMastery(save: SaveData, quest: QuestDef) {
+  const keys = factKeysOf(quest)
+  const need = quest.clearRatio ?? DEFAULT_CLEAR_RATIO
+  const learned = learnedCount(save.stats, keys)
+  return {
+    learned,
+    total: keys.length,
+    need,
+    required: Math.ceil(keys.length * need),
+    ratio: learnedRatio(save.stats, keys),
+    met: learnedRatio(save.stats, keys) >= need,
+  }
+}
 
 export function regionFactKeys(region: Op): string[] {
   const keys = new Set<string>()
@@ -187,7 +198,6 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
   const { save } = get()
   const quest = questById(state.questId)!
   const prog = questProgress(save, quest.id)
-  const target = targetFor(save, quest)
 
   const bestSniper = state.mode === 'sniper' && !state.untimed
     ? Math.max(prog.bestSniper, summary.score) : prog.bestSniper
@@ -196,10 +206,15 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
 
   const prevBest = state.mode === 'blitz' ? prog.bestBlitz : prog.bestSniper
   const newBest = !state.untimed && summary.score > prevBest && prevBest > 0
-  // Sniper is the gate: its score already folds accuracy in, so it clears quests.
-  const clearedNow = !prog.cleared && state.mode === 'sniper' && !state.untimed && summary.score >= target
 
   const stats: StatsMap = { ...save.stats, ...state.stats }
+
+  // Clearing is mastery of this quest's own facts, measured after the run.
+  // A run still has to happen: mastery carried in from overlapping fact
+  // families should not clear a quest he has never actually played.
+  const played = prog.plays > 0 || !state.untimed
+  const clearedNow =
+    !prog.cleared && played && questMastery({ ...save, stats }, quest).met
 
   let xpGained = 20 + summary.correct * 2
   if (clearedNow) xpGained += 50
@@ -233,7 +248,10 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
         bestBlitz,
         plays: prog.plays + 1,
         perfect: prog.perfect || (summary.perfect && summary.correct > 5),
-        blitzCleared: prog.blitzCleared || (state.mode === 'blitz' && summary.score >= target),
+        // A clean Blitz run on the quest, rather than a score threshold.
+        blitzCleared:
+          prog.blitzCleared ||
+          (state.mode === 'blitz' && summary.correct >= 10 && summary.accuracy >= 0.9),
       },
     },
   }

@@ -192,6 +192,49 @@ export function CorrectSticker({
   )
 }
 
+/** Reads left-to-right, top-to-bottom, matching incorrectSprite. */
+export const MISS_STICKERS = [
+  'Wrong!', 'Nope!', 'Nah!', 'Not quite!', 'Invalid!',
+  'Try again!', 'Close but no!', 'Not it!', 'Oops!', 'No dice!',
+  'Nice try!', 'No thanks!', 'Wrong answer!', 'Better luck next time!', 'Miss!',
+  'Not correct!', "That's a no!", 'Nope!', 'Incorrect!', 'Wrong again!',
+]
+
+/**
+ * The gentler half of the sheet, used by default. A seven-year-old who is
+ * already slow at these facts does not need "WRONG AGAIN!" thrown at him; the
+ * harsher frames stay available but are not what he sees.
+ */
+export const KIND_MISS_FRAMES = [3, 5, 6, 8, 10, 13, 2]
+
+export function MissSticker({
+  index,
+  kindOnly = true,
+  width = 'auto',
+  className,
+  style,
+}: {
+  index: number
+  /** false uses all twenty frames, including the blunt ones. */
+  kindOnly?: boolean
+  width?: number | string
+  className?: string
+  style?: CSSProperties
+}) {
+  const i = Math.abs(Math.floor(index))
+  const frame = kindOnly ? KIND_MISS_FRAMES[i % KIND_MISS_FRAMES.length] : i % 20
+  return (
+    <Sprite
+      sheet="incorrectSprite"
+      index={frame}
+      width={width}
+      className={className}
+      style={style}
+      title={MISS_STICKERS[frame]}
+    />
+  )
+}
+
 export const ART = {
   logo: `${IMG}/logo.webp`,
   world: `${IMG}/world.webp`,

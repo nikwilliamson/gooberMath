@@ -5,8 +5,8 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { RoughText, SplatBurst, SplatField } from '../art'
-import { CorrectSticker, STICKER_ANCHORS } from '../sprites'
+import { SplatBurst, SplatField } from '../art'
+import { CorrectSticker, MissSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
@@ -30,6 +30,7 @@ export function RunScreen() {
   const lastMult = useRef(1)
   const [comboStep, setComboStep] = useState(0)
   const [lastCorrectAt, setLastCorrectAt] = useState(0)
+  const [lastMissAt, setLastMissAt] = useState(0)
 
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
@@ -77,6 +78,7 @@ export function RunScreen() {
       }
       lastMult.current = mult
     } else {
+      setLastMissAt(run.answers.length)
       audio.miss()
       lastMult.current = 1
       if (settings.shake) {
@@ -108,7 +110,9 @@ export function RunScreen() {
   const lastPoints = run.answers[lastCorrectAt - 1]?.points ?? 0
   // Rotate through the 20 sticker phrases, offset per run so it is not always
   // the same opener.
-  const stickerIdx = lastCorrectAt + (run.startedAt | 0)
+  const stickerAt = Math.max(lastCorrectAt, lastMissAt)
+  const stickerMissed = lastMissAt > lastCorrectAt
+  const stickerIdx = stickerAt + (run.startedAt | 0)
   const anchor = STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length]
   const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
   const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
@@ -153,17 +157,23 @@ export function RunScreen() {
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
           <div className="board__zone">
-            {lastCorrectAt > 0 && anchor.zone === 'top' && (
+            {stickerAt > 0 && anchor.zone === 'top' && (
               <div
-                key={lastCorrectAt}
+                key={stickerAt}
                 className="sticker"
                 style={{ ['--rot' as string]: `${anchor.rot}deg` }}
                 data-side={anchor.side}
                 data-zone={anchor.zone}
                 aria-hidden
               >
-                <CorrectSticker index={stickerIdx} className="sticker__img" />
-                <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+                {stickerMissed ? (
+                  <MissSticker index={stickerIdx} className="sticker__img" />
+                ) : (
+                  <>
+                    <CorrectSticker index={stickerIdx} className="sticker__img" />
+                    <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -188,39 +198,32 @@ export function RunScreen() {
           </div>
 
           <div className="board__zone">
-            {lastCorrectAt > 0 && anchor.zone === 'bottom' && (
+            {stickerAt > 0 && anchor.zone === 'bottom' && (
               <div
-                key={lastCorrectAt}
+                key={stickerAt}
                 className="sticker"
                 style={{ ['--rot' as string]: `${anchor.rot}deg` }}
                 data-side={anchor.side}
                 data-zone={anchor.zone}
                 aria-hidden
               >
-                <CorrectSticker index={stickerIdx} className="sticker__img" />
-                <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+                {stickerMissed ? (
+                  <MissSticker index={stickerIdx} className="sticker__img" />
+                ) : (
+                  <>
+                    <CorrectSticker index={stickerIdx} className="sticker__img" />
+                    <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+                  </>
+                )}
               </div>
             )}
           </div>
 
           {showWrong && (
-            <div className="fb">
-              {settings.particles && (
-                <SplatBurst
-                  className="fb__splat fb-splat"
-                  color="#ff4d5e"
-                  color2="#7a1020"
-                  seed={run.answers.length + 5}
-                />
-              )}
-              <RoughText
-                text="Oops"
-                size={130}
-                color="#ff4d5e"
-                seed={run.answers.length + 2}
-                className="fb__word fb-word"
-              />
-              <div className="fb__answer fb-points">
+            <div className="fb fb--answer">
+              {/* The sticker says he missed; this says what the answer was,
+                  which is the part that actually teaches. */}
+              <div className="fb__answer fb-word">
                 <span className="fb__answersub">The answer was</span>
                 <span className="fb__answerv tnum">{fact.answer}</span>
               </div>

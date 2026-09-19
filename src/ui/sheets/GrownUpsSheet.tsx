@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { statFor, tierCounts, tierOf } from '@/engine/mastery'
 import { QUESTS, REGIONS } from '@/engine/quests'
 import { exportSave, importSave } from '@/store/persist'
-import { factKeysOf, questProgress, regionFactKeys, regionOpen, targetFor, useGame } from '@/store/game'
+import { factKeysOf, questMastery, questProgress, regionFactKeys, regionOpen, useGame } from '@/store/game'
 import type { Op } from '@/engine/types'
 
 export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
@@ -24,7 +24,7 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
         const median = latencies.length
           ? [...latencies].sort((a, b) => a - b)[Math.floor(latencies.length / 2)]
           : 0
-        return { q, counts, prog, median, target: targetFor(save, q), total: keys.length }
+        return { q, counts, prog, median, mastery: questMastery(save, q), total: keys.length }
       }),
     [save],
   )

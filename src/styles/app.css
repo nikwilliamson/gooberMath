@@ -355,6 +355,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 
 /* --- feedback ------------------------------------------------------------- */
 .fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
+/* The answer reveal sits over the problem deliberately: it is the one moment
+   that has to be read. The miss sticker stays out in a zone like the rest. */
+.fb--answer { pointer-events: none; }
 .fb__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(132%, 660px); opacity: 0.82; z-index: 0; }
 .fb__word { position: relative; z-index: 1; width: min(84%, 460px); }
 /* A sticker beside the problem, not over it. It animates itself out and ends

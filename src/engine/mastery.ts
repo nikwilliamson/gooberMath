@@ -46,6 +46,23 @@ export function tierCounts(stats: StatsMap, keys: FactKey[]): Record<Tier, numbe
   return out
 }
 
+/** Share of a fact list at 'known' or better. This is what clears a quest. */
+export function learnedRatio(stats: StatsMap, keys: FactKey[]): number {
+  if (keys.length === 0) return 1
+  let learned = 0
+  for (const k of keys) {
+    const t = tierOf(statFor(stats, k))
+    if (t === 'known' || t === 'automatic') learned++
+  }
+  return learned / keys.length
+}
+
+export const learnedCount = (stats: StatsMap, keys: FactKey[]) =>
+  keys.filter((k) => {
+    const t = tierOf(statFor(stats, k))
+    return t === 'known' || t === 'automatic'
+  }).length
+
 /** 0..1 across a fact list, weighting automatic highest. Drives the region rings. */
 export function masteryOf(stats: StatsMap, keys: FactKey[]): number {
   if (keys.length === 0) return 0
