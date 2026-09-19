@@ -53,11 +53,15 @@ export const REGIONS: RegionDef[] = [
  * screen without touching code.
  */
 export const QUESTS: QuestDef[] = [
+  // Zero and one never appear in a multiply or divide quest, and no quest
+  // opens on a zero fact: they are rules, not facts, and the first problem a
+  // region ever shows him should be one worth having.
+
   // --- Plusfall Coast -------------------------------------------------------
   {
     id: 'add-1', region: 'add', name: 'First Splash',
-    blurb: 'Adding nothing, one, or two. Warm up the ink.',
-    spec: { op: 'add', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } }, untimedFirst: false,
+    blurb: 'Count on one or two. Warm up the ink.',
+    spec: { op: 'add', pairs: { kind: 'addend', values: [1, 2], maxSum: 12, min: 1 } }, untimedFirst: false,
   },
   {
     id: 'add-2', region: 'add', name: 'Double Trouble',
@@ -71,8 +75,8 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'add-4', region: 'add', name: 'Near Miss',
-    blurb: 'Almost-doubles, plus eight and plus nine.',
-    spec: { op: 'add', pairs: { kind: 'nearDoubles', max: 9 } }, untimedFirst: false,
+    blurb: 'Almost-doubles: one or two more than a double you own.',
+    spec: { op: 'add', pairs: { kind: 'nearDoubles', max: 9, span: 2 } }, untimedFirst: false,
   },
   {
     id: 'add-5', region: 'add', name: 'Plus Nine Gang',
@@ -81,15 +85,17 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'add-boss', region: 'add', name: 'Coast Guardian',
-    blurb: 'Every sum to twenty, all at once. Beat it to open the Marsh.',
-    spec: { op: 'add', pairs: { kind: 'allSums', maxSum: 18 } }, untimedFirst: false, boss: true,
+    blurb: 'Every sum to eighteen, all at once. Beat it to own the Coast.',
+    spec: { op: 'add', pairs: { kind: 'allSums', maxSum: 18, min: 1 } }, untimedFirst: false, boss: true,
   },
 
   // --- Minus Marsh ----------------------------------------------------------
+  // Each quest mirrors its Coast twin, and takes only the side of the family
+  // its strategy teaches ("take away 2" is 7 − 2, not 7 − 5).
   {
     id: 'sub-1', region: 'sub', name: 'Backwash',
-    blurb: 'Take away nothing, one, or two.',
-    spec: { op: 'sub', pairs: { kind: 'addend', values: [0, 1, 2], maxSum: 12 } }, untimedFirst: false,
+    blurb: 'Take away one or two. Count back.',
+    spec: { op: 'sub', pairs: { kind: 'addend', values: [1, 2], maxSum: 12, min: 1 }, derive: 'value' }, untimedFirst: false,
   },
   {
     id: 'sub-2', region: 'sub', name: 'Half Back',
@@ -104,51 +110,59 @@ export const QUESTS: QuestDef[] = [
   {
     id: 'sub-4', region: 'sub', name: 'Close Call',
     blurb: 'The near-doubles, running backwards.',
-    spec: { op: 'sub', pairs: { kind: 'nearDoubles', max: 9 } }, untimedFirst: false,
+    spec: { op: 'sub', pairs: { kind: 'nearDoubles', max: 9, span: 2 } }, untimedFirst: false,
+  },
+  {
+    id: 'sub-5', region: 'sub', name: 'Nine Back',
+    blurb: 'Take away eight or nine. Take ten, then give one back.',
+    spec: { op: 'sub', pairs: { kind: 'addend', values: [8, 9], maxSum: 18, min: 1 }, derive: 'value' }, untimedFirst: false,
   },
   {
     id: 'sub-boss', region: 'sub', name: 'Marsh Guardian',
-    blurb: 'Every difference inside twenty. Beat it to open the Peaks.',
-    spec: { op: 'sub', pairs: { kind: 'allSums', maxSum: 18 } }, untimedFirst: false, boss: true,
+    blurb: 'Every difference inside eighteen. Beat it to own the Marsh.',
+    spec: { op: 'sub', pairs: { kind: 'allSums', maxSum: 18, min: 1 } }, untimedFirst: false, boss: true,
   },
 
   // --- Multiplex Peaks ------------------------------------------------------
   {
     id: 'mul-1', region: 'mul', name: 'Skip Step',
     blurb: 'Twos, fives and tens. Count the steps, then stop counting.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } }, untimedFirst: true,
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [2, 5, 10], max: 100, min: 2 } }, untimedFirst: true,
   },
   {
     id: 'mul-2', region: 'mul', name: 'Square Up',
-    blurb: 'Threes, fours, and the squares.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [3, 4], max: 100 } }, untimedFirst: true,
+    blurb: 'Threes and fours. Skip count, then stop counting.',
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [3, 4], max: 100, min: 2 } }, untimedFirst: true,
   },
   {
     id: 'mul-3', region: 'mul', name: 'Perfect Corners',
-    blurb: 'Every square from 1x1 to 10x10.',
-    spec: { op: 'mul', pairs: { kind: 'squares', max: 10 } }, untimedFirst: true,
+    blurb: 'Every square from 2x2 to 10x10.',
+    spec: { op: 'mul', pairs: { kind: 'squares', max: 10, min: 2 } }, untimedFirst: true,
   },
   {
+    // With 2s, 5s, 10s, 3s, 4s and the squares owned, only six facts are left:
+    // 6x7, 6x8, 6x9, 7x8, 7x9, 8x9. This is those six, wrapped in review.
     id: 'mul-boss', region: 'mul', name: 'Peak Guardian',
-    blurb: 'Sixes through nines, the hard ridge. Beat it to open the Depths.',
-    spec: { op: 'mul', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } }, untimedFirst: true, boss: true,
+    blurb: 'Sixes through nines. Only six facts up here you have never met.',
+    spec: { op: 'mul', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100, min: 2 } }, untimedFirst: true, boss: true,
   },
 
   // --- Divide Depths --------------------------------------------------------
+  // Divisor decides the quest, so each set is a clean "share into N".
   {
     id: 'div-1', region: 'div', name: 'Split Step',
     blurb: 'Share into twos, fives and tens.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [2, 5, 10], max: 100 } }, untimedFirst: true,
+    spec: { op: 'div', pairs: { kind: 'factor', values: [2, 5, 10], max: 100, min: 2 }, derive: 'value' }, untimedFirst: true,
   },
   {
     id: 'div-2', region: 'div', name: 'Fair Shares',
     blurb: 'Threes and fours, split clean.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [3, 4], max: 100 } }, untimedFirst: true,
+    spec: { op: 'div', pairs: { kind: 'factor', values: [3, 4], max: 100, min: 2 }, derive: 'value' }, untimedFirst: true,
   },
   {
     id: 'div-boss', region: 'div', name: 'Depth Guardian',
-    blurb: 'Sixes through nines. The last one.',
-    spec: { op: 'div', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100 } }, untimedFirst: true, boss: true,
+    blurb: 'Share into sixes through nines. The last one.',
+    spec: { op: 'div', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100, min: 2 }, derive: 'value' }, untimedFirst: true, boss: true,
   },
 ]
 

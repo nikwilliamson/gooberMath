@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { factsFor, formatFact, pairsFor } from './facts'
 import { emptyStat, learnedRatio, recordAnswer, statFor, tierOf } from './mastery'
-import { DEFAULT_CLEAR_RATIO, QUESTS, questById } from './quests'
+import { DEFAULT_CLEAR_RATIO, QUESTS, questById, questsIn } from './quests'
 import { IDLE_MS, runReducer, startRun, summarize } from './run'
 import { UNLOCK_SCORE, comboMult, scoreAnswer, speedBonus } from './scoring'
-import { RETRY_MAX, createSelector, recordSelection, selectNext } from './selector'
+import { INTRO_GAP, INTRO_SCHEDULE, MAX_LEARNING, RETRY_MAX, SEED_POOL, createSelector, recordSelection, selectNext } from './selector'
 import type { FactKey, StatsMap } from './types'
 
 describe('facts', () => {
@@ -64,6 +64,63 @@ describe('facts', () => {
     expect(keys).toContain('add:7+10')
     expect(keys).not.toContain('add:0+10')
     expect(keys).toHaveLength(14)
+  })
+
+  it('keeps zero and one out of multiply and divide, and off every front door', () => {
+    for (const q of QUESTS) {
+      if (q.region === 'mul' || q.region === 'div') {
+        for (const f of factsFor(q.spec)) {
+          expect(f.a, `${q.id} ${f.key}`).toBeGreaterThanOrEqual(2)
+          expect(f.b, `${q.id} ${f.key}`).toBeGreaterThanOrEqual(2)
+        }
+      }
+    }
+    // The first fact of each region's first quest is the first problem that
+    // region can ever show him. It must be worth having.
+    for (const r of ['add', 'sub', 'mul', 'div'] as const) {
+      const [first] = factsFor(questsIn(r)[0].spec)
+      expect(first.a, r).toBeGreaterThanOrEqual(1)
+      expect(first.b, r).toBeGreaterThanOrEqual(1)
+      expect(first.answer, r).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('enumerates in teaching order, not canonical order', () => {
+    const twos = factsFor({ op: 'mul', pairs: { kind: 'factor', values: [2, 5], max: 100, min: 2 } })
+    expect(twos.slice(0, 3).map(formatFact)).toEqual(['2 × 2', '2 × 3', '2 × 4'])
+    // Fives start once the twos are done, and 2 × 5 is not repeated.
+    expect(twos.map((f) => f.key).filter((k) => k === 'mul:2x5')).toHaveLength(1)
+    const [firstAdd] = factsFor(questById('add-1')!.spec)
+    expect(formatFact(firstAdd)).toBe('1 + 1')
+  })
+
+  it("derives only the strategy's side of a family when asked", () => {
+    for (const f of factsFor(questById('sub-1')!.spec)) expect([1, 2], f.key).toContain(f.b)
+    for (const f of factsFor(questById('sub-5')!.spec)) expect([8, 9], f.key).toContain(f.b)
+    for (const f of factsFor(questById('div-1')!.spec)) expect([2, 5, 10], f.key).toContain(f.b)
+    // 10 ÷ 2 and 10 ÷ 5 both survive even though they share a pair.
+    const keys = factsFor(questById('div-1')!.spec).map((f) => f.key)
+    expect(keys).toContain('div:10/2')
+    expect(keys).toContain('div:10/5')
+  })
+
+  it('mirrors the Coast in the Marsh, quest for quest', () => {
+    expect(questsIn('sub')).toHaveLength(questsIn('add').length)
+  })
+
+  it('bosses are review, not a pile of new facts', () => {
+    const unseenInBoss = (region: 'add' | 'sub' | 'mul') => {
+      const pre = new Set(questsIn(region).filter((q) => !q.boss).flatMap((q) => factsFor(q.spec).map((f) => f.key)))
+      const boss = questsIn(region).find((q) => q.boss)!
+      const facts = factsFor(boss.spec)
+      return facts.filter((f) => !pre.has(f.key)).length / facts.length
+    }
+    expect(unseenInBoss('add')).toBeLessThan(0.1)
+    expect(unseenInBoss('sub')).toBeLessThan(0.25)
+    // The Peaks boss is exactly the six facts no strategy covers, in review.
+    const pre = new Set(questsIn('mul').filter((q) => !q.boss).flatMap((q) => factsFor(q.spec).map((f) => f.key)))
+    const fresh = factsFor(questById('mul-boss')!.spec).filter((f) => !pre.has(f.key)).map((f) => f.key)
+    expect(fresh).toEqual(['mul:6x7', 'mul:6x8', 'mul:6x9', 'mul:7x8', 'mul:7x9', 'mul:8x9'])
   })
 
   it('formats with real math symbols', () => {
@@ -128,22 +185,95 @@ describe('selector', () => {
     expect(sawAt).toBeLessThanOrEqual(RETRY_MAX)
   })
 
-  it('introduces new facts one at a time on gated quests', () => {
+  /** Perfect player: answers every problem correctly in `ms`. */
+  const play = (questId: string, n: number, stats: StatsMap = {}, ms = 2000, seed = 3) => {
+    const q = questById(questId)!
+    const qFacts = factsFor(q.spec)
+    let sel = createSelector(qFacts, stats, q.untimedFirst, seed)
+    const served: FactKey[] = []
+    for (let i = 0; i < n; i++) {
+      const r = selectNext(sel, qFacts, stats)
+      sel = r.sel
+      served.push(r.key)
+      stats[r.key] = recordAnswer(statFor(stats, r.key), true, ms, i)
+      sel = recordSelection(sel, r.key, true)
+    }
+    return { served, sel }
+  }
+
+  const mastered = (questIds: string[], ms = 2000) => {
+    const stats: StatsMap = {}
+    for (const id of questIds) {
+      for (const f of factsFor(questById(id)!.spec)) {
+        let st = emptyStat(f.key)
+        for (let i = 0; i < 4; i++) st = recordAnswer(st, true, ms, i)
+        stats[f.key] = st
+      }
+    }
+    return stats
+  }
+
+  it('introduces one new fact per INTRO_GAP on gated quests, and stops at MAX_LEARNING', () => {
     const mul = questById('mul-1')!
     const mulFacts = factsFor(mul.spec)
     let sel = createSelector(mulFacts, {}, true, 3)
-    expect(sel.active.length).toBeLessThanOrEqual(4)
+    expect(sel.active.length).toBe(SEED_POOL)
 
-    // Master everything currently active; exactly one new fact should join.
-    const stats: StatsMap = {}
+    // Master the seeds but never answer anything introduced after them.
+    const stats = mastered([])
     for (const k of sel.active) {
       let s = emptyStat(k)
       for (let i = 0; i < 4; i++) s = recordAnswer(s, true, 800, i)
       stats[k] = s
     }
-    const before = sel.active.length
-    sel = selectNext(sel, mulFacts, stats).sel
-    expect(sel.active.length).toBe(before + 1)
+    const sizes: number[] = []
+    for (let i = 0; i < INTRO_GAP * 4; i++) {
+      sel = selectNext(sel, mulFacts, stats).sel
+      sizes.push(sel.active.length)
+    }
+    expect(sizes[INTRO_GAP - 1]).toBe(SEED_POOL)
+    expect(sizes[INTRO_GAP]).toBe(SEED_POOL + 1)
+    expect(sizes[INTRO_GAP * 2]).toBe(SEED_POOL + 2)
+    // Two unlearned facts in the pool: no third.
+    expect(sizes[INTRO_GAP * 4 - 1]).toBe(SEED_POOL + MAX_LEARNING)
+  })
+
+  it('rehearses a new fact on the expanding schedule before it fades into the pool', () => {
+    const { served } = play('mul-1', 12)
+    // A warm-up is 12 problems: exactly the seeds, in teaching order, each
+    // seen at least INTRO_SCHEDULE.length times.
+    const seeds = factsFor(questById('mul-1')!.spec).slice(0, SEED_POOL).map((f) => f.key)
+    expect([...new Set(served)].sort()).toEqual([...seeds].sort())
+    for (const k of seeds) {
+      expect(served.filter((s) => s === k).length, k).toBeGreaterThanOrEqual(INTRO_SCHEDULE.length)
+    }
+    expect(served[0]).toBe('mul:2x2')
+  })
+
+  it('surfaces a fresh gated quest within a handful of runs, not thirty', () => {
+    // ~20 problems is one 60s run. The old selector had 13 of 30 facts active
+    // after 200 perfect answers.
+    const { sel } = play('mul-1', 60)
+    expect(sel.active.length).toBeGreaterThanOrEqual(12)
+    const all = play('mul-1', 200)
+    expect(all.sel.active.length).toBe(factsFor(questById('mul-1')!.spec).length)
+  })
+
+  it('leads a boss with its own facts even when review fills the seed pool', () => {
+    const stats = mastered(['mul-1', 'mul-2', 'mul-3'])
+    const { served } = play('mul-boss', 30, stats)
+    expect(served[0]).toBe('mul:6x7')
+    const hard = ['mul:6x7', 'mul:6x8', 'mul:6x9', 'mul:7x8', 'mul:7x9', 'mul:8x9']
+    expect(hard.filter((k) => served.includes(k)).length).toBe(hard.length)
+  })
+
+  it('still seeds new facts when every review fact is slow', () => {
+    // Every prior fact over the 3s bar: 'learning', which used to block all
+    // introductions and made the boss a pure review quest.
+    const stats = mastered(['mul-1', 'mul-2', 'mul-3'], 3200)
+    const { served } = play('mul-boss', 10, stats)
+    expect(served).toContain('mul:6x7')
+    expect(served).toContain('mul:6x8')
   })
 
   it('keeps a simulated player inside the flow band', () => {

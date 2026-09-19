@@ -41,13 +41,28 @@ pnpm deploy:check   # what CI runs: typecheck + tests + build
 ## Quests
 
 Everything is a quest. Four regions (Add, Subtract, Multiply, Divide), each a
-ladder of quests ending in a boss that opens the next region. A quest clears when
-his Sniper score passes its target; the target is the quest's floor raised toward
-80% of his best on the previous quest, so difficulty tracks him rather than a table.
+ladder of quests ending in a boss. Quests within a region unlock in sequence; all
+four regions are open from the start. A quest clears when a Sniper run reaches a
+fixed score (`UNLOCK_SCORE`); mastery of its facts is tracked separately and gates
+nothing.
+
+The ladder is ordered by strategy, the way fluency curricula sequence facts, and
+Subtract mirrors Add quest for quest (count on / count back, doubles / halves,
+make ten / break ten, near doubles, plus nine / nine back, boss). Two rules shape
+what a quest contains:
+
+- Zero and one never appear in a multiply or divide quest, and no quest opens on a
+  zero fact. They are rules, not facts, and the first problem a region shows him
+  should be one worth having. The Peaks boss is exactly the six products no
+  strategy covers (6×7, 6×8, 6×9, 7×8, 7×9, 8×9), wrapped in review.
+- A subtraction or division quest can take just the side of a fact family its
+  strategy teaches (`derive: 'value'`): "take away 2" is 7 − 2, not 7 − 5, and
+  "share into fives" is 30 ÷ 5, not 30 ÷ 6.
 
 Quest definitions, fact sets and targets are all data in `src/engine/quests.ts` —
-retune them without touching logic. Regions can also be opened by hand from the
-Grown-ups sheet.
+retune them without touching logic. Facts come out of a spec in teaching order
+(2×2, 2×3, … then the fives), and on a gated quest that is the order they are
+introduced.
 
 ## How it picks problems
 
@@ -58,13 +73,20 @@ Grown-ups sheet.
 - A missed fact is forced back within 3–5 problems, so the *correct* answer is what
   gets rehearsed. At most two such retries are pending at once, so a bad patch
   cannot spiral into an all-hard run.
-- New facts join one at a time, and only once nothing active is still being learned
-  (incremental rehearsal). This applies to multiply/divide; add/subtract start with
-  the whole set because he already knows those facts, just slowly.
+- On gated quests (multiply/divide) new facts join one at a time, in teaching
+  order, at most one per `INTRO_GAP` problems and never while `MAX_LEARNING`
+  active facts are still being learned. A new fact is rehearsed on an expanding
+  schedule (`INTRO_SCHEDULE`: shown, again after one problem, again after two
+  more) before it fades into the weighted pool — incremental rehearsal as taught,
+  rather than the new fact being the rarest thing on screen. A gated quest always
+  seeds at least `MIN_FRESH` never-seen facts, so a boss whose review facts fill
+  the pool still leads with its own. Add/subtract start with the whole set because
+  he already knows those facts, just slowly.
 - A fact never repeats back to back.
 
-`engine.test.ts` asserts these as invariants, including a simulated player whose
-hit rate must land between 85% and 98%.
+`engine.test.ts` asserts these as invariants: the flow band for a simulated player
+(85–98% hit rate), the introduction pace, the rehearsal schedule, and that the
+Peaks boss puts 6×7 on screen first.
 
 ## Mastery model
 
