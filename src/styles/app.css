@@ -310,7 +310,22 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 }
 .combo__mult[data-on] { opacity: 1; }
 
-.board { display: grid; place-items: center; align-content: center; min-height: 0; position: relative; }
+/* Three rows: a zone, the problem, a zone. Stickers live in the zones, so the
+   equation can never be covered regardless of viewport height. */
+.board {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  align-content: stretch;
+  min-height: 0;
+  position: relative;
+}
+.board__zone {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
 .board > .problemcard { position: relative; z-index: 2; }
 
 .problemcard {
@@ -347,14 +362,23 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .sticker {
   position: absolute;
   z-index: 4;
-  width: clamp(120px, 34%, 230px);
-  pointer-events: none;
-  display: grid;
-  justify-items: center;
+  /* Sized from the zone's height, so it cannot grow past its lane. */
+  height: min(78%, 124px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 2px;
+  pointer-events: none;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
   animation: stickerPop 1150ms var(--ease-out) both;
 }
+.sticker[data-side='left'] { left: clamp(6px, 4%, 34px); }
+.sticker[data-side='right'] { right: clamp(6px, 4%, 34px); }
+/* Anchored to the edge furthest from the problem, and scaled from that edge, so
+   the pop's overshoot expands away from the equation rather than onto it. */
+.sticker[data-zone='top'] { top: 0; transform-origin: center top; --drift: -16px; }
+.sticker[data-zone='bottom'] { bottom: 0; transform-origin: center bottom; --drift: 16px; }
+.sticker__img { flex: 1 1 auto; min-height: 0; height: 100%; }
 .sticker__points {
   font-family: var(--font-display);
   font-size: clamp(0.8rem, 2.4vmin, 1.15rem);
@@ -367,7 +391,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   16%  { opacity: 1; transform: scale(1.06) rotate(var(--rot, 0deg)); }
   26%  { transform: scale(1) rotate(var(--rot, 0deg)); }
   68%  { opacity: 1; transform: scale(1) rotate(var(--rot, 0deg)); }
-  100% { opacity: 0; transform: scale(0.94) translateY(-14px) rotate(var(--rot, 0deg)); }
+  100% { opacity: 0; transform: translateY(var(--drift, -16px)) scale(0.94) rotate(var(--rot, 0deg)); }
 }
 .fb__points {
   position: relative; z-index: 1;

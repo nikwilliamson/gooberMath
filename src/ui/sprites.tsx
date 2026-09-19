@@ -157,22 +157,20 @@ export const STICKERS = [
 ]
 
 /**
- * Six anchors ringing the problem card. The sticker is a reward for the answer,
- * so it lands beside the equation rather than on top of it — covering the thing
- * he just read is what made the old full-screen version feel like an interruption.
+ * Where a sticker may land. Zones are real boxes above and below the problem
+ * card, so a sticker can never overlap the equation no matter how short the
+ * viewport gets — percentages alone could not guarantee that.
  */
 export const STICKER_ANCHORS = [
-  { top: '4%', left: '2%', rot: -7 },
-  { top: '6%', right: '2%', rot: 6 },
-  { bottom: '6%', left: '4%', rot: 5 },
-  { bottom: '4%', right: '3%', rot: -6 },
-  { top: '26%', right: '1%', rot: 8 },
-  { bottom: '24%', left: '1%', rot: -9 },
+  { zone: 'top', side: 'left', rot: -7 },
+  { zone: 'bottom', side: 'right', rot: 6 },
+  { zone: 'bottom', side: 'left', rot: 5 },
+  { zone: 'top', side: 'right', rot: -6 },
 ] as const
 
 export function CorrectSticker({
   index,
-  width = '100%',
+  width = 'auto',
   className,
   style,
 }: {

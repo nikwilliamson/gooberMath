@@ -152,6 +152,22 @@ export function RunScreen() {
         <div className="board">
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
+          <div className="board__zone">
+            {lastCorrectAt > 0 && anchor.zone === 'top' && (
+              <div
+                key={lastCorrectAt}
+                className="sticker"
+                style={{ ['--rot' as string]: `${anchor.rot}deg` }}
+                data-side={anchor.side}
+                data-zone={anchor.zone}
+                aria-hidden
+              >
+                <CorrectSticker index={stickerIdx} className="sticker__img" />
+                <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+
           <div className={`panel problemcard${showWrong ? ' problemcard--dim' : ''}`}>
             <span key={`${run.currentKey}:${run.answers.length}`} className="problem tnum problem-in">
               {formatFact(fact)} ={' '}
@@ -171,17 +187,21 @@ export function RunScreen() {
             </span>
           </div>
 
-          {lastCorrectAt > 0 && (
-            <div
-              key={lastCorrectAt}
-              className="sticker"
-              style={{ ...anchor, ['--rot' as string]: `${anchor.rot}deg` }}
-              aria-hidden
-            >
-              <CorrectSticker index={stickerIdx} />
-              <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
-            </div>
-          )}
+          <div className="board__zone">
+            {lastCorrectAt > 0 && anchor.zone === 'bottom' && (
+              <div
+                key={lastCorrectAt}
+                className="sticker"
+                style={{ ['--rot' as string]: `${anchor.rot}deg` }}
+                data-side={anchor.side}
+                data-zone={anchor.zone}
+                aria-hidden
+              >
+                <CorrectSticker index={stickerIdx} className="sticker__img" />
+                <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
 
           {showWrong && (
             <div className="fb">
