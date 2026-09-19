@@ -34,6 +34,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
   const start = (questId: string, mode: Mode, untimed: boolean) => {
     audio.unlock()
+    audio.primeMusic()
     begin(questId, mode, untimed)
   }
 

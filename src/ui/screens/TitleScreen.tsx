@@ -7,6 +7,7 @@ export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void
 
   const play = () => {
     audio.unlock()
+    audio.primeMusic()
     audio.fanfare()
     go('map')
   }

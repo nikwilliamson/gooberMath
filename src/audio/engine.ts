@@ -23,6 +23,7 @@ class AudioEngine {
   private music: HTMLAudioElement | null = null
   /** Whether music *should* be playing, so a settings toggle can resume it. */
   private wantMusic = false
+  private primed = false
 
   intensity = 0
   sfxEnabled = true
@@ -33,7 +34,6 @@ class AudioEngine {
   unlock() {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume()
-      this.primeMusic()
       return
     }
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
@@ -51,8 +51,6 @@ class AudioEngine {
     this.sfxGain = ctx.createGain()
     this.sfxGain.gain.value = 0.85
     this.sfxGain.connect(this.master)
-
-    this.primeMusic()
 
     const len = Math.floor(ctx.sampleRate * 0.5)
     const buf = ctx.createBuffer(1, len, ctx.sampleRate)
@@ -175,18 +173,29 @@ class AudioEngine {
 
   /**
    * iOS will not start audio outside a user gesture, and the track starts after
-   * the countdown, not on the tap. Priming it during the gesture is what makes
-   * the later play() work.
+   * the countdown rather than on the tap, so it has to be unlocked during the
+   * gesture. Call this ONLY from a real tap that precedes a run — never from
+   * unlock(), which every sound effect calls: re-priming mid-run pauses the
+   * track that is already playing.
    */
-  private primeMusic() {
+  primeMusic() {
+    if (this.primed || this.wantMusic) return
     const el = this.ensureMusic()
     if (!el) return
     el.muted = true
     void el
       .play()
       .then(() => {
-        el.pause()
-        el.currentTime = 0
+        this.primed = true
+        // If a run started while this was in flight, leave it alone.
+        if (!this.wantMusic) {
+          el.pause()
+          try {
+            el.currentTime = 0
+          } catch {
+            /* ignore */
+          }
+        }
         el.muted = false
       })
       .catch(() => {
@@ -201,6 +210,8 @@ class AudioEngine {
     const el = this.ensureMusic()
     if (!el) return
     el.loop = loop
+    // A prime may have left it muted; startMusic is the authority.
+    el.muted = false
     el.volume = this.musicVolume()
     try {
       el.currentTime = 0
