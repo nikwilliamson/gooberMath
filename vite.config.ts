@@ -17,7 +17,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // A stale worker must never be able to pin a broken build on a device.
-      workbox: { cleanupOutdatedCaches: true, skipWaiting: true, clientsClaim: true },
+      workbox: {
+        // The default glob misses audio, which would leave offline runs silent.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,m4a}'],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'GooberMath',

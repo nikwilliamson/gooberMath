@@ -49,9 +49,9 @@ export const QUESTS: QuestDef[] = [
     baseTarget: 3000, untimedFirst: false,
   },
   {
-    id: 'add-3', region: 'add', name: 'Ten Pact',
-    blurb: 'Every pair that makes exactly ten.',
-    spec: { op: 'add', pairs: { kind: 'sumTo', sum: 10 } },
+    id: 'add-3', region: 'add', name: 'Make Ten',
+    blurb: 'Pairs that hit ten, then ten plus the rest. This is how you cross ten.',
+    spec: { op: 'add', pairs: { kind: 'makeTen' } },
     baseTarget: 3200, untimedFirst: false,
   },
   {
@@ -63,7 +63,7 @@ export const QUESTS: QuestDef[] = [
   {
     id: 'add-5', region: 'add', name: 'Plus Nine Gang',
     blurb: 'Add eight, add nine. Think ten, then step back.',
-    spec: { op: 'add', pairs: { kind: 'addend', values: [8, 9], maxSum: 18 } },
+    spec: { op: 'add', pairs: { kind: 'addend', values: [8, 9], maxSum: 18, min: 1 } },
     baseTarget: 3800, untimedFirst: false,
   },
   {
@@ -87,9 +87,9 @@ export const QUESTS: QuestDef[] = [
     baseTarget: 3000, untimedFirst: false,
   },
   {
-    id: 'sub-3', region: 'sub', name: 'Ten Breaker',
-    blurb: 'Break ten apart, every way there is.',
-    spec: { op: 'sub', pairs: { kind: 'sumTo', sum: 10 } },
+    id: 'sub-3', region: 'sub', name: 'Break Ten',
+    blurb: 'Take ten apart, then step back down over it.',
+    spec: { op: 'sub', pairs: { kind: 'makeTen' } },
     baseTarget: 3200, untimedFirst: false,
   },
   {

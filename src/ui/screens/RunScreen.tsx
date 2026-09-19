@@ -47,7 +47,7 @@ export function RunScreen() {
         setCount(0)
         arm(performance.now())
         setLive(true)
-        if (settings.music) audio.startMusic()
+        if (settings.music) audio.startMusic(run?.untimed ?? false)
       }
     }, 700)
     return () => window.clearInterval(id)

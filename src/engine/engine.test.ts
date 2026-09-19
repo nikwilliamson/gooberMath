@@ -8,9 +8,8 @@ import { RETRY_MAX, createSelector, recordSelection, selectNext } from './select
 import type { FactKey, StatsMap } from './types'
 
 describe('facts', () => {
-  it('canonicalises commutative pairs', () => {
-    const pairs = pairsFor({ kind: 'sumTo', sum: 10 })
-    expect(pairs).toEqual([[0, 10], [1, 9], [2, 8], [3, 7], [4, 6], [5, 5]].filter(([a, b]) => a <= 9 && b <= 10))
+  it('canonicalises commutative pairs and skips the degenerate zero pair', () => {
+    expect(pairsFor({ kind: 'sumTo', sum: 10 })).toEqual([[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]])
   })
 
   it('derives subtraction from its inverse family', () => {
@@ -30,12 +29,41 @@ describe('facts', () => {
   it('every quest produces solvable, whole-number facts', () => {
     for (const q of QUESTS) {
       const facts = factsFor(q.spec)
-      expect(facts.length, q.id).toBeGreaterThan(2)
       for (const f of facts) {
         expect(Number.isInteger(f.answer), `${q.id} ${f.key}`).toBe(true)
         expect(f.answer, `${q.id} ${f.key}`).toBeGreaterThanOrEqual(0)
       }
     }
+  })
+
+  it('every quest has enough facts to fill a run', () => {
+    // A 60s run is ~30 answers. Under about eight facts he is not practising a
+    // set, he is repeating the same handful, which is what made "Ten Pact" (six
+    // facts, two of them new) not work as a level.
+    for (const q of QUESTS) {
+      expect(factsFor(q.spec).length, q.id).toBeGreaterThanOrEqual(8)
+    }
+  })
+
+  it('no quest contains a degenerate or out-of-range fact', () => {
+    for (const q of QUESTS) {
+      for (const f of factsFor(q.spec)) {
+        // "0 + 10 = 10" is not a fact worth drilling.
+        expect(f.op === 'add' && (f.a === 0 || f.b === 0) && f.answer > 9, `${q.id} ${f.key}`).toBe(false)
+        expect(f.a, `${q.id} ${f.key}`).toBeLessThanOrEqual(100)
+        expect(f.b, `${q.id} ${f.key}`).toBeLessThanOrEqual(10)
+      }
+    }
+  })
+
+  it('make ten covers the pairs to ten and the ten-plus facts', () => {
+    const keys = factsFor({ op: 'add', pairs: { kind: 'makeTen' } }).map((f) => f.key)
+    for (const k of ['add:1+9', 'add:2+8', 'add:3+7', 'add:4+6', 'add:5+5']) {
+      expect(keys, k).toContain(k)
+    }
+    expect(keys).toContain('add:7+10')
+    expect(keys).not.toContain('add:0+10')
+    expect(keys).toHaveLength(14)
   })
 
   it('formats with real math symbols', () => {

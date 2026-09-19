@@ -10,6 +10,25 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      /*
+       * If nothing mounts, the usual cause is GitHub Pages serving THIS source
+       * file from the repo root instead of the built site in dist/ — in which
+       * case /src/main.tsx below resolves against the domain root and 404s.
+       * A blank page gives you nothing to go on, so say it out loud.
+       */
+      setTimeout(function () {
+        var root = document.getElementById('root')
+        if (!root || root.childElementCount > 0) return
+        root.innerHTML =
+          '<div style="min-height:100dvh;display:grid;place-items:center;padding:28px;' +
+          'background:#080a10;color:#f3f5fa;font:600 14px/1.6 ui-monospace,monospace;text-align:center">' +
+          '<div><p style="color:#f5b21f;letter-spacing:.14em">GOOBERMATH DID NOT LOAD</p>' +
+          '<p>If the console shows a 404 for <b>main.tsx</b>, Pages is serving the repo root, ' +
+          'not the built site.</p><p style="color:#8a93a8">Fix: repo Settings &rarr; Pages &rarr; ' +
+          'Source: <b>GitHub Actions</b>, then re-run the deploy workflow.</p></div></div>'
+      }, 8000)
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

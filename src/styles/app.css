@@ -251,7 +251,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .combo__mult { font-size: clamp(0.54rem, 1.4vmin, 0.64rem); letter-spacing: 0.14em; color: var(--dim); }
 
 .board { display: grid; place-items: center; align-content: center; min-height: 0; position: relative; }
-.board > *:not(.inklayer) { position: relative; z-index: 2; }
+.board > *:not(.inklayer):not(.fb) { position: relative; z-index: 2; }
 
 .problemcard {
   display: grid; place-items: center;
@@ -267,7 +267,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.problem__slot { display: inline-block; min-width: 1.2ch; text-align: center; color: var(--text); }
+.problem__slot { display: inline-block; width: 1.1ch; text-align: center; color: var(--text); }
 /* The rule marks where the answer goes, so it hangs off the slots themselves
    rather than being centred under the whole equation. */
 .problem__answer {

@@ -2,9 +2,11 @@ import type { Fact, FactKey, Op } from './types'
 
 /** A pair spec describes (a,b) operand pairs; the op turns them into facts. */
 export type PairSpec =
-  | { kind: 'addend'; values: number[]; maxSum: number }
+  | { kind: 'addend'; values: number[]; maxSum: number; min?: number }
   | { kind: 'doubles'; max: number }
   | { kind: 'sumTo'; sum: number }
+  /** Make-ten pairs plus the ten-plus facts: the bridging strategy, whole. */
+  | { kind: 'makeTen' }
   | { kind: 'nearDoubles'; max: number }
   | { kind: 'allSums'; maxSum: number }
   | { kind: 'factor'; values: number[]; max: number }
@@ -28,16 +30,24 @@ export function pairsFor(spec: PairSpec): Array<[number, number]> {
   }
 
   switch (spec.kind) {
-    case 'addend':
+    case 'addend': {
+      const lo = spec.min ?? 0
       for (const v of spec.values) {
-        for (let o = 0; o + v <= spec.maxSum && o <= 9; o++) push(v, o)
+        for (let o = lo; o + v <= spec.maxSum && o <= 9; o++) push(v, o)
       }
       break
+    }
     case 'doubles':
       for (let n = 1; n <= spec.max; n++) push(n, n)
       break
     case 'sumTo':
-      for (let a = 0; a <= spec.sum - a; a++) push(a, spec.sum - a)
+      // From 1, not 0: "0 + 10" is not a one-digit fact and teaches nothing.
+      for (let a = 1; a <= spec.sum - a && spec.sum - a <= 9; a++) push(a, spec.sum - a)
+      break
+    case 'makeTen':
+      for (let a = 1; a <= 5; a++) push(a, 10 - a)
+      // Ten plus the rest: making ten is only useful if you can add onto it.
+      for (let o = 1; o <= 9; o++) push(10, o)
       break
     case 'nearDoubles':
       for (let n = 1; n < spec.max; n++) push(n, n + 1)
