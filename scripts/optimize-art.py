@@ -30,7 +30,7 @@ PLAN = {
     'accessoriesSprite':  (1150, 88, False),
     'world':              (1536, 74, False),
     'additionFields':     (1536, 74, False),
-    'correctAnswerSprite': (1150, 88, False),
+    'positiveSprite':     (1150, 88, False),
 }
 
 

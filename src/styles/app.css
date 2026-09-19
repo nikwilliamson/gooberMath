@@ -187,7 +187,12 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   mix-blend-mode: screen;
   filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.55));
 }
-.title__mascot { margin-top: clamp(-18px, -3vmin, -6px); filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6)); }
+.title__mascot {
+  width: min(58%, 300px);
+  height: auto;
+  margin-top: clamp(-18px, -3vmin, -6px);
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6));
+}
 .title__actions { display: grid; gap: 10px; justify-items: start; width: min(320px, 100%); }
 .title__actions .btn { width: 100%; justify-content: flex-start; }
 .title__actions .btn--amber { justify-content: space-between; }
@@ -297,7 +302,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .combo__mult[data-on] { opacity: 1; }
 
 .board { display: grid; place-items: center; align-content: center; min-height: 0; position: relative; }
-.board > *:not(.inklayer):not(.fb) { position: relative; z-index: 2; }
+.board > .problemcard { position: relative; z-index: 2; }
 
 .problemcard {
   transition: opacity var(--dur-state) var(--ease-snap), filter var(--dur-state) var(--ease-snap);
@@ -328,7 +333,33 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
 .fb__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(132%, 660px); opacity: 0.82; z-index: 0; }
 .fb__word { position: relative; z-index: 1; width: min(84%, 460px); }
-.fb__sticker { position: relative; z-index: 1; width: min(84%, 440px); filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.6)); }
+/* A sticker beside the problem, not over it. It animates itself out and ends
+   invisible, so it never needs unmounting and never gates the next question. */
+.sticker {
+  position: absolute;
+  z-index: 4;
+  width: clamp(120px, 34%, 230px);
+  pointer-events: none;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
+  animation: stickerPop 1150ms var(--ease-out) both;
+}
+.sticker__points {
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 2.4vmin, 1.15rem);
+  font-weight: 800;
+  color: #eaffe2;
+  text-shadow: 0 2px 8px rgba(4, 8, 14, 0.9);
+}
+@keyframes stickerPop {
+  0%   { opacity: 0; transform: scale(0.5) rotate(calc(var(--rot, 0deg) - 12deg)); }
+  16%  { opacity: 1; transform: scale(1.06) rotate(var(--rot, 0deg)); }
+  26%  { transform: scale(1) rotate(var(--rot, 0deg)); }
+  68%  { opacity: 1; transform: scale(1) rotate(var(--rot, 0deg)); }
+  100% { opacity: 0; transform: scale(0.94) translateY(-14px) rotate(var(--rot, 0deg)); }
+}
 .fb__points {
   position: relative; z-index: 1;
   font-family: var(--font-display);

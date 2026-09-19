@@ -3,7 +3,25 @@ import { audio } from '@/audio/engine'
 import { questById, questsIn } from '@/engine/quests'
 import { COSMETICS } from '@/store/cosmetics'
 import { questProgress, questStatus, targetFor, useGame } from '@/store/game'
-import { Goober, GooberCap, RoughText, SplatBurst, SplatField } from '../art'
+import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
+import { GooberSprite, type Pose } from '../sprites'
+
+/** The Goober reacts to the run: clearing is a celebration, a bad run is not. */
+function poseForRun(
+  accuracy: number,
+  correct: number,
+  cleared: boolean,
+  newBest: boolean,
+  perfect: boolean,
+): Pose {
+  if (cleared) return 'cheer'
+  if (newBest || (perfect && correct > 5)) return 'jump'
+  if (correct === 0) return 'dizzy'
+  if (accuracy >= 0.85) return 'ready'
+  if (accuracy >= 0.65) return 'stride'
+  if (accuracy >= 0.45) return 'think'
+  return 'sad'
+}
 
 export function ResultsScreen() {
   const summary = useGame((s) => s.summary)
@@ -103,7 +121,17 @@ export function ResultsScreen() {
 
             <div className="results__mascot">
               <SplatBurst className="splatbg fb-splat" color="#f5b21f" color2="#35d6ef" seed={summary.score % 7} />
-              <Goober mood={awards.cleared || awards.newBest ? 'cheer' : 'idle'} size={150} className="reward-in" />
+              <GooberSprite
+                pose={poseForRun(
+                  summary.accuracy,
+                  summary.correct,
+                  awards.cleared,
+                  awards.newBest,
+                  summary.perfect,
+                )}
+                width={160}
+                className="reward-in"
+              />
             </div>
           </div>
 
@@ -148,7 +176,7 @@ export function ResultsScreen() {
               <span className="reward__glow reward-glow" />
               <SplatBurst className="reward__splat fb-splat" color="#f5b21f" color2="#35d6ef" seed={rewardIdx + 3} />
               {reward.kind === 'goober' ? (
-                <Goober mood="cheer" tint={reward.tint} size={170} className="reward-in" />
+                <GooberSprite pose="cheer" width={180} className="reward-in" />
               ) : (
                 <GooberCap size={190} className="reward-in" />
               )}

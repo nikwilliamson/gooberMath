@@ -1,6 +1,6 @@
 import { audio } from '@/audio/engine'
 import { useGame } from '@/store/game'
-import { Goober, SplatField } from '../art'
+import { SplatField } from '../art'
 import { ART } from '../sprites'
 
 export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void; onGrownUps: () => void }) {
@@ -41,7 +41,7 @@ export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void
       <div className="title screen-in">
         <div className="title__hero">
           <img src={ART.logo} alt="GooberMath" className="wordmark" width={1000} height={644} />
-          <Goober mood="cheer" size={200} className="title__mascot bob" />
+          <img src={ART.goober} alt="" className="title__mascot bob" width={700} height={678} />
         </div>
 
         <div className="title__actions">

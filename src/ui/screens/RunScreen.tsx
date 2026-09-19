@@ -6,7 +6,7 @@ import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
 import { GooberCap, RoughText, SplatBurst, SplatField } from '../art'
-import { CorrectSticker } from '../sprites'
+import { CorrectSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
@@ -29,6 +29,7 @@ export function RunScreen() {
   const seenAnswers = useRef(0)
   const lastMult = useRef(1)
   const [comboStep, setComboStep] = useState(0)
+  const [lastCorrectAt, setLastCorrectAt] = useState(0)
 
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
@@ -64,6 +65,7 @@ export function RunScreen() {
     const last = run.answers[run.answers.length - 1]
     if (!last) return
     if (last.correct) {
+      setLastCorrectAt(run.answers.length)
       audio.hit(run.streak)
       const mult = comboMult(run.streak)
       if (mult > lastMult.current) {
@@ -103,11 +105,11 @@ export function RunScreen() {
   const healthy = !run.untimed && run.msLeft > 30_000
   const mult = comboMult(run.streak)
   const showWrong = run.phase === 'feedback' && run.lastCorrect === false
-  const showRight = run.phase === 'feedback' && run.lastCorrect === true
-  const lastPoints = run.answers[run.answers.length - 1]?.points ?? 0
+  const lastPoints = run.answers[lastCorrectAt - 1]?.points ?? 0
   // Rotate through the 20 sticker phrases, offset per run so it is not always
   // the same opener.
-  const stickerIdx = run.answers.length + (run.startedAt | 0)
+  const stickerIdx = lastCorrectAt + (run.startedAt | 0)
+  const anchor = STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length]
   const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
   const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
 
@@ -150,7 +152,7 @@ export function RunScreen() {
         <div className="board">
           {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
 
-          <div className={`panel problemcard${showRight || showWrong ? ' problemcard--dim' : ''}`}>
+          <div className={`panel problemcard${showWrong ? ' problemcard--dim' : ''}`}>
             <span key={`${run.currentKey}:${run.answers.length}`} className="problem tnum problem-in">
               {formatFact(fact)} ={' '}
               <span className="problem__answer">
@@ -169,10 +171,15 @@ export function RunScreen() {
             </span>
           </div>
 
-          {showRight && (
-            <div className="fb">
-              <CorrectSticker index={stickerIdx} className="fb__sticker fb-word" />
-              <span className="fb__points fb__points--good fb-points">+{lastPoints.toLocaleString()}</span>
+          {lastCorrectAt > 0 && (
+            <div
+              key={lastCorrectAt}
+              className="sticker"
+              style={{ ...anchor, ['--rot' as string]: `${anchor.rot}deg` }}
+              aria-hidden
+            >
+              <CorrectSticker index={stickerIdx} />
+              <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
             </div>
           )}
 
@@ -202,7 +209,7 @@ export function RunScreen() {
         </div>
 
         <div className="padwrap">
-          <div className={showRight || showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
+          <div className={showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
             <NumberPad onDigit={digit} onBackspace={backspace} disabled={run.phase !== 'playing'} />
           </div>
         </div>

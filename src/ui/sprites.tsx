@@ -160,6 +160,20 @@ export const STICKERS = [
   'Another one!', 'Dub!', 'On point!', 'That works!', 'Keep cookin!',
 ]
 
+/**
+ * Six anchors ringing the problem card. The sticker is a reward for the answer,
+ * so it lands beside the equation rather than on top of it — covering the thing
+ * he just read is what made the old full-screen version feel like an interruption.
+ */
+export const STICKER_ANCHORS = [
+  { top: '4%', left: '2%', rot: -7 },
+  { top: '6%', right: '2%', rot: 6 },
+  { bottom: '6%', left: '4%', rot: 5 },
+  { bottom: '4%', right: '3%', rot: -6 },
+  { top: '26%', right: '1%', rot: 8 },
+  { bottom: '24%', left: '1%', rot: -9 },
+] as const
+
 export function CorrectSticker({
   index,
   width = '100%',
@@ -174,7 +188,7 @@ export function CorrectSticker({
   const i = Math.abs(Math.floor(index)) % 20
   return (
     <Sprite
-      sheet="correctAnswerSprite.webp"
+      sheet="positiveSprite.webp"
       cols={5}
       rows={4}
       col={i % 5}
