@@ -6,15 +6,11 @@ import type { Mode, Op } from '@/engine/types'
 import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
-import { OP_ACCENT } from '../art'
-import { LevelMarker, MARKER_HOLDS_NUMBER, REGION_ART, type MarkerState } from '../sprites'
-import { FactGrid } from '../components/FactGrid'
 import { VoiceToggle } from '../components/VoiceToggle'
+import { MapView, type MapNode } from '../map/MapView'
+import type { MarkerState } from '../sprites'
 
-const OP_NAME: Record<Op, string> = { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division' }
-const OP_SHORT: Record<Op, string> = { add: 'Add', sub: 'Subtract', mul: 'Multiply', div: 'Divide' }
-const OP_SYM: Record<Op, string> = { add: '+', sub: '−', mul: '×', div: '÷' }
-
+/** Wires the map to the store; MapView draws it. */
 export function MapScreen({ onSettings }: { onSettings: () => void }) {
   const save = useGame((s) => s.save)
   const go = useGame((s) => s.go)
@@ -44,152 +40,72 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
   const currentStatus = current ? questStatus(save, current) : 'locked'
   const currentProg = current ? questProgress(save, current.id) : null
+  const currentMastery = current ? questMastery(save, current) : null
+
+  const nodes: MapNode[] = quests.map((quest) => {
+    const status = questStatus(save, quest)
+    const prog = questProgress(save, quest.id)
+    const mastery = questMastery(save, quest)
+    const marker: MarkerState = prog.mastered
+      ? 'mastered'
+      : status === 'cleared' || status === 'locked'
+        ? status
+        : current?.id === quest.id
+          ? 'current'
+          : 'open'
+    return {
+      quest,
+      status,
+      marker,
+      learned: mastery.learned,
+      required: mastery.required,
+      mastered: prog.mastered,
+      bestSniper: prog.bestSniper,
+      bestSniperVoice: prog.bestSniperVoice,
+      perfect: prog.perfect,
+      grid: { keys: factKeysOf(quest), stats: save.stats },
+    }
+  })
+
+  const counts = Object.fromEntries(
+    allRegions.map((r) => [
+      r.id,
+      { done: questsIn(r.id).filter((q) => questProgress(save, q.id).cleared).length, total: questsIn(r.id).length },
+    ]),
+  ) as Record<Op, { done: number; total: number }>
 
   return (
-    <div className="app" data-region={region}>
-      <div
-        key={region}
-        className="scene scene--art"
-        style={{ backgroundImage: `url(${REGION_ART[region]})` }}
-      />
-
-      <div className="map screen-in">
-        <header className="map__head">
-          <button className="btn btn--ghost" onClick={() => go('title')} aria-label="Back">
-            &#8592;
-          </button>
-          <div className="map__world">
-            <span className="label">World {worldNo}</span>
-            <h1 className="map__op">{regionDef.name}</h1>
-            <span className="map__sub">{OP_NAME[region]}</span>
-          </div>
-          <span className="spacer" />
-          <span className="chip">
-            <span style={{ color: 'var(--amber)' }}>&#9733;</span>
-            <span className="tnum">
-              {clearedHere}/{quests.length}
-            </span>
-          </span>
-          <button className="btn btn--ghost" onClick={onSettings} aria-label="Settings">
-            &#9881;
-          </button>
-        </header>
-
-        <div className="nodes">
-          <p className="map__blurb">{regionDef.blurb}</p>
-          {quests.map((quest, i) => {
-            const status = questStatus(save, quest)
-            const prog = questProgress(save, quest.id)
-            const isCurrent = current?.id === quest.id
-            const marker: MarkerState = prog.mastered
-              ? 'mastered'
-              : status === 'cleared' || status === 'locked'
-                ? status
-                : isCurrent
-                  ? 'current'
-                  : 'open'
-            return (
-              <div key={quest.id} className={`node${status === 'locked' ? ' node--locked' : ''}`}>
-                <div className="node__rail">
-                  <span className={`node__marker node__marker--${marker}`}>
-                    <LevelMarker state={marker} width="100%" />
-                    {MARKER_HOLDS_NUMBER[marker] && <span className="node__num tnum">{i + 1}</span>}
-                  </span>
-                </div>
-                <button
-                  className="node__body"
-                  disabled={status === 'locked'}
-                  onClick={() => setSelected(quest.id)}
-                >
-                  <span className="node__name">
-                    {quest.name}
-                    {quest.boss && <span style={{ color: 'var(--amber)' }}> &#9733;</span>}
-                  </span>
-                  <span className="node__meta">
-                    <span>{quest.blurb}</span>
-                  </span>
-                  <span className="node__meta">
-                    <span>
-                      {questMastery(save, quest).learned}/{questMastery(save, quest).required} facts
-                      {prog.mastered ? ' ★' : ''}
-                    </span>
-                    <span>Best {prog.bestSniper.toLocaleString()}</span>
-                    {prog.bestSniperVoice > 0 && <span>Voice {prog.bestSniperVoice.toLocaleString()}</span>}
-                    {prog.perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
-                  </span>
-                  <span className="node__grid">
-                    <FactGrid keys={factKeysOf(quest)} stats={save.stats} />
-                  </span>
-                </button>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="questbar">
-          {current && currentStatus !== 'locked' && (
-            <div className="panel questbar__card">
-              <div className="questbar__info">
-                <span className="label">Current quest</span>
-                <span className="questbar__name">{current.name}</span>
-                <span className="questbar__blurb">{current.blurb}</span>
-              </div>
-              <div className="questbar__target">
-                <span className="label">{currentProg?.cleared ? 'Unlocked' : 'Unlock at'}</span>
-                <span className="questbar__targetv tnum">
-                  {currentProg?.cleared
-                    ? '✓'
-                    : (current.unlockScore ?? UNLOCK_SCORE).toLocaleString()}
-                </span>
-              </div>
-              <div className="questbar__target">
-                <span className="label">Facts learned</span>
-                <span className="questbar__targetv tnum">
-                  {questMastery(save, current).learned}/{questMastery(save, current).required}
-                  {currentProg?.mastered ? ' ★' : ''}
-                </span>
-              </div>
-              <VoiceToggle />
-              <div className="questbar__modes">
-                {current.untimedFirst && !currentProg?.practiced && (
-                  <button className="btn btn--ghost" onClick={() => start(current.id, 'sniper', true)}>
-                    Warm up
-                  </button>
-                )}
-                <button className="btn btn--ghost" onClick={() => start(current.id, 'blitz', false)}>
-                  Blitz
-                </button>
-                <button className="btn btn--amber" onClick={() => start(current.id, 'sniper', false)}>
-                  Play
-                </button>
-              </div>
-            </div>
-          )}
-
-          <nav className="optabs">
-            {allRegions.map((r) => {
-              const done = questsIn(r.id).filter((q) => questProgress(save, q.id).cleared).length
-              return (
-                <button
-                  key={r.id}
-                  className={`optab${r.id === region ? ' optab--active' : ''}`}
-                  style={{ ['--tab' as string]: OP_ACCENT[r.id] }}
-                  onClick={() => {
-                    setRegion(r.id)
-                    setSelected(null)
-                  }}
-                >
-                  <span className="optab__sym">{OP_SYM[r.id]}</span>
-                  {OP_SHORT[r.id]}
-                  <span className="label" style={{ letterSpacing: '0.1em' }}>
-                    {done}/{questsIn(r.id).length}
-                  </span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-      </div>
-    </div>
+    <MapView
+      region={region}
+      blurb={regionDef.blurb}
+      header={{ worldNo, name: regionDef.name, cleared: clearedHere, total: quests.length, onBack: () => go('title'), onSettings }}
+      nodes={nodes}
+      current={
+        current && currentProg && currentMastery && currentStatus !== 'locked'
+          ? {
+              quest: current,
+              cleared: currentProg.cleared,
+              mastered: currentProg.mastered,
+              unlockScore: current.unlockScore ?? UNLOCK_SCORE,
+              learned: currentMastery.learned,
+              required: currentMastery.required,
+              warmUp: Boolean(current.untimedFirst) && !currentProg.practiced,
+              onWarmUp: () => start(current.id, 'sniper', true),
+              onBlitz: () => start(current.id, 'blitz', false),
+              onPlay: () => start(current.id, 'sniper', false),
+            }
+          : null
+      }
+      tabs={{
+        region,
+        counts,
+        onChange: (r) => {
+          setRegion(r)
+          setSelected(null)
+        },
+      }}
+      onSelect={setSelected}
+      questBarExtra={<VoiceToggle />}
+    />
   )
 }
