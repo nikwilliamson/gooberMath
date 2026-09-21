@@ -8,3 +8,6 @@ vite.config.ts.timestamp-*
 *.tgz
 # Offline speech model: fetched by scripts/fetch-voice-model.sh, never committed.
 public/voice/
+
+# Screenshots the Claude desktop app drops beside the repo.
+Claude outputs/
