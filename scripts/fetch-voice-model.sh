@@ -3,10 +3,10 @@
 # Fetch the offline speech model into public/voice/, where the site serves it
 # from its own origin. Never committed: 40MB of binary has no place in git.
 #
-#   pnpm voice:model
+#   npm run voice:model
 #
 # CI runs this before every deploy (cached). Locally, run it once before
-# `pnpm dev` if you want voice to work in development.
+# `npm run dev` if you want voice to work in development.
 #
 # Integrity: the zip's sha256 is pinned in scripts/voice-model.sha256. The first
 # run on a machine with no pin writes one and says so. Commit it, and every
@@ -53,35 +53,64 @@ if [[ -f "${PIN}" ]]; then
     exit 1
   fi
   echo "voice model: sha256 verified"
-elif [[ -n "${CI:-}" ]]; then
-  # Don't block a deploy of everything else on this, but make it impossible to miss.
-  echo "::warning::voice model sha256 is not pinned. Run pnpm voice:model locally and commit scripts/voice-model.sha256. Got ${SHA}."
-else
-  echo "${SHA}" > "${PIN}"
-  echo "voice model: no pin yet — wrote ${SHA} to scripts/voice-model.sha256. Commit it."
 fi
 
 unzip -q "${TMP}/model.zip" -d "${TMP}"
-WORDS="${TMP}/${NAME}/graph/words.txt"
-[[ -f "${WORDS}" ]] || { echo "voice model: ${WORDS} missing — unexpected layout" >&2; exit 1; }
+MODEL="${TMP}/${NAME}"
+[[ -f "${MODEL}/am/final.mdl" ]] || { echo "voice model: ${NAME}/am/final.mdl missing — unexpected layout" >&2; exit 1; }
 
-# Every number word the grammar uses must exist in the model, or Vosk silently
-# drops it and that number can never be heard. Keep in sync with numbers.ts.
-NUMBERS="zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen
-fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred"
-MISSING=""
-for w in ${NUMBERS}; do
-  awk -v w="${w}" '$1 == w { found = 1 } END { exit !found }' "${WORDS}" || MISSING="${MISSING} ${w}"
-done
-if [[ -n "${MISSING}" ]]; then
-  echo "voice model: missing number words:${MISSING}" >&2
-  exit 1
+# Every number word the grammar uses must be in the model's vocabulary, or
+# Vosk silently drops it and that number can never be heard. Some builds ship
+# graph/words.txt; the official small model keeps the vocabulary only in the
+# symbol table inside graph/Gr.fst (int32 length, bytes, int64 key per entry).
+# Node reads either: it is guaranteed wherever `npm run` works.
+# Keep the list in sync with src/voice/numbers.ts.
+VOCAB="$(node - "${MODEL}" <<'JS'
+const fs = require('fs')
+const path = require('path')
+const dir = process.argv[2]
+const WORDS = ('zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen ' +
+  'fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred').split(' ')
+const txt = path.join(dir, 'graph/words.txt')
+const gr = path.join(dir, 'graph/Gr.fst')
+let has
+if (fs.existsSync(txt)) {
+  const vocab = new Set(fs.readFileSync(txt, 'utf8').split('\n').map((l) => l.split(/\s/)[0]))
+  has = (w) => vocab.has(w)
+} else if (fs.existsSync(gr)) {
+  const buf = fs.readFileSync(gr)
+  has = (w) => {
+    const needle = Buffer.alloc(4 + w.length)
+    needle.writeInt32LE(w.length, 0)
+    needle.write(w, 4)
+    return buf.includes(needle)
+  }
+} else {
+  console.error('voice model: no vocabulary found (graph/words.txt or graph/Gr.fst)')
+  process.exit(1)
+}
+const missing = WORDS.filter((w) => !has(w))
+if (missing.length) {
+  console.error('voice model: missing number words: ' + missing.join(' '))
+  process.exit(1)
+}
+// [unk] lets noise land somewhere other than the nearest number. Only offer
+// it in the grammar when the model actually has it.
+console.log(has('[unk]') ? 'true' : 'false')
+JS
+)"
+HAS_UNK="${VOCAB}"
+
+# Pin only now, once the download has proved to be a usable model.
+if [[ ! -f "${PIN}" ]]; then
+  if [[ -n "${CI:-}" ]]; then
+    # Don't block a deploy of everything else on this, but make it impossible to miss.
+    echo "::warning::voice model sha256 is not pinned. Run npm run voice:model locally and commit scripts/voice-model.sha256. Got ${SHA}."
+  else
+    echo "${SHA}" > "${PIN}"
+    echo "voice model: no pin yet — wrote ${SHA} to scripts/voice-model.sha256. Commit it."
+  fi
 fi
-
-# [unk] lets noise land somewhere other than the nearest number. Only offer it
-# in the grammar when the model actually has it.
-HAS_UNK=false
-awk '$1 == "[unk]" { found = 1 } END { exit !found }' "${WORDS}" && HAS_UNK=true
 
 # The worker strips the archive's first path component, so keep the folder.
 mkdir -p "${OUT}"

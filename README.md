@@ -6,10 +6,11 @@ one problem at a time, a number pad, a 60-second clock, and a personal best to b
 ## Run it
 
 ```bash
-pnpm install
-pnpm dev        # http://localhost:5173
-pnpm test       # engine tests (20)
-pnpm build      # static PWA in dist/
+npm install
+npm run dev            # http://localhost:5173
+npm test               # engine + voice tests
+npm run build          # static PWA in dist/
+npm run voice:model    # optional: fetch the speech model (see Voice answers)
 ```
 
 Fully responsive, phone through desktop, both orientations. Keyboard input works
@@ -27,7 +28,7 @@ name, so renaming the repo needs no code change. For a custom domain or a
 `<user>.github.io` repo, build with `BASE_PATH=/`.
 
 ```bash
-pnpm deploy:check   # what CI runs: typecheck + tests + build
+npm run deploy:check   # what CI runs: typecheck + tests + build
 ```
 
 ## Modes
@@ -128,7 +129,7 @@ file, and GitHub Pages cannot set headers), but the worker makes exactly two
 requests, for the model and its wasm, both from this origin, and voice works in
 airplane mode once the model is stored.
 
-**The model** (~40MB) is not in git. `pnpm voice:model` fetches it into
+**The model** (~40MB) is not in git. `npm run voice:model` fetches it into
 `public/voice/`, and CI runs that before every deploy (cached). The first local
 run writes `scripts/voice-model.sha256`; commit it and every later fetch is
 verified against it. Without the model, the switch says voice is not included

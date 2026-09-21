@@ -2,4 +2,4 @@
 *.png binary
 *.m4a binary
 *.mp3 binary
-pnpm-lock.yaml linguist-generated=true
+package-lock.json linguist-generated=true
