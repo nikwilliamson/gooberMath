@@ -35,6 +35,15 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
 
+      # Offline speech model for voice answers. Fetched here and served from
+      # this site's own origin; never committed. Cached across deploys, keyed on
+      # the script and the pinned sha256 so a model change refetches.
+      - uses: actions/cache@v4
+        with:
+          path: public/voice
+          key: voice-model-${{ hashFiles('scripts/fetch-voice-model.sh', 'scripts/voice-model.sha256') }}
+      - run: pnpm voice:model
+
       - run: pnpm build
 
       - uses: actions/configure-pages@v5
