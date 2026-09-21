@@ -3,10 +3,14 @@ import { statFor, tierCounts, tierOf } from '@/engine/mastery'
 import { QUESTS, REGIONS } from '@/engine/quests'
 import { exportSave, importSave } from '@/store/persist'
 import { factKeysOf, questMastery, questProgress, regionFactKeys, useGame } from '@/store/game'
+import { useVoiceStatus } from '@/voice/status'
 
 export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
   const save = useGame((s) => s.save)
   const replaceSave = useGame((s) => s.replaceSave)
+  const setSettings = useGame((s) => s.setSettings)
+  const voiceModel = useVoiceStatus((s) => s.model)
+  const [voiceMsg, setVoiceMsg] = useState('')
   const [io, setIo] = useState('')
   const [msg, setMsg] = useState('')
 
@@ -101,6 +105,29 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
             </table>
           </div>
         )}
+
+        <div className="sheet__section">
+          <span className="sheet__label">Voice answers</span>
+          <span className="sheet__label">
+            Speech is recognized entirely on this device, and it can only recognize the numbers zero to one
+            hundred. Audio is processed in memory as he speaks and is never saved or sent anywhere. The mic is on
+            only during a voice run.
+          </span>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button
+              className="btn"
+              onClick={async () => {
+                setSettings({ voice: false })
+                const { deleteModel } = await import('@/voice/listener')
+                await deleteModel()
+                setVoiceMsg('Voice model removed from this device.')
+              }}
+            >
+              Remove voice model
+            </button>
+            <span className="sheet__label">{voiceMsg || (voiceModel === 'ready' ? 'Installed on this device.' : '')}</span>
+          </div>
+        </div>
 
         <div className="sheet__section">
           <span className="sheet__label">Move progress between devices</span>

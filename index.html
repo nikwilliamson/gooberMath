@@ -2,6 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Nothing on this page may send data anywhere but this site. That covers
+      the page's own fetches; the speech worker is loaded from its own file, so
+      a meta CSP does not bind it. Its only requests are the model and the
+      wasm, both from here, and voice keeps working in airplane mode.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self'; worker-src 'self'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#0b0a1f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

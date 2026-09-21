@@ -23,6 +23,9 @@ export default defineConfig({
         // together, and blocking first paint on them over cellular is worse
         // than fetching them once and keeping them.
         globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
+        // Voice is opt-in. Precaching its worker would make every visitor
+        // download it; the model itself lives in the worker's own IndexedDB.
+        globIgnores: ['**/vosk*', 'voice/**'],
         runtimeCaching: [
           {
             // The typeface is external, so offline runs would fall back to the
@@ -33,6 +36,18 @@ export default defineConfig({
               cacheName: 'goobermath-fonts',
               expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // The recognizer's worker and wasm, once voice has been used, so it
+            // keeps working offline. The model is not here: the worker stores
+            // it in IndexedDB itself, and a second 40MB copy would be waste.
+            urlPattern: ({ url }: { url: URL }) => /\/assets\/vosk[^/]*$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'goobermath-voice',
+              expiration: { maxEntries: 4 },
+              cacheableResponse: { statuses: [200] },
             },
           },
           {

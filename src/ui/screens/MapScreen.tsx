@@ -9,6 +9,7 @@ import {
 import { OP_ACCENT, SplatField } from '../art'
 import { ART } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
+import { VoiceToggle } from '../components/VoiceToggle'
 
 const OP_NAME: Record<Op, string> = { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division' }
 const OP_SHORT: Record<Op, string> = { add: 'Add', sub: 'Subtract', mul: 'Multiply', div: 'Divide' }
@@ -35,6 +36,8 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
   const start = (questId: string, mode: Mode, untimed: boolean) => {
     audio.unlock()
+    // Voice runs route music through the context; set it before priming.
+    audio.setRouted(save.settings.voice)
     audio.primeMusic()
     begin(questId, mode, untimed)
   }
@@ -113,6 +116,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                       {prog.mastered ? ' ★' : ''}
                     </span>
                     <span>Best {prog.bestSniper.toLocaleString()}</span>
+                    {prog.bestSniperVoice > 0 && <span>Voice {prog.bestSniperVoice.toLocaleString()}</span>}
                     {prog.perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
                   </span>
                   <span className="node__grid">
@@ -147,6 +151,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                   {currentProg?.mastered ? ' ★' : ''}
                 </span>
               </div>
+              <VoiceToggle />
               <div className="questbar__modes">
                 {current.untimedFirst && !currentProg?.practiced && (
                   <button className="btn btn--ghost" onClick={() => start(current.id, 'sniper', true)}>

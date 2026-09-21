@@ -282,6 +282,39 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
 .questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* Voice answers switch, above the mode buttons. Takes its own row so the
+   explanation under it has room at 320px. */
+.voicetoggle { flex: 1 1 100%; display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.voicetoggle__btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0.45em 0.6em 0.45em 0.75em;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--dim);
+  font: inherit; font-size: clamp(0.66rem, 1.8vmin, 0.78rem);
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-state) var(--ease-snap), border-color var(--dur-state) var(--ease-snap);
+}
+.voicetoggle__btn[data-on] { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, transparent); }
+.voicetoggle__btn[aria-busy='true'] { opacity: 0.7; }
+.voicetoggle__icon { width: 1.25em; height: 1.25em; }
+.voicetoggle__track {
+  position: relative; width: 2.3em; height: 1.3em; border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.14);
+  transition: background var(--dur-state) var(--ease-snap);
+}
+.voicetoggle__thumb {
+  position: absolute; top: 0.15em; left: 0.15em; width: 1em; height: 1em; border-radius: 50%;
+  background: #fff;
+  transition: transform var(--dur-state) var(--ease-spring);
+}
+.voicetoggle__btn[data-on] .voicetoggle__track { background: var(--green); }
+.voicetoggle__btn[data-on] .voicetoggle__thumb { transform: translateX(1em); }
+.voicetoggle__note { font-size: clamp(0.66rem, 1.7vmin, 0.78rem); color: var(--dim); font-weight: 400; line-height: 1.4; }
+.voicetoggle__note[data-tone='ok'] { color: color-mix(in srgb, var(--green) 70%, var(--dim)); }
+
 .optabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-width: 0; }
 
 /* Wide screens: a centred column reads better than full-bleed left-aligned text. */
@@ -315,6 +348,42 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 
 .hud { display: flex; align-items: flex-start; gap: 14px; }
 .hud__time { display: grid; gap: 5px; flex: 1; min-width: 0; }
+
+/* Voice runs: the mic, with a ring that swells with his level. Fixed size so
+   the HUD never shifts. */
+.voicechip {
+  --level: 0;
+  flex: none; align-self: center;
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  color: var(--dim);
+  box-shadow: 0 0 0 calc(var(--level) * 7px) color-mix(in srgb, currentColor 22%, transparent);
+  transition: box-shadow 60ms linear, color var(--dur-state) var(--ease-snap), border-color var(--dur-state) var(--ease-snap);
+}
+.voicechip__icon { width: 18px; height: 18px; }
+.voicechip[data-state='listening'] { color: var(--green); border-color: color-mix(in srgb, var(--green) 55%, transparent); }
+.voicechip[data-state='opening'] { opacity: 0.6; }
+.voicechip[data-state='denied'], .voicechip[data-state='error'] { color: var(--red); border-color: color-mix(in srgb, var(--red) 55%, transparent); }
+
+/* "Say it again", hung just under the problem card: a number was heard but not
+   clearly enough to score, so nothing was. Never covers the problem. */
+.voicenudge {
+  position: absolute; left: 50%; top: calc(100% + 8px); z-index: 3;
+  transform: translateX(-50%);
+  padding: 0.4em 0.9em; border-radius: var(--r-pill);
+  background: rgba(20, 16, 6, 0.9);
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  color: var(--amber);
+  font-size: clamp(0.66rem, 1.8vmin, 0.8rem); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  white-space: nowrap; pointer-events: none;
+  animation: nudge 1400ms var(--ease-out) both;
+}
+@keyframes nudge {
+  0% { opacity: 0; transform: translate(-50%, -4px); }
+  12%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 0); }
+}
 .hud__clock { display: flex; align-items: center; gap: 12px; }
 .hud__digits {
   font-family: var(--font-display);
@@ -712,7 +781,7 @@ textarea.io {
   inset: -2px;
   border-radius: inherit;
   pointer-events: none;
-  border: 2px solid var(--lime);
+  border: 2px solid var(--green);
   box-shadow: 0 0 34px rgba(110, 224, 95, 0.4), inset 0 0 22px rgba(110, 224, 95, 0.18);
   animation: cardGlow var(--dur-celebrate) var(--ease-out) both;
 }
@@ -784,3 +853,21 @@ textarea.io {
   }
   .bob { animation: none !important; }
 }
+
+/* ?voicedebug only. Deliberately plain: a tool, not part of the game. It sits
+   over the timer — the one strip of the screen with nothing to tap — and lets
+   every tap through except on its own buttons, so the game stays playable. */
+.voicedebug {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  top: calc(4px + env(safe-area-inset-top)); z-index: 90;
+  width: max-content; max-width: min(92vw, 520px);
+  pointer-events: none;
+  font: 11px/1.35 ui-monospace, Menlo, monospace;
+  color: #d8f5d0; background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(110, 224, 95, 0.4); border-radius: 8px;
+  opacity: 0.85;
+}
+.voicedebug__bar button { pointer-events: auto; }
+.voicedebug__bar { display: flex; gap: 10px; align-items: center; padding: 4px 8px; }
+.voicedebug__bar button { font: inherit; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 2px 6px; }
+.voicedebug__list { margin: 0; padding: 4px 8px 6px 24px; max-height: 26vh; overflow: hidden; word-break: break-all; }

@@ -10,7 +10,7 @@ import {
 import type { Mode, Op, StatsMap } from '@/engine/types'
 import { COSMETICS, levelFromXp } from './cosmetics'
 import { loadSave, saveSoon } from './persist'
-import { DEFAULT_SAVE, emptyQuest, today, type SaveData, type Settings } from './types'
+import { DEFAULT_SAVE, bestKey, emptyQuest, today, type SaveData, type Settings } from './types'
 
 export type Screen = 'title' | 'map' | 'run' | 'results' | 'stats'
 export type QuestStatus = 'locked' | 'open' | 'cleared'
@@ -103,6 +103,8 @@ interface GameStore {
   tick: (now: number) => void
   digit: (d: number) => void
   backspace: () => void
+  /** A whole answer heard by the voice layer. */
+  spoken: (value: number, spokeAt: number) => void
   /** Dismiss the held wrong-answer reveal and move to the next problem. */
   advance: () => void
   quit: () => void
@@ -157,7 +159,7 @@ export const useGame = create<GameStore>((set, get) => ({
     const quest = questById(questId)
     if (!quest) return
     const { save } = get()
-    const started = startRun(quest, save.stats, { mode, untimed }, performance.now())
+    const started = startRun(quest, save.stats, { mode, untimed, voice: save.settings.voice }, performance.now())
     ctx = started.ctx
     set({ run: started.state, screen: 'run', activeQuestId: questId, summary: null, awards: null })
   },
@@ -188,6 +190,14 @@ export const useGame = create<GameStore>((set, get) => ({
     set({ run: runReducer(run, { type: 'BACKSPACE' }, ctx) })
   },
 
+  spoken: (value, spokeAt) => {
+    const { run } = get()
+    if (!run || !ctx || run.phase !== 'playing') return
+    const next = runReducer(run, { type: 'SPOKEN', value, spokeAt, now: performance.now() }, ctx)
+    if (next === run) return
+    set((s) => ({ run: next, pulse: s.pulse + 1 }))
+  },
+
   advance: () => {
     const { run } = get()
     if (!run || !ctx || run.phase !== 'feedback') return
@@ -214,12 +224,9 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
   const quest = questById(state.questId)!
   const prog = questProgress(save, quest.id)
 
-  const bestSniper = state.mode === 'sniper' && !state.untimed
-    ? Math.max(prog.bestSniper, summary.score) : prog.bestSniper
-  const bestBlitz = state.mode === 'blitz'
-    ? Math.max(prog.bestBlitz, summary.score) : prog.bestBlitz
-
-  const prevBest = state.mode === 'blitz' ? prog.bestBlitz : prog.bestSniper
+  // Each mode, and each of keys and voice, keeps its own best.
+  const best = bestKey(state.mode, state.voice)
+  const prevBest = prog[best]
   const newBest = !state.untimed && summary.score > prevBest && prevBest > 0
 
   const stats: StatsMap = { ...save.stats, ...state.stats }
@@ -271,8 +278,7 @@ function finish(state: RunState, set: SetFn, get: GetFn) {
         cleared: prog.cleared || clearedNow,
         mastered: prog.mastered || masteredNow,
         practiced: prog.practiced || state.untimed,
-        bestSniper,
-        bestBlitz,
+        [best]: state.untimed ? prevBest : Math.max(prevBest, summary.score),
         plays: prog.plays + 1,
         perfect: prog.perfect || (summary.perfect && summary.correct > 5),
         // A clean Blitz run on the quest, rather than a score threshold.

@@ -9,6 +9,8 @@ import { SplatBurst, SplatField } from '../art'
 import { CorrectSticker, MissSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
+import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
+import { useVoiceRun } from '@/voice/useVoiceRun'
 import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
 
 
@@ -64,6 +66,14 @@ export function RunScreen() {
 
   useEffect(() => () => audio.stopMusic(), [])
   useRaf((now) => tick(now), live)
+
+  // Voice is a second way in, never a replacement: the keypad stays live.
+  useVoiceRun({
+    enabled: run?.voice ?? false,
+    playing: live && run?.phase === 'playing',
+    answer: run ? (factsByKey.get(run.currentKey)?.answer ?? -1) : -1,
+    shownAt: run?.shownAt ?? 0,
+  })
   useKeypad(live && run?.phase === 'playing', { digit, backspace, escape: quit })
 
   // The reveal ignores input for a beat before it will accept a dismissal.
@@ -162,7 +172,13 @@ export function RunScreen() {
   const stickerMissed = lastMissAt > lastCorrectAt
   const stickerIdx = stickerAt + (run.startedAt | 0)
   const anchor = STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length]
-  const slots = Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
+  // While answering, one slot per digit of the answer. Once answered, exactly
+  // what was entered: a spoken "8" for 10, or "100" for 10, has a different
+  // length, and padding it with "?" read as a half-typed answer.
+  const slots =
+    run.phase === 'playing'
+      ? Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
+      : run.entry.split('')
   // Derived during render, not waited for in an effect: the state update lands
   // a frame after the key changes, and that one frame had the old question
   // already unmounted and the new one still at zero opacity — an empty card for
@@ -197,6 +213,7 @@ export function RunScreen() {
               )}
             </div>
           </div>
+          {run.voice && <VoiceChip />}
           <div className={`combo${mult >= 2 ? ' combo--hot' : run.streak === 0 ? ' combo--cold' : ''}`}>
             <span className="label">Combo</span>
             <span key={comboStep} className="combo__v tnum combo-step">
@@ -234,6 +251,7 @@ export function RunScreen() {
           </div>
 
           <div className={`panel problemcard${showWrong ? ' problemcard--dim' : ''}`}>
+            {run.voice && <VoiceNudge />}
             {settings.flashes && comboStep > 0 && (
               <span key={comboStep} className="problemcard__glow" aria-hidden />
             )}
