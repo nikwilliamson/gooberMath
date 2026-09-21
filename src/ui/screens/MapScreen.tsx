@@ -7,7 +7,7 @@ import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
 import { OP_ACCENT } from '../art'
-import { REGION_ART } from '../sprites'
+import { LevelMarker, MARKER_HOLDS_NUMBER, REGION_ART, type MarkerState } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
 import { VoiceToggle } from '../components/VoiceToggle'
 
@@ -82,15 +82,19 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
             const prog = questProgress(save, quest.id)
             const isCurrent = current?.id === quest.id
             const last = i === quests.length - 1
+            const marker: MarkerState = prog.mastered
+              ? 'mastered'
+              : status === 'cleared' || status === 'locked'
+                ? status
+                : isCurrent
+                  ? 'current'
+                  : 'open'
             return (
               <div key={quest.id} className={`node${status === 'locked' ? ' node--locked' : ''}`}>
                 <div className="node__rail">
-                  <span
-                    className={`node__dot${status === 'cleared' ? ' node__dot--done' : ''}${
-                      isCurrent && status !== 'locked' ? ' node__dot--current' : ''
-                    }`}
-                  >
-                    {status === 'cleared' ? '✓' : status === 'locked' ? '🔒' : i + 1}
+                  <span className={`node__marker node__marker--${marker}`}>
+                    <LevelMarker state={marker} width="100%" />
+                    {MARKER_HOLDS_NUMBER[marker] && <span className="node__num tnum">{i + 1}</span>}
                   </span>
                   {!last && <span className={`node__line${status === 'cleared' ? ' node__line--done' : ''}`} />}
                 </div>
