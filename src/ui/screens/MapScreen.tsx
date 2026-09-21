@@ -6,8 +6,8 @@ import type { Mode, Op } from '@/engine/types'
 import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
-import { OP_ACCENT, SplatField } from '../art'
-import { ART } from '../sprites'
+import { OP_ACCENT } from '../art'
+import { LevelMarker, MARKER_HOLDS_NUMBER, REGION_ART, type MarkerState } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
 import { VoiceToggle } from '../components/VoiceToggle'
 
@@ -48,14 +48,10 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
   return (
     <div className="app" data-region={region}>
       <div
+        key={region}
         className="scene scene--art"
-        // One backdrop across all four worlds; the region accent and splats do
-        // the differentiating. The second scene made three tabs feel like a
-        // different, lesser screen.
-        style={{ backgroundImage: `url(${ART.additionFields})` }}
-      >
-        <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.07} />
-      </div>
+        style={{ backgroundImage: `url(${REGION_ART[region]})` }}
+      />
 
       <div className="map screen-in">
         <header className="map__head">
@@ -64,8 +60,8 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
           </button>
           <div className="map__world">
             <span className="label">World {worldNo}</span>
-            <h1 className="map__op">{OP_NAME[region]}</h1>
-            <span className="map__sub">{regionDef.name}</span>
+            <h1 className="map__op">{regionDef.name}</h1>
+            <span className="map__sub">{OP_NAME[region]}</span>
           </div>
           <span className="spacer" />
           <span className="chip">
@@ -85,18 +81,20 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
             const status = questStatus(save, quest)
             const prog = questProgress(save, quest.id)
             const isCurrent = current?.id === quest.id
-            const last = i === quests.length - 1
+            const marker: MarkerState = prog.mastered
+              ? 'mastered'
+              : status === 'cleared' || status === 'locked'
+                ? status
+                : isCurrent
+                  ? 'current'
+                  : 'open'
             return (
               <div key={quest.id} className={`node${status === 'locked' ? ' node--locked' : ''}`}>
                 <div className="node__rail">
-                  <span
-                    className={`node__dot${status === 'cleared' ? ' node__dot--done' : ''}${
-                      isCurrent && status !== 'locked' ? ' node__dot--current' : ''
-                    }`}
-                  >
-                    {status === 'cleared' ? '✓' : status === 'locked' ? '🔒' : i + 1}
+                  <span className={`node__marker node__marker--${marker}`}>
+                    <LevelMarker state={marker} width="100%" />
+                    {MARKER_HOLDS_NUMBER[marker] && <span className="node__num tnum">{i + 1}</span>}
                   </span>
-                  {!last && <span className={`node__line${status === 'cleared' ? ' node__line--done' : ''}`} />}
                 </div>
                 <button
                   className="node__body"

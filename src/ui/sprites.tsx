@@ -1,3 +1,4 @@
+import type { Op } from '@/engine/types'
 import type { CSSProperties } from 'react'
 import frames from './spriteFrames.json'
 
@@ -238,6 +239,51 @@ export function MissSticker({
 export const ART = {
   logo: `${IMG}/logo.webp`,
   world: `${IMG}/world.webp`,
-  additionFields: `${IMG}/additionFields.webp`,
   goober: `${IMG}/goober.webp`,
+}
+
+/* -------------------------------------------------------------------------- */
+/* Level markers: the quest-node platforms on the map                          */
+/* -------------------------------------------------------------------------- */
+
+export type MarkerState = 'locked' | 'open' | 'current' | 'cleared' | 'mastered'
+
+/** Frame index in levelMarkers, reading order across the loose sheet. */
+const MARKER_FRAMES: Record<MarkerState, number> = {
+  locked: 0, open: 1, current: 2, cleared: 3, mastered: 4,
+}
+
+/** Open and current have an empty ring for the quest number; the others don't. */
+export const MARKER_HOLDS_NUMBER: Record<MarkerState, boolean> = {
+  locked: false, open: true, current: true, cleared: false, mastered: false,
+}
+
+export function LevelMarker({
+  state,
+  width,
+  className,
+  style,
+}: {
+  state: MarkerState
+  width: number | string
+  className?: string
+  style?: CSSProperties
+}) {
+  return <Sprite sheet="levelMarkers" index={MARKER_FRAMES[state]} width={width} className={className} style={style} />
+}
+
+/** One painted map per region; the MapScreen backdrop. */
+export const REGION_ART: Record<Op, string> = {
+  add: `${IMG}/plusPlains.webp`,
+  sub: `${IMG}/minusMarsh.webp`,
+  mul: `${IMG}/timesTundra.webp`,
+  div: `${IMG}/dividedDesert.webp`,
+}
+
+/** Inside the world: the RunScreen backdrop while he plays a quest there. */
+export const LEVEL_ART: Record<Op, string> = {
+  add: `${IMG}/plusPlainsLevel.webp`,
+  sub: `${IMG}/minusMarshLevel.webp`,
+  mul: `${IMG}/timesTundraLevel.webp`,
+  div: `${IMG}/dividedDesertLevel.webp`,
 }

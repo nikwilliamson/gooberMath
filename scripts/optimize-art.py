@@ -30,9 +30,24 @@ PLAN = {
     'questSprite':        (1150, 88, False),
     'accessoriesSprite':  (1150, 88, False),
     'world':              (1536, 74, False),
-    'additionFields':     (1536, 74, False),
+    'plusPlains':         (1536, 74, False),
+    'minusMarsh':         (1536, 74, False),
+    'timesTundra':        (1536, 74, False),
+    'dividedDesert':      (1536, 74, False),
+    'plusPlainsLevel':    (1536, 74, False),
+    'minusMarshLevel':    (1536, 74, False),
+    'timesTundraLevel':   (1536, 74, False),
+    'dividedDesertLevel': (1536, 74, False),
     'positiveSprite':     (1150, 88, False),
     'incorrectSprite':    (1150, 88, False),
+    'levelMarkers':       (1254, 88, False),
+}
+
+
+# Full-bleed world maps: saved without alpha, never de-checkered.
+OPAQUE = {
+    'plusPlains', 'minusMarsh', 'timesTundra', 'dividedDesert',
+    'plusPlainsLevel', 'minusMarshLevel', 'timesTundraLevel', 'dividedDesertLevel',
 }
 
 
@@ -82,6 +97,49 @@ GRIDS = {
     'incorrectSprite': (5, 4),
     'itemsSprite': (5, 4),
 }
+
+
+# Sheets laid out loosely rather than on a grid: the frames are found by
+# clustering the ink, and every frame gets the same box so they share a scale
+# and a centre on screen. name -> (frame count, cluster gap in px)
+BLOBS = {
+    'levelMarkers': (5, 16),
+}
+
+
+def measure_blobs(path: Path, count: int, gap: int):
+    """
+    Frames from a loose sheet. Dilating the alpha by `gap` joins each marker to
+    its own floating rocks and sparkles without bridging to its neighbours;
+    the largest `count` clusters are the frames, read left to right, top to
+    bottom. Boxes are the widest and tallest cluster, centred on each one.
+    """
+    alpha = np.array(Image.open(path).convert('RGBA').getchannel('A'))
+    ink = (alpha > 12).astype(np.uint8)
+    k = 2 * gap + 1
+    joined = cv2.dilate(ink, np.ones((k, k), np.uint8))
+    n, lbl, stats, _ = cv2.connectedComponentsWithStats(joined, 8)
+    boxes = []
+    for i in range(1, n):
+        ys, xs = np.where((lbl == i) & (ink == 1))
+        if len(xs) == 0:
+            continue
+        boxes.append((len(xs), int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1))
+    boxes = sorted(boxes, reverse=True)[:count]
+    if len(boxes) != count:
+        raise SystemExit(f'{path.stem}: found {len(boxes)} clusters, expected {count}')
+    w = max(x1 - x0 for _, x0, _, x1, _ in boxes)
+    h = max(y1 - y0 for _, _, y0, _, y1 in boxes)
+    sheet_h, sheet_w = alpha.shape
+    frames = []
+    for _, x0, y0, x1, y1 in boxes:
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        fx = min(max(0, round(cx - w / 2)), sheet_w - w)
+        fy = min(max(0, round(cy - h / 2)), sheet_h - h)
+        frames.append([fx, fy, w, h])
+    # Reading order: rows first (a row is anything within half a frame height).
+    frames.sort(key=lambda f: (round(f[1] / (h / 2)), f[0]))
+    return frames
 
 
 def _row_bands(ink, rows: int):
@@ -169,8 +227,13 @@ def main() -> None:
         stem = png.stem
         max_w, quality, trim = PLAN.get(stem, (1200, 88, False))
         raw = Image.open(png)
-        # Some exports arrive without alpha, with the checkerboard baked in.
-        im = dechecker(raw) if 'A' not in raw.getbands() else raw.convert('RGBA')
+        # Some sprite exports arrive without alpha, with the checkerboard baked
+        # in. Full-bleed backgrounds have no alpha to recover, and the flood
+        # would eat their fog and snow.
+        if stem in OPAQUE:
+            im = raw.convert('RGB')
+        else:
+            im = dechecker(raw) if 'A' not in raw.getbands() else raw.convert('RGBA')
         if trim:
             im = trim_alpha(im)
         if im.width > max_w:
@@ -181,13 +244,17 @@ def main() -> None:
         total_before += before
         total_after += after
         print(f'{stem:20} {im.width:5}x{im.height:<5} {before/1024:8.0f} KB -> {after/1024:7.0f} KB')
-        if stem in GRIDS:
-            cols, rows = GRIDS[stem]
+        if stem in GRIDS or stem in BLOBS:
+            if stem in GRIDS:
+                cols, rows = GRIDS[stem]
+                frames = measure_frames(dest, cols, rows)
+            else:
+                frames = measure_blobs(dest, *BLOBS[stem])
             manifest[stem] = {
                 'sheet': f'{stem}.webp',
                 'width': im.width,
                 'height': im.height,
-                'frames': measure_frames(dest, cols, rows),
+                'frames': frames,
             }
     frames_file = Path('src/ui/spriteFrames.json')
     frames_file.write_text(json.dumps(manifest, indent=2) + '\n')

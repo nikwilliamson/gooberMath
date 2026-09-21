@@ -5,8 +5,7 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { SplatBurst, SplatField } from '../art'
-import { CorrectSticker, MissSticker, STICKER_ANCHORS } from '../sprites'
+import { CorrectSticker, LEVEL_ART, MissSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
@@ -191,9 +190,7 @@ export function RunScreen() {
 
   return (
     <div className="app" data-region={quest.region}>
-      <div className="scene scene--arena">
-        {settings.particles && <SplatField count={3} seed={11} color="#5b7bb5" opacity={0.08} />}
-      </div>
+      <div className="scene scene--art scene--level" style={{ backgroundImage: `url(${LEVEL_ART[quest.region]})` }} />
 
       <div className="run">
         <div className="hud">
@@ -355,13 +352,6 @@ export function RunScreen() {
           <div className="countdown">
             <span className="countdown__mode">{modeName}</span>
             <div className="countdown__n">
-              <SplatBurst
-                key={`s${count}`}
-                className="countdown__splat count-splat-in"
-                color="#f5b21f"
-                color2="#ff8a1f"
-                seed={count * 3}
-              />
               <span key={count} className="count-in countdown__digit">
                 {count}
               </span>

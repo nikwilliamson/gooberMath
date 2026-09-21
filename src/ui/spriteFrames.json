@@ -350,6 +350,43 @@
       ]
     ]
   },
+  "levelMarkers": {
+    "sheet": "levelMarkers.webp",
+    "width": 1254,
+    "height": 1254,
+    "frames": [
+      [
+        0,
+        156,
+        422,
+        455
+      ],
+      [
+        412,
+        170,
+        422,
+        455
+      ],
+      [
+        826,
+        174,
+        422,
+        455
+      ],
+      [
+        199,
+        706,
+        422,
+        455
+      ],
+      [
+        684,
+        717,
+        422,
+        455
+      ]
+    ]
+  },
   "positiveSprite": {
     "sheet": "positiveSprite.webp",
     "width": 1150,

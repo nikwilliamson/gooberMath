@@ -1,6 +1,5 @@
 import { audio } from '@/audio/engine'
 import { useGame } from '@/store/game'
-import { SplatField } from '../art'
 import { ART } from '../sprites'
 
 export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void; onGrownUps: () => void }) {
@@ -15,9 +14,7 @@ export function TitleScreen({ onSettings, onGrownUps }: { onSettings: () => void
 
   return (
     <div className="app">
-      <div className="scene scene--world">
-        <SplatField count={3} seed={5} color="#f5b21f" opacity={0.1} />
-      </div>
+      <div className="scene scene--world" />
 
       <span className="micro micro--tl">
         Practice
