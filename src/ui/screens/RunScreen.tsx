@@ -5,14 +5,16 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { CorrectSticker, LEVEL_ART, MissSticker, STICKER_ANCHORS } from '../sprites'
-import { InkLayer } from '../components/InkLayer'
-import { NumberPad } from '../components/NumberPad'
-import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
 import { useVoiceRun } from '@/voice/useVoiceRun'
-import { clamp01, formatClock, useKeypad, useRaf } from '../hooks'
+import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
+import { useKeypad, useRaf } from '../hooks'
+import { RunView } from '../run/RunView'
+import { STICKER_ANCHORS } from '../sprites'
 
-
+/**
+ * Wires the run to the store: countdown, clock, input, audio, and the
+ * choreography around answers. Everything visible is RunView.
+ */
 export function RunScreen() {
   const run = useGame((s) => s.run)
   const settings = useGame((s) => s.save.settings)
@@ -159,18 +161,13 @@ export function RunScreen() {
 
   const fact = factsByKey.get(run.currentKey)!
   const width = String(fact.answer).length
-  const frac = run.untimed ? 1 : clamp01(run.msLeft / 60_000)
-  const urgent = !run.untimed && run.msLeft <= 10_000
-  const healthy = !run.untimed && run.msLeft > 30_000
   const mult = comboMult(run.streak)
   const showWrong = run.phase === 'feedback' && run.lastCorrect === false
   const lastPoints = run.answers[lastCorrectAt - 1]?.points ?? 0
   // Rotate through the 20 sticker phrases, offset per run so it is not always
   // the same opener.
   const stickerAt = Math.max(lastCorrectAt, lastMissAt)
-  const stickerMissed = lastMissAt > lastCorrectAt
   const stickerIdx = stickerAt + (run.startedAt | 0)
-  const anchor = STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length]
   // While answering, one slot per digit of the answer. Once answered, exactly
   // what was entered: a spoken "8" for 10, or "100" for 10, has a different
   // length, and padding it with "?" read as a half-typed answer.
@@ -186,222 +183,48 @@ export function RunScreen() {
   const leaving =
     outgoing ??
     (ref && ref.key !== run.currentKey ? { ...ref, won: lastWasCorrect.current } : null)
-  const modeName = run.untimed ? 'Warm-up' : run.mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
 
   return (
-    <div className="app" data-region={quest.region}>
-      <div className="scene scene--art scene--level" style={{ backgroundImage: `url(${LEVEL_ART[quest.region]})` }} />
-
-      <div className="run">
-        <div className="hud">
-          <button className="btn btn--ghost" onClick={quit} aria-label="Stop this run" style={{ padding: '0.5em 0.8em' }}>
-            &#10005;
-          </button>
-          <div className="hud__time">
-            <span className="label">{run.untimed ? 'Warm-up' : 'Time'}</span>
-            <div className="hud__clock">
-              <span className="hud__digits tnum">
-                {run.untimed ? `${run.problemsLeft} left` : formatClock(run.msLeft)}
-              </span>
-              {!run.untimed && (
-                <div className={`timer${urgent ? ' timer--urgent' : healthy ? ' timer--ok' : ''}`}>
-                  <div className="timer__fill" style={{ transform: `scaleX(${frac})` }} />
-                </div>
-              )}
-            </div>
-          </div>
-          {run.voice && <VoiceChip />}
-          <div className={`combo${mult >= 2 ? ' combo--hot' : run.streak === 0 ? ' combo--cold' : ''}`}>
-            <span className="label">Combo</span>
-            <span key={comboStep} className="combo__v tnum combo-step">
-              x{run.streak}
-            </span>
-            <span className="combo__mult" data-on={mult > 1 || undefined}>
-              {mult > 1 ? `${mult}\u00d7 points` : '\u00a0'}
-            </span>
-          </div>
-        </div>
-
-        <div className={`board${shake ? ' shake' : ''}`}>
-          {settings.particles && <InkLayer pulse={pulse} enabled={settings.particles} intensity={mult / 3} />}
-
-          <div className="board__zone">
-            {stickerAt > 0 && anchor.zone === 'top' && (
-              <div
-                key={stickerAt}
-                className="sticker"
-                style={{ ['--rot' as string]: `${anchor.rot}deg` }}
-                data-side={anchor.side}
-                data-zone={anchor.zone}
-                aria-hidden
-              >
-                {stickerMissed ? (
-                  <MissSticker index={stickerIdx} className="sticker__img" />
-                ) : (
-                  <>
-                    <CorrectSticker index={stickerIdx} className="sticker__img" />
-                    <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className={`panel problemcard${showWrong ? ' problemcard--dim' : ''}`}>
-            {run.voice && <VoiceNudge />}
-            {settings.flashes && comboStep > 0 && (
-              <span key={comboStep} className="problemcard__glow" aria-hidden />
-            )}
-            {/* The old question leaves while the new one arrives: both sit in
-                the same grid cell so the card never jumps between them. */}
-            {leaving && (
-              <span
-                key={leaving.key}
-                className={`problem tnum problem-out${leaving.won ? ' problem-out--won' : ''}`}
-                aria-hidden
-              >
-                {leaving.left}
-                <span className="problem__answer">
-                  {leaving.answer.split('').map((d, i) => (
-                    <span key={i} className="problem__slot">
-                      {d}
-                    </span>
-                  ))}
-                </span>
-              </span>
-            )}
-            {/* Keyed on the fact alone. Including the answer count remounted
-                this span the instant he typed the last digit, so the whole
-                equation blinked out and faded back in before the old question
-                had even started leaving — that was the flash before the swap. */}
-            <span key={run.currentKey} className="problem tnum problem-in">
-              {formatFact(fact)} ={' '}
-              <span className="problem__answer">
-                {slots.map((d, i) => (
-                  <span key={i} className="problem__slot">
-                    {d ? (
-                      <span key={d} className="slot-in" style={{ display: 'inline-block' }}>
-                        {d}
-                      </span>
-                    ) : (
-                      '?'
-                    )}
-                  </span>
-                ))}
-              </span>
-            </span>
-          </div>
-
-          <div className="board__zone">
-            {stickerAt > 0 && anchor.zone === 'bottom' && (
-              <div
-                key={stickerAt}
-                className="sticker"
-                style={{ ['--rot' as string]: `${anchor.rot}deg` }}
-                data-side={anchor.side}
-                data-zone={anchor.zone}
-                aria-hidden
-              >
-                {stickerMissed ? (
-                  <MissSticker index={stickerIdx} className="sticker__img" />
-                ) : (
-                  <>
-                    <CorrectSticker index={stickerIdx} className="sticker__img" />
-                    <span className="sticker__points">+{lastPoints.toLocaleString()}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {showWrong && (
-            // Tap anywhere to move on. The clock is already paused here, so
-            // this beat costs him nothing but the three-second miss penalty —
-            // reading the whole fact is the part that actually teaches, and a
-            // reveal that vanished on a timer was gone before he had read it.
-            <button
-              className="fb fb--answer"
-              onClick={canDismiss ? advance : undefined}
-              aria-label="Next problem"
-            >
-              <div className="fb__answer fb-word">
-                <span className="fb__answersub">Not quite</span>
-                <span className="fb__answerv tnum">
-                  {formatFact(fact)} = {fact.answer}
-                </span>
-                {run.entry !== '' && (
-                  <span className="fb__answeryou">
-                    you said <b className="tnum">{run.entry}</b>
-                  </span>
-                )}
-                <span className="fb__answertap" data-ready={canDismiss || undefined}>
-                  Tap to keep going
-                </span>
-              </div>
-            </button>
-          )}
-        </div>
-
-        <div className="padwrap" onClick={showWrong && canDismiss ? advance : undefined}>
-          <div className={showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
-            <NumberPad onDigit={digit} onBackspace={backspace} disabled={run.phase !== 'playing'} />
-          </div>
-        </div>
-
-        {count > 0 && (
-          <div className="countdown">
-            <span className="countdown__mode">{modeName}</span>
-            <div className="countdown__n">
-              <span key={count} className="count-in countdown__digit">
-                {count}
-              </span>
-            </div>
-
-            <div className="countdown__foot">
-              <span className="label">
-                {run.mode === 'blitz' ? 'Same facts. Faster you.' : 'Misses cost three seconds.'}
-              </span>
-              <div className="countdown__dots">
-                {[3, 2, 1].map((n) => (
-                  <span key={n} className={`countdown__dot${count <= n ? ' countdown__dot--on' : ''}`} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {count === 0 && (
-        <span className="micro micro--br micro--run">
-          {run.mode === 'blitz' ? (
-            <>
-              Focus
-              <br />
-              Solve
-              <br />
-              Repeat
-            </>
-          ) : showWrong ? (
-            <>
-              Learn
-              <br />
-              Adapt
-              <br />
-              Come back
-              <br />
-              stronger
-            </>
-          ) : (
-            <>
-              Keep
-              <br />
-              the
-              <br />
-              streak
-            </>
-          )}
-        </span>
-      )}
-    </div>
+    <RunView
+      region={quest.region}
+      mode={run.mode}
+      untimed={run.untimed}
+      count={count}
+      hud={{
+        untimed: run.untimed,
+        msLeft: run.msLeft,
+        problemsLeft: run.problemsLeft,
+        streak: run.streak,
+        mult,
+        comboStep,
+        onQuit: quit,
+      }}
+      problem={{
+        factKey: run.currentKey,
+        left: formatFact(fact),
+        slots,
+        leaving,
+        glow: settings.flashes ? comboStep : 0,
+      }}
+      sticker={
+        stickerAt > 0
+          ? {
+              at: stickerAt,
+              index: stickerIdx,
+              missed: lastMissAt > lastCorrectAt,
+              points: lastPoints,
+              anchor: STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length],
+            }
+          : null
+      }
+      reveal={showWrong ? { left: formatFact(fact), answer: fact.answer, entry: run.entry, ready: canDismiss } : null}
+      effects={{ particles: settings.particles, pulse, intensity: mult / 3, shake }}
+      padLive={run.phase === 'playing'}
+      onDigit={digit}
+      onBackspace={backspace}
+      onDismiss={advance}
+      hudExtra={run.voice ? <VoiceChip /> : undefined}
+      problemExtra={run.voice ? <VoiceNudge /> : undefined}
+    />
   )
 }
