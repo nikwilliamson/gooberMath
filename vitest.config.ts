@@ -15,6 +15,12 @@ export default defineConfig({
         // the a11y checks from preview.tsx.
         extends: './vite.config.ts',
         plugins: [storybookTest({ configDir: '.storybook' })],
+        // Pre-bundle everything the stories reach on a cold cache. A dep that
+        // Vite discovers mid-run is re-optimised and reloaded, and a story
+        // rendered across that reload sees two copies of React.
+        optimizeDeps: {
+          include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-dev-runtime', 'zustand', 'storybook/test', 'storybook/actions'],
+        },
         test: {
           name: 'storybook',
           browser: {
