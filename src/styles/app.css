@@ -99,11 +99,12 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
     radial-gradient(90% 70% at 20% 90%, rgba(245, 178, 31, 0.07) 0%, transparent 60%),
     linear-gradient(180deg, #121826 0%, var(--bg) 70%);
 }
-.scene--arena {
+/* In play the problem is the only thing that may be bright, so the world art
+   sits under a heavier scrim than it does on the map. */
+.scene--level::before {
   background:
-    radial-gradient(60% 40% at 50% 8%, rgba(120, 160, 230, 0.16) 0%, transparent 60%),
-    radial-gradient(80% 60% at 80% 100%, rgba(53, 214, 239, 0.07) 0%, transparent 60%),
-    linear-gradient(180deg, #101623 0%, var(--bg) 75%);
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.55) 0%, rgba(6, 9, 16, 0.78) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.6) 0%, rgba(6, 9, 16, 0.82) 55%, rgba(6, 9, 16, 0.96) 100%);
 }
 .scene__splats { position: absolute; inset: 0; }
 

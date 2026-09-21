@@ -34,6 +34,10 @@ PLAN = {
     'minusMarsh':         (1536, 74, False),
     'timesTundra':        (1536, 74, False),
     'dividedDesert':      (1536, 74, False),
+    'plusPlainsLevel':    (1536, 74, False),
+    'minusMarshLevel':    (1536, 74, False),
+    'timesTundraLevel':   (1536, 74, False),
+    'dividedDesertLevel': (1536, 74, False),
     'positiveSprite':     (1150, 88, False),
     'incorrectSprite':    (1150, 88, False),
     'levelMarkers':       (1254, 88, False),
@@ -41,7 +45,10 @@ PLAN = {
 
 
 # Full-bleed world maps: saved without alpha, never de-checkered.
-OPAQUE = {'plusPlains', 'minusMarsh', 'timesTundra', 'dividedDesert'}
+OPAQUE = {
+    'plusPlains', 'minusMarsh', 'timesTundra', 'dividedDesert',
+    'plusPlainsLevel', 'minusMarshLevel', 'timesTundraLevel', 'dividedDesertLevel',
+}
 
 
 def dechecker(im: Image.Image, tol: int = 26) -> Image.Image:

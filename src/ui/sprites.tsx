@@ -279,3 +279,11 @@ export const REGION_ART: Record<Op, string> = {
   mul: `${IMG}/timesTundra.webp`,
   div: `${IMG}/dividedDesert.webp`,
 }
+
+/** Inside the world: the RunScreen backdrop while he plays a quest there. */
+export const LEVEL_ART: Record<Op, string> = {
+  add: `${IMG}/plusPlainsLevel.webp`,
+  sub: `${IMG}/minusMarshLevel.webp`,
+  mul: `${IMG}/timesTundraLevel.webp`,
+  div: `${IMG}/dividedDesertLevel.webp`,
+}
