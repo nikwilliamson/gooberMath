@@ -75,8 +75,8 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.62) 0%, rgba(6, 9, 16, 0.88) 70%),
-    linear-gradient(180deg, rgba(6, 9, 16, 0.72) 0%, rgba(6, 9, 16, 0.9) 55%, rgba(6, 9, 16, 0.97) 100%);
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.30) 0%, rgba(6, 9, 16, 0.62) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.42) 0%, rgba(6, 9, 16, 0.7) 55%, rgba(6, 9, 16, 0.94) 100%);
 }
 .scene--world {
   background-image: var(--world-art);
