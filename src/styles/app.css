@@ -69,10 +69,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* The region art is itself a map with painted nodes. Blurred and pushed well
-     back it reads as depth; left sharp it competes with the real quest list. */
-  filter: blur(3px) saturate(0.85);
-  transform: scale(1.04);
+  filter: saturate(0.85);
 }
 .scene--art::before {
   content: '';
