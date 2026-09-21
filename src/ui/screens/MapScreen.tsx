@@ -6,7 +6,7 @@ import type { Mode, Op } from '@/engine/types'
 import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
-import { OP_ACCENT, SplatField } from '../art'
+import { OP_ACCENT } from '../art'
 import { REGION_ART } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
 import { VoiceToggle } from '../components/VoiceToggle'
@@ -51,9 +51,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
         key={region}
         className="scene scene--art"
         style={{ backgroundImage: `url(${REGION_ART[region]})` }}
-      >
-        <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.07} />
-      </div>
+      />
 
       <div className="map screen-in">
         <header className="map__head">
