@@ -60,22 +60,22 @@ export const QUESTS: QuestDef[] = [
   // --- Plus Plains ----------------------------------------------------------
   {
     id: 'add-1', region: 'add', name: 'Count On',
-    blurb: 'Count on one or two. Warm up the ink.',
+    blurb: 'Count on one or two. First steps across the Plains.',
     spec: { op: 'add', pairs: { kind: 'addend', values: [1, 2], maxSum: 12, min: 1 } }, untimedFirst: false,
   },
   {
     id: 'add-2', region: 'add', name: 'Double Trouble',
-    blurb: 'Two of the same. These are the fastest facts you own.',
+    blurb: 'Two of the same. The fastest facts you own.',
     spec: { op: 'add', pairs: { kind: 'doubles', max: 9 } }, untimedFirst: false,
   },
   {
     id: 'add-3', region: 'add', name: 'Make Ten',
-    blurb: 'Pairs that hit ten, then ten plus the rest. This is how you cross ten.',
+    blurb: 'Pairs that hit ten, then ten and the rest. Ten is the bridge.',
     spec: { op: 'add', pairs: { kind: 'makeTen' } }, untimedFirst: false,
   },
   {
     id: 'add-4', region: 'add', name: 'Near Doubles',
-    blurb: 'Almost-doubles: one or two more than a double you own.',
+    blurb: 'One or two more than a double you already own.',
     spec: { op: 'add', pairs: { kind: 'nearDoubles', max: 9, span: 2 } }, untimedFirst: false,
   },
   {
@@ -85,7 +85,7 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'add-boss', region: 'add', name: 'Plains Guardian',
-    blurb: 'Every sum to eighteen, all at once. Beat it to own the Plains.',
+    blurb: 'Every sum to eighteen at the gates of Sumrise Keep. Beat it to own the Plains.',
     spec: { op: 'add', pairs: { kind: 'allSums', maxSum: 18, min: 1 } }, untimedFirst: false, boss: true,
   },
 
@@ -94,12 +94,12 @@ export const QUESTS: QuestDef[] = [
   // its strategy teaches ("take away 2" is 7 − 2, not 7 − 5).
   {
     id: 'sub-1', region: 'sub', name: 'Count Back',
-    blurb: 'Take away one or two. Count back.',
+    blurb: 'Take away one or two. Count back into the fog.',
     spec: { op: 'sub', pairs: { kind: 'addend', values: [1, 2], maxSum: 12, min: 1 }, derive: 'value' }, untimedFirst: false,
   },
   {
     id: 'sub-2', region: 'sub', name: 'Half Back',
-    blurb: 'Undo a double. If you know 7+7, you know 14-7.',
+    blurb: 'Undo a double. If you know 7+7, 14-7 is free.',
     spec: { op: 'sub', pairs: { kind: 'doubles', max: 9 } }, untimedFirst: false,
   },
   {
@@ -109,7 +109,7 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'sub-4', region: 'sub', name: 'Close Call',
-    blurb: 'The near-doubles, running backwards.',
+    blurb: 'The near-doubles, running backwards through the reeds.',
     spec: { op: 'sub', pairs: { kind: 'nearDoubles', max: 9, span: 2 } }, untimedFirst: false,
   },
   {
@@ -119,31 +119,31 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'sub-boss', region: 'sub', name: 'Marsh Guardian',
-    blurb: 'Every difference inside eighteen. Beat it to own the Marsh.',
+    blurb: 'Every difference inside eighteen, out at the Drowned Keep. Beat it to own the Marsh.',
     spec: { op: 'sub', pairs: { kind: 'allSums', maxSum: 18, min: 1 } }, untimedFirst: false, boss: true,
   },
 
   // --- Times Tundra ---------------------------------------------------------
   {
     id: 'mul-1', region: 'mul', name: 'Skip Count',
-    blurb: 'Twos, fives and tens. Count the steps, then stop counting.',
+    blurb: 'Twos, fives and tens. Count the steps up, then stop counting.',
     spec: { op: 'mul', pairs: { kind: 'factor', values: [2, 5, 10], max: 100, min: 2 } }, untimedFirst: true,
   },
   {
     id: 'mul-2', region: 'mul', name: 'Threes and Fours',
-    blurb: 'Threes and fours. Skip count, then stop counting.',
+    blurb: 'Skip count the threes and fours, then stop counting.',
     spec: { op: 'mul', pairs: { kind: 'factor', values: [3, 4], max: 100, min: 2 } }, untimedFirst: true,
   },
   {
     id: 'mul-3', region: 'mul', name: 'Square Summit',
-    blurb: 'Every square from 2x2 to 10x10.',
+    blurb: 'Every square from 2x2 to 10x10. The top of the Tundra.',
     spec: { op: 'mul', pairs: { kind: 'squares', max: 10, min: 2 } }, untimedFirst: true,
   },
   {
     // With 2s, 5s, 10s, 3s, 4s and the squares owned, only six facts are left:
     // 6x7, 6x8, 6x9, 7x8, 7x9, 8x9. This is those six, wrapped in review.
     id: 'mul-boss', region: 'mul', name: 'Tundra Guardian',
-    blurb: 'Sixes through nines. Only six facts up here you have never met.',
+    blurb: 'Sixes through nines at the Frost Spire. Only six facts up here you have never met.',
     spec: { op: 'mul', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100, min: 2 } }, untimedFirst: true, boss: true,
   },
 
@@ -151,7 +151,7 @@ export const QUESTS: QuestDef[] = [
   // Divisor decides the quest, so each set is a clean "share into N".
   {
     id: 'div-1', region: 'div', name: 'Split in Two',
-    blurb: 'Share into twos, fives and tens.',
+    blurb: 'Share into twos, fives and tens. Even splits across the sand.',
     spec: { op: 'div', pairs: { kind: 'factor', values: [2, 5, 10], max: 100, min: 2 }, derive: 'value' }, untimedFirst: true,
   },
   {
@@ -161,7 +161,7 @@ export const QUESTS: QuestDef[] = [
   },
   {
     id: 'div-boss', region: 'div', name: 'Desert Guardian',
-    blurb: 'Share into sixes through nines. The last one.',
+    blurb: 'Share into sixes through nines at the Crown Vault. The last one.',
     spec: { op: 'div', pairs: { kind: 'factor', values: [6, 7, 8, 9], max: 100, min: 2 }, derive: 'value' }, untimedFirst: true, boss: true,
   },
 ]
