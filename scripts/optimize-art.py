@@ -30,10 +30,17 @@ PLAN = {
     'questSprite':        (1150, 88, False),
     'accessoriesSprite':  (1150, 88, False),
     'world':              (1536, 74, False),
-    'additionFields':     (1536, 74, False),
+    'plusPlains':         (1536, 74, False),
+    'minusMarsh':         (1536, 74, False),
+    'timesTundra':        (1536, 74, False),
+    'dividedDesert':      (1536, 74, False),
     'positiveSprite':     (1150, 88, False),
     'incorrectSprite':    (1150, 88, False),
 }
+
+
+# Full-bleed world maps: saved without alpha, never de-checkered.
+OPAQUE = {'plusPlains', 'minusMarsh', 'timesTundra', 'dividedDesert'}
 
 
 def dechecker(im: Image.Image, tol: int = 26) -> Image.Image:
@@ -169,8 +176,13 @@ def main() -> None:
         stem = png.stem
         max_w, quality, trim = PLAN.get(stem, (1200, 88, False))
         raw = Image.open(png)
-        # Some exports arrive without alpha, with the checkerboard baked in.
-        im = dechecker(raw) if 'A' not in raw.getbands() else raw.convert('RGBA')
+        # Some sprite exports arrive without alpha, with the checkerboard baked
+        # in. Full-bleed backgrounds have no alpha to recover, and the flood
+        # would eat their fog and snow.
+        if stem in OPAQUE:
+            im = raw.convert('RGB')
+        else:
+            im = dechecker(raw) if 'A' not in raw.getbands() else raw.convert('RGBA')
         if trim:
             im = trim_alpha(im)
         if im.width > max_w:
