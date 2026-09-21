@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "voice:model": "bash scripts/fetch-voice-model.sh",
-    "deploy:check": "pnpm typecheck && pnpm test && pnpm build"
+    "deploy:check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@lichess-org/vosk-browser": "0.0.3",
@@ -28,11 +28,5 @@
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^0.21.1",
     "vitest": "^2.1.8"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
-  "packageManager": "pnpm@12.4.2"
+  }
 }
