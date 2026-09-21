@@ -81,7 +81,6 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
             const status = questStatus(save, quest)
             const prog = questProgress(save, quest.id)
             const isCurrent = current?.id === quest.id
-            const last = i === quests.length - 1
             const marker: MarkerState = prog.mastered
               ? 'mastered'
               : status === 'cleared' || status === 'locked'
@@ -96,7 +95,6 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
                     <LevelMarker state={marker} width="100%" />
                     {MARKER_HOLDS_NUMBER[marker] && <span className="node__num tnum">{i + 1}</span>}
                   </span>
-                  {!last && <span className={`node__line${status === 'cleared' ? ' node__line--done' : ''}`} />}
                 </div>
                 <button
                   className="node__body"
