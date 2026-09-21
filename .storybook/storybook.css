@@ -1,0 +1,16 @@
+/*
+ * Storybook-only chrome. The app's own styles assume `.app` is a flex child of
+ * a full-height body (see app.css `html, body, #root`); the region wrapper
+ * has to hand that through untouched.
+ */
+.sb-region {
+  display: contents;
+}
+
+/* Screen stories: the root is the viewport, same as #root in index.html. */
+.sb-show-main.sb-main-fullscreen #storybook-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}

@@ -11,3 +11,7 @@ public/voice/
 
 # Screenshots the Claude desktop app drops beside the repo.
 Claude outputs/
+
+# Storybook
+storybook-static/
+*storybook.log
