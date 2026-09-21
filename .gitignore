@@ -6,3 +6,5 @@ dev-dist
 _tmp_*
 vite.config.ts.timestamp-*
 *.tgz
+# Offline speech model: fetched by scripts/fetch-voice-model.sh, never committed.
+public/voice/

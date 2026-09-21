@@ -17,3 +17,11 @@ export function writeLocal(key: string, value: string): void {
     /* private mode or cookies blocked: this is a convenience, never load-bearing */
   }
 }
+
+export function removeLocal(key: string): void {
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    /* see readLocal */
+  }
+}

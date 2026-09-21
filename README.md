@@ -102,6 +102,7 @@ src/engine/   pure TypeScript — facts, quests, mastery, selector, scoring, run
 src/store/    zustand + IndexedDB persistence
 src/ui/       React components; art.tsx is all SVG
 src/audio/    Web Audio, fully synthesised (no audio files)
+src/voice/    optional spoken answers: pure decision logic + on-device recognizer
 ```
 
 The run loop is a pure reducer `(state, event) => state` over `TICK / DIGIT /
@@ -113,6 +114,55 @@ testable without React. The engine imports nothing from React or the DOM.
 Title screen → Grown-ups. Per-quest mastery counts and median recall time, his
 slowest facts right now, manual region unlocks, and export/import of the save
 blob for moving between devices.
+
+## Voice answers
+
+Optional, off by default: the **Voice** switch on the map's quest bar. He says
+the answer instead of (or as well as) tapping it; the keypad always stays live.
+
+**Nothing leaves the device.** Recognition is [Vosk](https://alphacephei.com/vosk/)
+compiled to WebAssembly (Lichess's maintained fork of vosk-browser), running in a
+worker, restricted to the number words zero to one hundred. The page carries a
+`connect-src 'self'` CSP. That does not bind the worker (it loads from its own
+file, and GitHub Pages cannot set headers), but the worker makes exactly two
+requests, for the model and its wasm, both from this origin, and voice works in
+airplane mode once the model is stored.
+
+**The model** (~40MB) is not in git. `pnpm voice:model` fetches it into
+`public/voice/`, and CI runs that before every deploy (cached). The first local
+run writes `scripts/voice-model.sha256`; commit it and every later fetch is
+verified against it. Without the model, the switch says voice is not included
+in this build and nothing else changes. The model URL doubles as its IndexedDB
+cache key on each device, so it is pinned to the model version; never
+content-hash it.
+
+**How an answer is decided** (`src/voice/voice.ts`, a pure reducer like the run
+loop). Numbers below were measured against the real decoder, in the app:
+
+- A right answer is accepted as soon as its final result arrives:
+  **~0.4–0.6s after he stops speaking**. Answer time for scoring and mastery is
+  taken from when he *started* saying the number, so the recognizer's wait is
+  never charged to him.
+- A wrong answer is held until he has been quiet for 1.4s, so counting on
+  ("six … seven … eight") lands on eight, and a paused "twenty … four" reads as
+  24. Longer pauses than that score the number he paused on.
+- A guess is never scored: a wrong number needs 0.6 confidence, otherwise he is
+  asked to say it again. A right one needs only 0.4, because correctly heard
+  teens come back as low as 0.57.
+- Thirteen–nineteen misheard as thirty–ninety (it happens; those came back at
+  0.50–0.65, while a spoken tens word is always 1.0) counts as the teen when the
+  teen is the answer.
+
+Voice runs keep their own best scores. The mic is open only during a voice run.
+If iOS kills the tab mid-run (memory, on an older iPhone), the next launch
+switches voice off and says why, rather than crashing again.
+
+**Tuning on a device:** open the site with `?voicedebug`. A small panel over the
+timer logs every result, its confidence and timing, and each decision; *copy log*
+puts it on the clipboard with the device and iOS version. Worth checking on both
+the iPhone and the iPad, in Safari and from the home screen: accuracy on his
+voice, counting on, whether the music leaks into the mic, whether the game audio
+stays on the speaker (not the earpiece) with the mic live, and airplane mode.
 
 ## Art direction
 

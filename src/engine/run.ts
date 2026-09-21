@@ -3,7 +3,7 @@ import { recordAnswer, statFor } from './mastery'
 import type { QuestDef } from './quests'
 import { RUN_MS, WRONG_PENALTY_MS, scoreAnswer } from './scoring'
 import { createSelector, recordSelection, selectNext, type SelectorState } from './selector'
-import type { AnswerLog, Fact, FactKey, Mode, StatsMap } from './types'
+import type { AnswerLog, Fact, FactKey, Input, Mode, StatsMap } from './types'
 
 export const FEEDBACK_CORRECT_MS = 200
 /**
@@ -28,12 +28,15 @@ export interface RunCtx {
 export interface RunConfig {
   mode: Mode
   untimed: boolean
+  /** Voice answering is on for this run. Bests are kept separately. */
+  voice?: boolean
   seed?: number
 }
 
 export interface RunState {
   mode: Mode
   untimed: boolean
+  voice: boolean
   questId: string
   sel: SelectorState
   stats: StatsMap
@@ -63,6 +66,13 @@ export interface RunState {
 export type RunEvent =
   | { type: 'TICK'; now: number }
   | { type: 'DIGIT'; d: number; now: number }
+  /**
+   * A whole answer, heard. `spokeAt` is when he started saying it: the answer
+   * time is measured from there, not from when the recognizer decided, so the
+   * ~0.5s it waits to be sure he has finished is never charged to him — the
+   * mastery tiers run on these latencies.
+   */
+  | { type: 'SPOKEN'; value: number; now: number; spokeAt: number }
   | { type: 'BACKSPACE' }
   | { type: 'RESOLVE'; now: number }
   | { type: 'QUIT' }
@@ -86,6 +96,7 @@ export function startRun(quest: QuestDef, stats: StatsMap, cfg: RunConfig, now: 
     state: {
       mode: cfg.mode,
       untimed: cfg.untimed,
+      voice: cfg.voice ?? false,
       questId: quest.id,
       sel,
       stats,
@@ -112,9 +123,16 @@ export function startRun(quest: QuestDef, stats: StatsMap, cfg: RunConfig, now: 
   }
 }
 
-function resolveAnswer(s: RunState, ctx: RunCtx, now: number, value: string): RunState {
+function resolveAnswer(
+  s: RunState,
+  ctx: RunCtx,
+  now: number,
+  value: string,
+  input: Input = 'keys',
+  answeredAt = now,
+): RunState {
   const fact = ctx.byKey.get(s.currentKey)!
-  const ms = now - s.shownAt
+  const ms = Math.max(0, answeredAt - s.shownAt)
   const correct = value !== '' && Number(value) === fact.answer
 
   const correctCount = s.correctCount + (correct ? 1 : 0)
@@ -125,7 +143,7 @@ function resolveAnswer(s: RunState, ctx: RunCtx, now: number, value: string): Ru
   const streak = correct ? s.streak + 1 : 0
   const penalty = !correct && s.mode === 'sniper' && !s.untimed ? WRONG_PENALTY_MS : 0
 
-  const log: AnswerLog = { key: fact.key, correct, ms, points }
+  const log: AnswerLog = { key: fact.key, correct, ms, points, input }
 
   return {
     ...s,
@@ -186,6 +204,12 @@ export function runReducer(s: RunState, e: RunEvent, ctx: RunCtx): RunState {
       return { ...s, entry, lastInputAt: e.now }
     }
 
+    case 'SPOKEN': {
+      if (s.phase !== 'playing') return s
+      // Whatever he had half-typed is superseded by what he said.
+      return resolveAnswer(s, ctx, e.now, String(e.value), 'voice', e.spokeAt)
+    }
+
     case 'BACKSPACE':
       return s.phase === 'playing' ? { ...s, entry: s.entry.slice(0, -1) } : s
 
@@ -217,6 +241,7 @@ export interface RunSummary {
   questId: string
   mode: Mode
   untimed: boolean
+  voice: boolean
   score: number
   correct: number
   wrong: number
@@ -238,6 +263,7 @@ export function summarize(s: RunState): RunSummary {
     questId: s.questId,
     mode: s.mode,
     untimed: s.untimed,
+    voice: s.voice,
     score: s.score,
     correct: s.correctCount,
     wrong: s.wrongCount,

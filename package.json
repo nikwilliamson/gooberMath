@@ -10,9 +10,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "voice:model": "bash scripts/fetch-voice-model.sh",
     "deploy:check": "pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@lichess-org/vosk-browser": "0.0.3",
     "idb-keyval": "^6.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

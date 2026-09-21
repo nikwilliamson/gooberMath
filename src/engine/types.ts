@@ -26,9 +26,13 @@ export interface FactStat {
 
 export type StatsMap = Record<FactKey, FactStat>
 
+export type Input = 'keys' | 'voice'
+
 export interface AnswerLog {
   key: FactKey
   correct: boolean
   ms: number
   points: number
+  /** How this one was answered. The keypad stays live in a voice run. */
+  input: Input
 }

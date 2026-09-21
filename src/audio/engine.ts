@@ -21,6 +21,17 @@ class AudioEngine {
   private sfxGain: GainNode | null = null
   private noise: AudioBuffer | null = null
   private music: HTMLAudioElement | null = null
+  /**
+   * Voice runs play the track through the AudioContext rather than as a bare
+   * media element. With the mic live, iOS switches to play-and-record, and a
+   * bare element on iPhone can drop to the earpiece; audio in the context
+   * follows the same route as the sound effects. Wiring an element into a
+   * context is permanent, so voice runs get their own element and keypad
+   * runs keep exactly the path they had.
+   */
+  private plainMusic: HTMLAudioElement | null = null
+  private routedMusic: HTMLAudioElement | null = null
+  private routed = false
   /** Whether music *should* be playing, so a settings toggle can resume it. */
   private wantMusic = false
   private primed = false
@@ -57,6 +68,25 @@ class AudioEngine {
     const data = buf.getChannelData(0)
     for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1
     this.noise = buf
+  }
+
+  /** The shared context, created on first use. The mic joins this one: two
+      contexts contending for the iOS audio session is a known way to lose
+      playback. Call from a gesture the first time. */
+  context(): AudioContext | null {
+    this.unlock()
+    return this.ctx
+  }
+
+  /** Route music for the next run. Call from the tap that starts it. */
+  setRouted(on: boolean) {
+    const want = on && !!this.ctx
+    if (want === this.routed) return
+    this.music?.pause()
+    this.routed = want
+    this.music = want ? this.routedMusic : this.plainMusic
+    // The other element has not been through a gesture yet.
+    this.primed = false
   }
 
   private env(node: AudioNode, at: number, peak: number, attack: number, decay: number) {
@@ -164,6 +194,15 @@ class AudioEngine {
       el.preload = 'auto'
       el.volume = MUSIC_BASE_VOLUME
       el.crossOrigin = 'anonymous'
+      if (this.routed && this.ctx && this.musicGain) {
+        // Volume moves to the gain node: iOS ignores element.volume anyway.
+        el.volume = 1
+        this.ctx.createMediaElementSource(el).connect(this.musicGain)
+        this.musicGain.gain.value = this.musicVolume()
+        this.routedMusic = el
+      } else {
+        this.plainMusic = el
+      }
       this.music = el
       return el
     } catch {
@@ -212,7 +251,7 @@ class AudioEngine {
     el.loop = loop
     // A prime may have left it muted; startMusic is the authority.
     el.muted = false
-    el.volume = this.musicVolume()
+    this.applyMusicVolume()
     try {
       el.currentTime = 0
     } catch {
@@ -239,10 +278,15 @@ class AudioEngine {
     return Math.min(1, MUSIC_BASE_VOLUME + this.intensity * 0.06)
   }
 
+  private applyMusicVolume() {
+    if (this.routed && this.musicGain) this.musicGain.gain.value = this.musicVolume()
+    else if (this.music) this.music.volume = this.musicVolume()
+  }
+
   /** Combo tier lifts the music a little rather than changing the arrangement. */
   setIntensity(level: number) {
     this.intensity = Math.max(0, Math.min(3, level))
-    if (this.music) this.music.volume = this.musicVolume()
+    this.applyMusicVolume()
   }
 
   applySettings(s: { music: boolean; sfx: boolean }) {

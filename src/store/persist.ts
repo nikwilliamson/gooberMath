@@ -39,15 +39,24 @@ let timer: number | null = null
 export function saveSoon(data: SaveData) {
   queued = data
   if (timer !== null) return
-  timer = window.setTimeout(() => {
-    timer = null
-    try {
-      if (queued) void set(KEY, queued).catch(() => {})
-    } catch {
-      /* IndexedDB unavailable (private mode): progress just will not persist */
-    }
-    queued = null
-  }, 400)
+  timer = window.setTimeout(() => void flushSave(), 400)
+}
+
+/**
+ * Write any queued save now, for the few changes that must survive the app
+ * being killed straight afterwards (the voice crash guard switching voice off).
+ */
+export async function flushSave(): Promise<void> {
+  if (timer !== null) window.clearTimeout(timer)
+  timer = null
+  const data = queued
+  queued = null
+  if (!data) return
+  try {
+    await set(KEY, data)
+  } catch {
+    /* IndexedDB unavailable (private mode): progress just will not persist */
+  }
 }
 
 export const exportSave = (data: SaveData) => JSON.stringify(data, null, 2)

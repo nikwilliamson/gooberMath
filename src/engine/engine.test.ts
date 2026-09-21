@@ -527,3 +527,53 @@ describe('unlocking', () => {
     for (const q of QUESTS) expect(q.unlockScore ?? UNLOCK_SCORE).toBe(UNLOCK_SCORE)
   })
 })
+
+describe('spoken answers', () => {
+  const quest = questById('add-1')!
+  const start = () => startRun(quest, {}, { mode: 'blitz', untimed: false, voice: true, seed: 3 }, 0)
+
+  it('resolves a whole answer at once and marks it as voice', () => {
+    const { state, ctx } = start()
+    const fact = ctx.byKey.get(state.currentKey)!
+    const s = runReducer(state, { type: 'SPOKEN', value: fact.answer, now: 1500, spokeAt: 900 }, ctx)
+    expect(s.phase).toBe('feedback')
+    expect(s.lastCorrect).toBe(true)
+    expect(s.answers[0]).toMatchObject({ correct: true, input: 'voice' })
+    expect(s.voice).toBe(true)
+  })
+
+  it('times the answer from when he started speaking, not from when it was recognized', () => {
+    const { state, ctx } = start()
+    const fact = ctx.byKey.get(state.currentKey)!
+    const s = runReducer(state, { type: 'SPOKEN', value: fact.answer, now: 1500, spokeAt: 900 }, ctx)
+    expect(s.answers[0].ms).toBe(900)
+  })
+
+  it('supersedes a half-typed entry', () => {
+    // Make Ten answers are all two digits, so one typed digit stays pending.
+    const { state, ctx } = startRun(questById('add-3')!, {}, { mode: 'blitz', untimed: false, voice: true, seed: 3 }, 0)
+    const fact = ctx.byKey.get(state.currentKey)!
+    expect(fact.answer).toBeGreaterThanOrEqual(10)
+    let s = runReducer(state, { type: 'DIGIT', d: 9, now: 400 }, ctx)
+    s = runReducer(s, { type: 'SPOKEN', value: fact.answer, now: 1200, spokeAt: 700 }, ctx)
+    expect(s.lastCorrect).toBe(true)
+    expect(s.entry).toBe(String(fact.answer))
+  })
+
+  it('is ignored outside of play, so a late result cannot answer twice', () => {
+    const { state, ctx } = start()
+    const fact = ctx.byKey.get(state.currentKey)!
+    const s1 = runReducer(state, { type: 'SPOKEN', value: fact.answer + 1, now: 1200, spokeAt: 700 }, ctx)
+    expect(s1.phase).toBe('feedback')
+    const s2 = runReducer(s1, { type: 'SPOKEN', value: fact.answer, now: 1300, spokeAt: 800 }, ctx)
+    expect(s2).toBe(s1)
+  })
+
+  it('keeps logging typed answers as keys in a voice run', () => {
+    const { state, ctx } = start()
+    const fact = ctx.byKey.get(state.currentKey)!
+    let s = state
+    for (const ch of String(fact.answer)) s = runReducer(s, { type: 'DIGIT', d: Number(ch), now: 800 }, ctx)
+    expect(s.answers[0].input).toBe('keys')
+  })
+})
