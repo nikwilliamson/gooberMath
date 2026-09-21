@@ -29,6 +29,15 @@ export const Buttons: StoryObj<typeof Button> = {
       <Button {...args} disabled>
         Disabled
       </Button>
+      <Button {...args} variant="ghost" iconOnly aria-label="Back">
+        ←
+      </Button>
+      <Button {...args} variant="ghost" iconOnly aria-label="Settings">
+        ⚙
+      </Button>
+      <Button {...args} variant="ghost" iconOnly aria-label="Stop">
+        ✕
+      </Button>
     </div>
   ),
   args: { onClick: fn() },

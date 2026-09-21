@@ -140,6 +140,8 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 }
 .btn--big { font-size: clamp(0.85rem, 2.3vmin, 1.05rem); padding: 1em 2em; }
 .btn--ghost { background: transparent; }
+/* A single glyph: square, same footprint everywhere it appears. */
+.btn--icon { padding: 0.5em 0.8em; aspect-ratio: 1; }
 .btn--ghost:hover { background: var(--panel-2); }
 .btn[disabled] { opacity: 0.35; pointer-events: none; }
 .btn__icon { font-size: 1.1em; }

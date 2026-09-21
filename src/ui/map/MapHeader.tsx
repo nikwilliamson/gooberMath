@@ -21,7 +21,7 @@ export interface MapHeaderProps {
 export function MapHeader({ worldNo, name, op, cleared, total, onBack, onSettings }: MapHeaderProps) {
   return (
     <header className="map__head">
-      <Button variant="ghost" onClick={onBack} aria-label="Back">
+      <Button variant="ghost" iconOnly onClick={onBack} aria-label="Back">
         &#8592;
       </Button>
       <div className="map__world">
@@ -36,7 +36,7 @@ export function MapHeader({ worldNo, name, op, cleared, total, onBack, onSetting
           {cleared}/{total}
         </Num>
       </Chip>
-      <Button variant="ghost" onClick={onSettings} aria-label="Settings">
+      <Button variant="ghost" iconOnly onClick={onSettings} aria-label="Settings">
         &#9881;
       </Button>
     </header>

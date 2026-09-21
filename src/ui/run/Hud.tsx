@@ -48,7 +48,7 @@ export interface HudProps {
 export function Hud({ untimed, msLeft, problemsLeft, streak, mult, comboStep, onQuit, children }: HudProps) {
   return (
     <div className="hud">
-      <Button variant="ghost" onClick={onQuit} aria-label="Stop this run" style={{ padding: '0.5em 0.8em' }}>
+      <Button variant="ghost" iconOnly onClick={onQuit} aria-label="Stop this run">
         &#10005;
       </Button>
       <div className="hud__time">

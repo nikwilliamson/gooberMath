@@ -12,12 +12,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode
   /** Glyph after the label. */
   iconAfter?: ReactNode
+  /** The whole button is one glyph (back, settings, quit): a square footprint. */
+  iconOnly?: boolean
 }
 
-export function Button({ variant = 'default', big, icon, iconAfter, className, children, ...rest }: ButtonProps) {
+export function Button({ variant = 'default', big, icon, iconAfter, iconOnly, className, children, ...rest }: ButtonProps) {
   return (
     <button
-      className={cx('btn', variant !== 'default' && `btn--${variant}`, big && 'btn--big', className)}
+      className={cx('btn', variant !== 'default' && `btn--${variant}`, big && 'btn--big', iconOnly && 'btn--icon', className)}
       {...rest}
     >
       {icon != null && <span className="btn__icon">{icon}</span>}
