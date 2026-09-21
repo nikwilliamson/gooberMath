@@ -1,0 +1,32 @@
+/* Voice answers switch, above the mode buttons. Takes its own row so the
+   explanation under it has room at 320px. */
+.voicetoggle { flex: 1 1 100%; display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.voicetoggle__btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0.45em 0.6em 0.45em 0.75em;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--dim);
+  font: inherit; font-size: clamp(0.66rem, 1.8vmin, 0.78rem);
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-state) var(--ease-snap), border-color var(--dur-state) var(--ease-snap);
+}
+.voicetoggle__btn[data-on] { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, transparent); }
+.voicetoggle__btn[aria-busy='true'] { opacity: 0.7; }
+.voicetoggle__icon { width: 1.25em; height: 1.25em; }
+.voicetoggle__track {
+  position: relative; width: 2.3em; height: 1.3em; border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.14);
+  transition: background var(--dur-state) var(--ease-snap);
+}
+.voicetoggle__thumb {
+  position: absolute; top: 0.15em; left: 0.15em; width: 1em; height: 1em; border-radius: 50%;
+  background: #fff;
+  transition: transform var(--dur-state) var(--ease-spring);
+}
+.voicetoggle__btn[data-on] .voicetoggle__track { background: var(--green); }
+.voicetoggle__btn[data-on] .voicetoggle__thumb { transform: translateX(1em); }
+.voicetoggle__note { font-size: clamp(0.66rem, 1.7vmin, 0.78rem); color: var(--dim); font-weight: 400; line-height: 1.4; }
+.voicetoggle__note[data-tone='ok'] { color: color-mix(in srgb, var(--green) 70%, var(--dim)); }

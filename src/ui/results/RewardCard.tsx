@@ -2,6 +2,7 @@ import type { Cosmetic } from '@/store/cosmetics'
 import { GooberCap, RoughText, SplatBurst } from '../art'
 import { Button, Label } from '../primitives'
 import { GooberSprite } from '../sprites'
+import './RewardCard.css'
 
 export interface RewardCardProps {
   reward: Cosmetic

@@ -1,3 +1,4 @@
+import './AnswerReveal.css'
 export interface AnswerRevealProps {
   /** Left side without the equals sign: "7 + 8". */
   left: string

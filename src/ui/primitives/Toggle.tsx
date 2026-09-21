@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cx } from './cx'
+import './Toggle.css'
 
 /** A settings tile: icon over label, amber when on. Group them in `.toggles`. */
 export function Toggle({

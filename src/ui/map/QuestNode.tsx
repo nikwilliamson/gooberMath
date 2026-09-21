@@ -3,6 +3,7 @@ import type { QuestDef } from '@/engine/quests'
 import type { QuestStatus } from '@/store/game'
 import { cx } from '../primitives'
 import { LevelMarker, MARKER_HOLDS_NUMBER, type MarkerState } from '../sprites'
+import './QuestNode.css'
 
 export interface QuestNodeProps {
   /** Position in the region's ladder, from 0. */

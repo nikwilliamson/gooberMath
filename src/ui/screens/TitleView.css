@@ -1,0 +1,18 @@
+.title { position: relative; z-index: 1; flex: 1; display: grid; grid-template-rows: 1fr auto; padding: clamp(16px, 4vmin, 44px); }
+.title__hero { display: grid; place-items: center; align-content: center; gap: clamp(4px, 1.4vmin, 14px); position: relative; }
+.wordmark {
+  width: min(86%, 440px);
+  height: auto;
+  /* The art carries its own dark glow; screen blending drops the box edge. */
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.55));
+}
+.title__mascot {
+  width: min(58%, 300px);
+  height: auto;
+  margin-top: clamp(-18px, -3vmin, -6px);
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6));
+}
+.title__actions { display: grid; gap: 10px; justify-items: start; width: min(320px, 100%); }
+.title__actions .btn { width: 100%; justify-content: flex-start; }
+.title__actions .btn--amber { justify-content: space-between; }

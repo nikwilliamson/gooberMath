@@ -1,0 +1,9 @@
+.reward { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 22px; background: radial-gradient(55% 45% at 50% 46%, rgba(245,178,31,0.18), rgba(4,6,12,0.97) 72%); }
+.reward__card { display: grid; justify-items: center; gap: clamp(8px, 2vmin, 16px); text-align: center; position: relative; }
+.reward__art { position: relative; display: grid; place-items: center; margin: clamp(4px, 2vmin, 18px) 0; }
+.reward__glow { position: absolute; width: 150%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(245,178,31,0.4), transparent 62%); }
+.reward__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 175%; opacity: 0.55; z-index: 0; }
+.reward__art > svg:not(.reward__splat) { position: relative; z-index: 1; }
+.reward__name { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.6rem); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.reward__kind { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); }
+.reward__actions { display: flex; gap: 10px; margin-top: 6px; }

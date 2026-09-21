@@ -1,5 +1,6 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
 import { cx } from './cx'
+import './Text.css'
 
 interface SpanProps extends HTMLAttributes<HTMLSpanElement> {
   children?: ReactNode

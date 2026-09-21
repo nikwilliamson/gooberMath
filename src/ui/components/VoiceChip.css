@@ -1,0 +1,35 @@
+/* Voice runs: the mic, with a ring that swells with his level. Fixed size so
+   the HUD never shifts. */
+.voicechip {
+  --level: 0;
+  flex: none; align-self: center;
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  color: var(--dim);
+  box-shadow: 0 0 0 calc(var(--level) * 7px) color-mix(in srgb, currentColor 22%, transparent);
+  transition: box-shadow 60ms linear, color var(--dur-state) var(--ease-snap), border-color var(--dur-state) var(--ease-snap);
+}
+.voicechip__icon { width: 18px; height: 18px; }
+.voicechip[data-state='listening'] { color: var(--green); border-color: color-mix(in srgb, var(--green) 55%, transparent); }
+.voicechip[data-state='opening'] { opacity: 0.6; }
+.voicechip[data-state='denied'], .voicechip[data-state='error'] { color: var(--red); border-color: color-mix(in srgb, var(--red) 55%, transparent); }
+
+/* "Say it again", hung just under the problem card: a number was heard but not
+   clearly enough to score, so nothing was. Never covers the problem. */
+.voicenudge {
+  position: absolute; left: 50%; top: calc(100% + 8px); z-index: 3;
+  transform: translateX(-50%);
+  padding: 0.4em 0.9em; border-radius: var(--r-pill);
+  background: rgba(20, 16, 6, 0.9);
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  color: var(--amber);
+  font-size: clamp(0.66rem, 1.8vmin, 0.8rem); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  white-space: nowrap; pointer-events: none;
+  animation: nudge 1400ms var(--ease-out) both;
+}
+@keyframes nudge {
+  0% { opacity: 0; transform: translate(-50%, -4px); }
+  12%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 0); }
+}

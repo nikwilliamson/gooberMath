@@ -1,5 +1,6 @@
 import { statFor, tierOf } from '@/engine/mastery'
 import type { StatsMap } from '@/engine/types'
+import './FactGrid.css'
 
 export function FactGrid({ keys, stats }: { keys: string[]; stats: StatsMap }) {
   return (

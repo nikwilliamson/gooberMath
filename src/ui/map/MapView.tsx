@@ -7,6 +7,7 @@ import { MapHeader, type MapHeaderProps } from './MapHeader'
 import { OpTabs, type OpTabsProps } from './OpTabs'
 import { QuestBar, type QuestBarProps } from './QuestBar'
 import { QuestNode, type QuestNodeProps } from './QuestNode'
+import './MapView.css'
 
 export interface MapNode extends Omit<QuestNodeProps, 'onSelect' | 'children' | 'index'> {
   /** Fact keys and their stats, for the grid. */

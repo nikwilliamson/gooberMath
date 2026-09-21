@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { QuestDef } from '@/engine/quests'
 import { Button, Label, Num, Panel } from '../primitives'
+import './QuestBar.css'
 
 export interface QuestBarProps {
   quest: QuestDef

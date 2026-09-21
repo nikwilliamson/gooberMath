@@ -1,0 +1,10 @@
+.questbar__card { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: clamp(12px, 2.4vmin, 18px); }
+/* A floor, so the quest name and blurb wrap to their own row rather than being
+   squeezed into a one-word-per-line ribbon, but one that can never itself
+   force the card wider than the screen. */
+.questbar__info { display: grid; gap: 2px; flex: 1; min-width: min(100%, 150px); }
+.questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
+.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; }
+.questbar__target { display: grid; gap: 2px; text-align: right; }
+.questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
+.questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }

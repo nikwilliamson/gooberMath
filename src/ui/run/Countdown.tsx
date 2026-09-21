@@ -1,4 +1,5 @@
 import { Label, cx } from '../primitives'
+import './Countdown.css'
 
 export interface CountdownProps {
   /** 3, 2, 1. The overlay is not rendered at 0. */

@@ -1,0 +1,50 @@
+.scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.scene::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(75% 60% at 50% 38%, transparent 30%, rgba(4, 6, 12, 0.85) 100%);
+}
+/* Painted backdrops sit behind a heavy scrim: the art is atmosphere, and the
+   UI on top of it still has to be readable on a phone in daylight. */
+.scene--art {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(0.85);
+}
+.scene--art::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.30) 0%, rgba(6, 9, 16, 0.62) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.42) 0%, rgba(6, 9, 16, 0.7) 55%, rgba(6, 9, 16, 0.94) 100%);
+}
+.scene--world {
+  background-image: var(--world-art);
+  background-size: cover;
+  background-position: center 30%;
+}
+.scene--world { filter: saturate(0.92); }
+.scene--world::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(85% 55% at 50% 42%, rgba(6, 9, 16, 0.30) 0%, rgba(6, 9, 16, 0.72) 75%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.5) 0%, rgba(6, 9, 16, 0.66) 55%, rgba(6, 9, 16, 0.95) 100%);
+}
+.scene--vignette::before { content: ''; position: absolute; inset: 0; background: radial-gradient(70% 55% at 50% 40%, transparent 35%, rgba(4, 6, 12, 0.6) 100%); }
+
+.scene--deep {
+  background:
+    radial-gradient(70% 50% at 50% 12%, rgba(90, 120, 190, 0.18) 0%, transparent 60%),
+    radial-gradient(90% 70% at 20% 90%, rgba(245, 178, 31, 0.07) 0%, transparent 60%),
+    linear-gradient(180deg, #121826 0%, var(--bg) 70%);
+}
+/* In play the problem is the only thing that may be bright, so the world art
+   sits under a heavier scrim than it does on the map. */
+.scene--level::before {
+  background:
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.55) 0%, rgba(6, 9, 16, 0.78) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.6) 0%, rgba(6, 9, 16, 0.82) 55%, rgba(6, 9, 16, 0.96) 100%);
+}
+.scene__splats { position: absolute; inset: 0; }

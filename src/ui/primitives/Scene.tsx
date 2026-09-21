@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cx } from './cx'
+import './Scene.css'
 
 export type SceneVariant = 'sky' | 'world' | 'deep'
 

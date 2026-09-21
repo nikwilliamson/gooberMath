@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Label, Num } from './Text'
+import './Stats.css'
 
 /**
  * One line of the results card: glyph, caption, big tabular value. `index`

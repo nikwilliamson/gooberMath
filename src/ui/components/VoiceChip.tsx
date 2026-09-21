@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useVoiceStatus } from '@/voice/status'
+import './VoiceChip.css'
 
 const UNSURE_SHOW_MS = 1400
 

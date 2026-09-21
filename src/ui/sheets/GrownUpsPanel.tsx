@@ -1,5 +1,6 @@
 import type { Tier } from '@/engine/types'
 import { Button, Sheet, SheetNote, SheetSection } from '../primitives'
+import './GrownUpsPanel.css'
 
 export interface QuestRow {
   id: string

@@ -1,0 +1,17 @@
+/* ?voicedebug only. Deliberately plain: a tool, not part of the game. It sits
+   over the timer — the one strip of the screen with nothing to tap — and lets
+   every tap through except on its own buttons, so the game stays playable. */
+.voicedebug {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  top: calc(4px + env(safe-area-inset-top)); z-index: 90;
+  width: max-content; max-width: min(92vw, 520px);
+  pointer-events: none;
+  font: 11px/1.35 ui-monospace, Menlo, monospace;
+  color: #d8f5d0; background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(110, 224, 95, 0.4); border-radius: 8px;
+  opacity: 0.85;
+}
+.voicedebug__bar button { pointer-events: auto; }
+.voicedebug__bar { display: flex; gap: 10px; align-items: center; padding: 4px 8px; }
+.voicedebug__bar button { font: inherit; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 2px 6px; }
+.voicedebug__list { margin: 0; padding: 4px 8px 6px 24px; max-height: 26vh; overflow: hidden; word-break: break-all; }

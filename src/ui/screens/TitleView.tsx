@@ -1,5 +1,6 @@
 import { Button, Micro, Scene } from '../primitives'
 import { ART } from '../sprites'
+import './TitleView.css'
 
 export interface TitleViewProps {
   onPlay: () => void

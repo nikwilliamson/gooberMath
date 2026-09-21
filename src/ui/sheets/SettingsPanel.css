@@ -1,0 +1,4 @@
+.cosmetics { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.cosmetic { display: grid; gap: 5px; place-items: center; padding: 10px 6px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--panel); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.cosmetic--active { border-color: var(--amber); color: var(--amber); }
+.cosmetic--locked { opacity: 0.35; }

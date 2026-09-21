@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import './InkLayer.css'
 
 
 /** Flecks thrown on a correct answer; amber and green to match the splats. */

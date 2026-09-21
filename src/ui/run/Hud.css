@@ -1,0 +1,37 @@
+.hud { display: flex; align-items: flex-start; gap: 14px; }
+.hud__time { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.hud__clock { display: flex; align-items: center; gap: 12px; }
+.hud__digits {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 4vmin, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  /* No tabular figures in this family: reserve the width so the clock and the
+     combo cannot jiggle the HUD as they count. */
+  min-width: 3.4ch;
+}
+.timer { position: relative; flex: 1; max-width: 240px; height: clamp(7px, 1.4vmin, 10px); border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.10); overflow: hidden; }
+.timer__fill { position: absolute; inset: 0; transform-origin: left center; border-radius: var(--r-pill); background: var(--amber); transition: transform 100ms linear, background var(--dur-state) var(--ease-snap); }
+.timer--ok .timer__fill { background: var(--green); }
+.timer--urgent .timer__fill { background: var(--red); }
+
+.combo { display: grid; justify-items: end; gap: 3px; flex: none; }
+.combo__v { font-family: var(--font-display); font-size: clamp(1.3rem, 4vmin, 2rem); font-weight: 700; line-height: 1; color: var(--amber); min-width: 2.6ch; text-align: right; }
+.combo--hot .combo__v { color: var(--green); }
+.combo--cold .combo__v { color: var(--red); }
+/* Always occupies its line so the HUD height never changes mid-run. */
+.combo__mult {
+  font-size: clamp(0.54rem, 1.4vmin, 0.64rem);
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  opacity: 0;
+  transition: opacity var(--dur-state) var(--ease-snap);
+}
+.combo__mult[data-on] { opacity: 1; }
+
+/* The combo number pulses only when the multiplier actually steps up. */
+.combo-step { animation: comboStep var(--dur-celebrate) var(--ease-spring); }
+@keyframes comboStep {
+  40% { transform: scale(1.35); }
+}

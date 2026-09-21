@@ -3,6 +3,11 @@ import { INITIAL_VIEWPORTS } from 'storybook/viewport'
 import '../src/styles/app.css'
 import './storybook.css'
 
+// Component stylesheets load with their components in the app. Stories often
+// borrow a neighbour's class for framing (a HUD inside `.run`, a chip inside
+// `.questbar__card`), so Storybook loads every one of them up front.
+import.meta.glob('../src/ui/**/*.css', { eager: true })
+
 /** The game is phone-first; a desktop canvas misrepresents nearly every screen. */
 const VIEWPORTS = {
   iphone: { ...INITIAL_VIEWPORTS.iphone14, name: 'iPhone' },

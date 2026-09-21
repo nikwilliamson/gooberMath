@@ -1,0 +1,10 @@
+table.data { width: 100%; border-collapse: collapse; font-size: 0.74rem; font-weight: 400; }
+table.data th, table.data td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+table.data th { color: var(--dim); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; }
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+textarea.io {
+  width: 100%; min-height: 96px; border-radius: var(--r-md);
+  background: rgba(0,0,0,0.45); color: var(--text); border: 1px solid var(--line-2);
+  padding: 10px; font-family: ui-monospace, monospace; font-size: 0.66rem; font-weight: 400;
+}

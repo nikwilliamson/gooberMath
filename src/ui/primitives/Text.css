@@ -1,0 +1,49 @@
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Small tracked uppercase labels carry almost all the UI voice. */
+.label {
+  font-size: clamp(0.56rem, 1.5vmin, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.label--amber { color: var(--amber); }
+.micro {
+  position: absolute;
+  font-size: clamp(0.5rem, 1.3vmin, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  line-height: 1.7;
+  pointer-events: none;
+  z-index: 3;
+}
+.micro--tl { top: clamp(12px, 3vmin, 26px); left: clamp(12px, 3vmin, 26px); }
+.micro--tr { top: clamp(12px, 3vmin, 26px); right: clamp(12px, 3vmin, 26px); text-align: right; }
+.micro--br { bottom: clamp(12px, 3vmin, 26px); right: clamp(12px, 3vmin, 26px); text-align: right; }
+@media (max-width: 760px) {
+  .micro--run { display: none; }
+}
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.3em 0.7em;
+  border-radius: var(--r-sm);
+  background: var(--amber);
+  color: #1a1204;
+  font-size: clamp(0.56rem, 1.5vmin, 0.68rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.35em 0.7em;
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  font-size: clamp(0.62rem, 1.7vmin, 0.78rem);
+  font-weight: 700;
+}

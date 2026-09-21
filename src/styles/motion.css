@@ -1,0 +1,45 @@
+/* Motion shared across screens: arrivals, celebrations, and the reduced-motion clamp. */
+/* Feedback: the word lands first, the splat blooms a beat behind it. */
+.fb-word { animation: fbWord var(--dur-enter) var(--ease-spring) both; }
+@keyframes fbWord {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.82); }
+}
+.fb-splat { animation: fbSplat var(--dur-celebrate) var(--ease-out) both; animation-delay: 40ms; }
+@keyframes fbSplat {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.55) rotate(-8deg); }
+  to { opacity: 0.82; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+
+/* Screen arrivals: one short rise, same curve everywhere. */
+.screen-in { animation: screenIn var(--dur-enter) var(--ease-out) both; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+}
+
+/* Lists arrive in sequence; --i is the row index. */
+.stagger { animation: screenIn var(--dur-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+/* Rewards are the one place overshoot is earned. */
+.reward-in { animation: rewardIn var(--dur-celebrate) var(--ease-spring) both; }
+@keyframes rewardIn {
+  from { opacity: 0; transform: scale(0.55) rotate(-6deg); }
+}
+.reward-glow { animation: rewardGlow var(--dur-celebrate) var(--ease-out) both; }
+@keyframes rewardGlow {
+  from { opacity: 0; transform: scale(0.4); }
+}
+
+.bob { animation: bob 3.6s var(--ease-snap) infinite; }
+@keyframes bob {
+  50% { transform: translate3d(0, -8px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .bob { animation: none !important; }
+}

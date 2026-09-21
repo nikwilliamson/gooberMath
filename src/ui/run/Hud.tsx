@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button, Label, Num, cx } from '../primitives'
 import { clamp01, formatClock } from '../hooks'
+import './Hud.css'
 
 export const RUN_MS = 60_000
 export const URGENT_MS = 10_000

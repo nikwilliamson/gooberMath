@@ -1,0 +1,54 @@
+.fb { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; z-index: 5; }
+/* The answer reveal sits over the problem deliberately: it is the one moment
+   that has to be read. The miss sticker stays out in a zone like the rest. */
+.fb--answer {
+  pointer-events: auto;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.fb__word { position: relative; z-index: 1; width: min(84%, 460px); }
+.fb__answer {
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid var(--red);
+  border-radius: var(--r-md);
+  background: rgba(20, 8, 12, 0.82);
+  padding: clamp(10px, 2.4vmin, 18px) clamp(20px, 5vmin, 44px);
+  display: grid; gap: 4px; justify-items: center;
+  box-shadow: 0 0 34px rgba(255, 77, 94, 0.28);
+}
+.fb__answersub {
+  font-size: clamp(0.7rem, 1.9vmin, 0.85rem);
+  color: var(--red);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.fb__answeryou { font-size: clamp(0.72rem, 2vmin, 0.9rem); color: var(--dim); font-weight: 400; }
+.fb__answeryou b { color: var(--text); font-weight: 700; }
+.fb__answertap {
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity var(--dur-enter) var(--ease-out);
+  font-size: clamp(0.66rem, 1.8vmin, 0.8rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.fb__answertap[data-ready] { opacity: 1; animation: tapHint 1.6s ease-in-out infinite; }
+@keyframes tapHint { 50% { opacity: 0.4; } }
+.fb__answerv {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5.6vmin, 2.7rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (max-height: 520px) {
+  .fb__word { width: min(64%, 340px); }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useState } from 'react'
 import { debugEntries, deviceInfo, onDebug } from '@/voice/debug'
+import './VoiceDebug.css'
 
 /**
  * `?voicedebug` only. The last few recognizer results and decisions, and a

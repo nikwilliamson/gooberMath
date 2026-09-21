@@ -1,0 +1,48 @@
+.run { position: relative; z-index: 1; flex: 1; display: grid; grid-template-rows: auto 1fr auto; gap: clamp(8px, 1.8vmin, 18px); padding: clamp(12px, 2.6vmin, 24px); min-height: 0; }
+
+/* Three rows: a zone, the problem, a zone. Stickers live in the zones, so the
+   equation can never be covered regardless of viewport height. */
+.board {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  align-content: stretch;
+  min-height: 0;
+  position: relative;
+}
+.board__zone {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
+.board > .problemcard { position: relative; z-index: 2; }
+
+.padwrap { display: grid; place-items: center; position: relative; }
+/* The pad and the card fade together behind the wrong-answer reveal. */
+.pad--dim { opacity: 0.22; filter: saturate(0.35); }
+
+/*
+ * The pad is bottom-anchored at every size. A side-by-side tablet layout was
+ * tried and pulled: the same screen has to feel identical on every device, and
+ * a pad that moves between the phone and the iPad breaks the muscle memory the
+ * whole game is trying to build.
+ */
+@media (min-width: 760px) {
+  .run { gap: clamp(14px, 2.4vmin, 28px); }
+  .hud, .board, .padwrap > * { max-width: 760px; margin-inline: auto; width: 100%; }
+}
+
+/* Landscape phones: keep four rows of real touch targets above the fold. */
+@media (max-height: 520px) {
+  .run { gap: 8px; padding: 8px clamp(10px, 3vw, 28px); }
+}
+
+/* Scoped to the board. Shaking the whole app moved the clock and the keypad
+   under his finger, which read as the page glitching rather than as a miss. */
+.shake { animation: shake var(--dur-enter) var(--ease-out); }
+@keyframes shake {
+  20% { transform: translate3d(-4px, 1px, 0); }
+  50% { transform: translate3d(3px, -1px, 0); }
+  80% { transform: translate3d(-2px, 1px, 0); }
+}

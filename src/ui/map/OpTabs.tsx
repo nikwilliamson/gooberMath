@@ -2,6 +2,7 @@ import type { Op } from '@/engine/types'
 import { OP_ACCENT } from '../art'
 import { Label, cx } from '../primitives'
 import { OP_SHORT, OP_SYM } from './MapHeader'
+import './OpTabs.css'
 
 export interface OpTabsProps {
   region: Op

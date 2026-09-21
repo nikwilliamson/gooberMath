@@ -1,0 +1,12 @@
+.toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); gap: 8px; }
+.toggle {
+  display: grid; gap: 6px; place-items: center;
+  padding: 12px 6px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--panel);
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dim);
+}
+.toggle--on { background: color-mix(in srgb, var(--amber) 15%, transparent); border-color: color-mix(in srgb, var(--amber) 55%, transparent); color: var(--amber); }
+.toggle__icon { font-size: 1.25rem; }

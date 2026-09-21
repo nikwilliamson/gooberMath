@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Panel, cx } from '../primitives'
+import './ProblemCard.css'
 
 export interface LeavingProblem {
   key: string

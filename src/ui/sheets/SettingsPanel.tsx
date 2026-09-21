@@ -2,6 +2,7 @@ import { COSMETICS, type Cosmetic } from '@/store/cosmetics'
 import type { Settings } from '@/store/types'
 import { Goober } from '../art'
 import { Button, Sheet, SheetSection, Toggle, cx } from '../primitives'
+import './SettingsPanel.css'
 
 export const SETTING_TOGGLES: Array<{ key: keyof Settings; icon: string; label: string }> = [
   { key: 'music', icon: '🎵', label: 'Music' },

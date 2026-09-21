@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from './Button'
+import './Sheet.css'
 
 /**
  * Bottom sheet over a scrim. Tapping the scrim closes it; tapping the sheet

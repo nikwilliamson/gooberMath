@@ -1,0 +1,6 @@
+.statrow { display: flex; align-items: center; gap: 12px; }
+.statrow__icon { width: 1.5em; font-size: clamp(0.95rem, 2.6vmin, 1.15rem); text-align: center; color: var(--amber); }
+.statrow__body { display: grid; gap: 1px; }
+.statrow__v { font-family: var(--font-display); font-size: clamp(1.1rem, 3.2vmin, 1.5rem); font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.targetbar { height: 5px; border-radius: var(--r-pill); background: rgba(255,255,255,0.1); overflow: hidden; }
+.targetbar__fill { height: 100%; background: var(--amber); }

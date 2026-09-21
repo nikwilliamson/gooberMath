@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { cx } from './cx'
+import './Button.css'
 
 export type ButtonVariant = 'default' | 'amber' | 'ghost'
 

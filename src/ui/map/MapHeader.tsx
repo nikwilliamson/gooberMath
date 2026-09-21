@@ -1,5 +1,6 @@
 import type { Op } from '@/engine/types'
 import { Button, Chip, Label, Num } from '../primitives'
+import './MapHeader.css'
 
 export const OP_NAME: Record<Op, string> = { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division' }
 export const OP_SHORT: Record<Op, string> = { add: 'Add', sub: 'Subtract', mul: 'Multiply', div: 'Divide' }

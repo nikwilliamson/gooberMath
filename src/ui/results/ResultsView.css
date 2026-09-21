@@ -1,0 +1,11 @@
+.results { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; padding: clamp(14px, 3vmin, 32px); overflow-y: auto; }
+.results__card { width: min(560px, 100%); display: grid; gap: clamp(14px, 3vmin, 24px); }
+.results__title { font-family: var(--font-display); font-size: clamp(1.5rem, 5.4vmin, 2.4rem); font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+.results__body { display: flex; align-items: center; gap: 16px; position: relative; }
+.results__stats { display: grid; gap: clamp(8px, 1.8vmin, 14px); flex: 1; min-width: 0; }
+.results__mascot { position: relative; flex: none; display: grid; place-items: center; }
+.results__mascot .splatbg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 185%; opacity: 0.7; z-index: 0; }
+.results__mascot > svg:not(.splatbg) { position: relative; z-index: 1; }
+.results__quote { font-size: clamp(0.62rem, 1.7vmin, 0.74rem); letter-spacing: 0.18em; text-transform: uppercase; color: var(--dimmer); line-height: 1.7; }
+.results__actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.results__actions .btn { flex: 1; min-width: 120px; }

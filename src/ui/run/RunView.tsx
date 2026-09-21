@@ -9,6 +9,7 @@ import { Countdown } from './Countdown'
 import { Hud, type HudProps } from './Hud'
 import { ProblemCard, type ProblemCardProps } from './ProblemCard'
 import { StickerZone, type StickerProps } from './Sticker'
+import './RunView.css'
 
 export interface RunViewProps {
   region: Op

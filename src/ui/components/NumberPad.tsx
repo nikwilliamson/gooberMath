@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { audio } from '@/audio/engine'
+import './NumberPad.css'
 
 /** Per-digit colours, matching the reference pad. */
 const KEY_COLORS: Record<string, [string, string, string]> = {

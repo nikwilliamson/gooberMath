@@ -1,0 +1,5 @@
+.factgrid { display: flex; flex-wrap: wrap; gap: 3px; }
+.factgrid__cell { width: 8px; height: 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.10); }
+.factgrid__cell--learning { background: color-mix(in srgb, var(--ink) 35%, transparent); }
+.factgrid__cell--known { background: color-mix(in srgb, var(--ink) 65%, transparent); }
+.factgrid__cell--automatic { background: var(--ink); }

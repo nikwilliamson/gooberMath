@@ -1,0 +1,13 @@
+.optabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-width: 0; }
+.optab {
+  display: grid; justify-items: center; gap: 5px;
+  min-width: 0;
+  padding: 0.7em 0.3em;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  font-size: clamp(0.54rem, 1.5vmin, 0.66rem);
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dim);
+}
+.optab__sym { font-size: clamp(1rem, 2.8vmin, 1.3rem); line-height: 1; }
+.optab--active { background: color-mix(in srgb, var(--tab) 16%, transparent); border-color: color-mix(in srgb, var(--tab) 45%, transparent); color: var(--tab); }

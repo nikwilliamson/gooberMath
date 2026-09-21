@@ -1,4 +1,5 @@
 import { CorrectSticker, MissSticker, STICKER_ANCHORS } from '../sprites'
+import './Sticker.css'
 
 export type StickerAnchor = (typeof STICKER_ANCHORS)[number]
 

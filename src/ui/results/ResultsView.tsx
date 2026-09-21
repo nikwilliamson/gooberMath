@@ -4,6 +4,7 @@ import { Button, Scene, TargetBar } from '../primitives'
 import { GooberSprite, type Pose } from '../sprites'
 import { ResultsStats, type ResultsStatsProps } from './ResultsStats'
 import { RewardCard, type RewardCardProps } from './RewardCard'
+import './ResultsView.css'
 
 export type ResultsTitle = 'Facts Mastered' | 'Quest Clear' | 'Warm-up Done' | 'Run Complete'
 
