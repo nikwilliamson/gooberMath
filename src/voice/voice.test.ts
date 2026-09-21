@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NUMBER_WORDS, grammarFor, parseNumbers } from './numbers'
-import { createVad } from './vad'
+import { FLUSH_QUIET_MS, createEndpointer, createVad } from './vad'
 import {
   ACCEPT_CONF, HOLD_CAP_MS, HOLD_MS, MIN_CONF, QUIET_MS, REACTION_FLOOR_MS, TENS_SURE,
   initialVoice, voiceStep, type HeardWord, type VoiceEvent, type VoiceState,
@@ -219,5 +219,43 @@ describe('vad', () => {
     expect(vad.voicedAt).toBe(settled) // bleed alone no longer counts
     vad.push(0.2, 21_100)
     expect(vad.voicedAt).toBe(21_100)
+  })
+})
+
+describe('endpointer', () => {
+  /** Levels every 43ms: speech for `speakMs`, then silence. Returns flush times. */
+  function run(pattern: Array<[ms: number, voiced: boolean]>) {
+    const vad = createVad()
+    const ep = createEndpointer()
+    const flushes: number[] = []
+    let t = 0
+    for (const [ms, voiced] of pattern) {
+      for (const end = t + ms; t < end; t += 43) {
+        if (ep.push(vad.push(voiced ? 0.12 : 0, t), t)) flushes.push(t)
+      }
+    }
+    return flushes
+  }
+
+  it('finalizes once, just after he stops', () => {
+    const flushes = run([[500, false], [450, true], [1500, false]])
+    expect(flushes).toHaveLength(1)
+    const lastVoice = 500 + 450 - 43
+    expect(flushes[0] - lastVoice).toBeGreaterThanOrEqual(FLUSH_QUIET_MS)
+    expect(flushes[0] - lastVoice).toBeLessThan(FLUSH_QUIET_MS + 50)
+  })
+
+  it('does not cut a word at a short gap inside it', () => {
+    // "eigh-t": ~130ms closure before the release is not the end of speech.
+    expect(run([[300, false], [300, true], [130, false], [100, true], [800, false]])).toHaveLength(1)
+  })
+
+  it('finalizes each number when he counts with pauses', () => {
+    expect(run([[300, false], [400, true], [700, false], [400, true], [700, false], [400, true], [900, false]])).toHaveLength(3)
+  })
+
+  it('never fires in silence, or while the room stays loud', () => {
+    expect(run([[3000, false]])).toHaveLength(0)
+    expect(run([[3000, true]])).toHaveLength(0)
   })
 })

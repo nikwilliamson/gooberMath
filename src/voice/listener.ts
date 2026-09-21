@@ -116,6 +116,9 @@ function setAudioSession(type: 'play-and-record' | 'auto') {
 
 export interface MicSession {
   close: () => void
+  /** Finalize whatever he has said so far, now, rather than waiting out the
+      recognizer's own trailing-silence timer. */
+  flush: () => void
 }
 
 const workletLoaded = new WeakSet<BaseAudioContext>()
@@ -205,6 +208,9 @@ export async function openMic(
 
   let closed = false
   return {
+    flush() {
+      if (!closed) rec.retrieveFinalResult()
+    },
     close() {
       if (closed) return
       closed = true

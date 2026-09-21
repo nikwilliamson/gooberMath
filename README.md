@@ -140,10 +140,11 @@ content-hash it.
 **How an answer is decided** (`src/voice/voice.ts`, a pure reducer like the run
 loop). Numbers below were measured against the real decoder, in the app:
 
-- A right answer is accepted as soon as its final result arrives:
-  **~0.4–0.6s after he stops speaking**. Answer time for scoring and mastery is
-  taken from when he *started* saying the number, so the recognizer's wait is
-  never charged to him.
+- A right answer is accepted as soon as its final result arrives: **~0.3s after
+  he stops speaking**. Vosk would wait out 0.5–0.75s of silence before
+  committing (median 805ms); the app watches his level and tells it to commit
+  after 250ms of quiet instead. Answer time for scoring and mastery is taken
+  from when he *started* saying the number, so no wait is charged to him.
 - A wrong answer is held until he has been quiet for 1.4s, so counting on
   ("six … seven … eight") lands on eight, and a paused "twenty … four" reads as
   24. Longer pauses than that score the number he paused on.

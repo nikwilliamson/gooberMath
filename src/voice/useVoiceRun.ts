@@ -5,7 +5,7 @@ import { useRaf } from '@/ui/hooks'
 import { removeLocal, writeLocal } from '@/ui/safeStorage'
 import { vlog } from './debug'
 import { VOICE_RUN_KEY, setVoiceStatus } from './status'
-import { createVad } from './vad'
+import { createEndpointer, createVad } from './vad'
 import { initialVoice, voiceStep, type HeardWord, type VoiceEvent } from './voice'
 
 interface Props {
@@ -40,7 +40,8 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
     const ctx = audio.context()
     if (!ctx) return
 
-    let session: { close: () => void } | null = null
+    let session: { close: () => void; flush: () => void } | null = null
+    const endpointer = createEndpointer()
     let cancelled = false
     const clearGuard = () => removeLocal(VOICE_RUN_KEY)
     writeLocal(VOICE_RUN_KEY, String(Date.now()))
@@ -55,6 +56,11 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
           (rms, now) => {
             const before = vad.current.voicedAt
             const after = vad.current.push(rms, now)
+            // He has stopped: have the recognizer commit now, not ~0.6s later.
+            if (endpointer.push(after, now)) {
+              session?.flush()
+              vlog('flush', { quietMs: Math.round(now - after) })
+            }
             // Log sound starting and stopping, not every reading: at ~23 a
             // second, readings would push everything useful out of the log.
             const wasVoiced = now - before < 120

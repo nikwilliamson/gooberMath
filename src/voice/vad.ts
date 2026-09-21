@@ -33,3 +33,40 @@ export function createVad(initialFloor = 0.01): Vad {
     },
   }
 }
+
+/**
+ * How long he has to be quiet before we tell the recognizer he has finished.
+ *
+ * Left to itself, Vosk waits out 0.5–0.75s of trailing silence (the model's
+ * endpoint rules) before it commits a result, which measured in the app as a
+ * median 805ms from his last word to the answer registering. We already know
+ * when he stops, so we finalize then instead. 250ms clears the model's 0.15s
+ * right-context requirement and the gap inside a plosive like the "t" of
+ * "eight", and is still well under Vosk's own wait.
+ */
+export const FLUSH_QUIET_MS = 250
+
+/**
+ * Decides when to force a final result. Fires once per stretch of speech, the
+ * first time he has been quiet for FLUSH_QUIET_MS after it. If the room never
+ * goes quiet (music bleeding past echo cancellation), it never fires and the
+ * recognizer's own endpointing still applies: no worse than without it.
+ */
+export function createEndpointer(quietMs = FLUSH_QUIET_MS) {
+  let pending = false
+  let lastVoiced = 0
+  return {
+    /** Feed the VAD's voicedAt after each reading; true means finalize now. */
+    push(voicedAt: number, now: number): boolean {
+      if (voicedAt > lastVoiced) {
+        lastVoiced = voicedAt
+        pending = true
+      }
+      if (pending && now - lastVoiced >= quietMs) {
+        pending = false
+        return true
+      }
+      return false
+    },
+  }
+}
