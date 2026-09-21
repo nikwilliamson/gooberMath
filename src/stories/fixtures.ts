@@ -91,7 +91,7 @@ export const saves = {
     stats: {
       ...statsAt(questKeys(quest('add-1')), 'automatic', 11),
       ...statsAt(questKeys(quest('add-2')), 'automatic', 12),
-      ...statsAt(questKeys(quest('add-3')), 'known', 13),
+      ...statsAt(questKeys(quest('add-3')), 'mixed', 13),
       ...statsAt(questKeys(quest('add-4')), 'mixed', 14),
       ...statsAt(questKeys(quest('sub-1')), 'learning', 15),
       ...statsAt(questKeys(quest('mul-1')), 'mixed', 16),
@@ -194,7 +194,9 @@ export const runs = {
     const { state, ctx } = freshRun(opts)
     const s = play(state, ctx, 4)
     const fact = ctx.byKey.get(s.currentKey)!
-    return answer(s, ctx, fact.answer === 9 ? 8 : 9, 1500)
+    // Same digit count as the right answer, or the pad would still be waiting.
+    const wrong = String(fact.answer + 1).length === String(fact.answer).length ? fact.answer + 1 : fact.answer - 1
+    return answer(s, ctx, wrong, 1500)
   },
 
   /** Under ten seconds left; the timer goes urgent. */
