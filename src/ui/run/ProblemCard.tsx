@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Panel, cx } from '../primitives'
+import { cx } from '../primitives'
 import './ProblemCard.css'
 
 export interface LeavingProblem {
@@ -27,10 +27,10 @@ export interface ProblemCardProps {
   children?: ReactNode
 }
 
-/** The equation and its answer slots. */
+/** The equation and its answer slots, in a pool of shadow over the world. */
 export function ProblemCard({ factKey, left, slots, leaving, glow = 0, dim, children }: ProblemCardProps) {
   return (
-    <Panel className={cx('problemcard', dim && 'problemcard--dim')}>
+    <div className={cx('problemcard', dim && 'problemcard--dim')}>
       {children}
       {glow > 0 && <span key={glow} className="problemcard__glow" aria-hidden />}
       {/* The old question leaves while the new one arrives: both sit in the
@@ -71,6 +71,6 @@ export function ProblemCard({ factKey, left, slots, leaving, glow = 0, dim, chil
           ))}
         </span>
       </span>
-    </Panel>
+    </div>
   )
 }
