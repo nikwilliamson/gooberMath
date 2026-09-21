@@ -244,6 +244,12 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .map__blurb { font-size: clamp(0.72rem, 1.9vmin, 0.86rem); color: var(--dim); font-weight: 400; margin-top: 10px; max-width: 42ch; }
 
 .nodes { min-width: 0; overflow-y: auto; padding: clamp(14px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
+/* Thumb only, no track: a bare sliver of ink over the painted world. */
+.nodes { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
+.nodes::-webkit-scrollbar { width: 6px; }
+.nodes::-webkit-scrollbar-track { background: transparent; }
+.nodes::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: var(--r-pill); }
+.nodes::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.36); }
 .node { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; min-width: 0; }
 .node__rail { display: grid; justify-items: center; gap: 0; }
 .node__dot {
