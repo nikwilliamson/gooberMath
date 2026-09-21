@@ -7,7 +7,7 @@ import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
 import { OP_ACCENT, SplatField } from '../art'
-import { ART } from '../sprites'
+import { REGION_ART } from '../sprites'
 import { FactGrid } from '../components/FactGrid'
 import { VoiceToggle } from '../components/VoiceToggle'
 
@@ -48,11 +48,9 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
   return (
     <div className="app" data-region={region}>
       <div
+        key={region}
         className="scene scene--art"
-        // One backdrop across all four worlds; the region accent and splats do
-        // the differentiating. The second scene made three tabs feel like a
-        // different, lesser screen.
-        style={{ backgroundImage: `url(${ART.additionFields})` }}
+        style={{ backgroundImage: `url(${REGION_ART[region]})` }}
       >
         <SplatField count={2} seed={worldNo * 4} color={OP_ACCENT[region]} opacity={0.07} />
       </div>
@@ -64,8 +62,8 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
           </button>
           <div className="map__world">
             <span className="label">World {worldNo}</span>
-            <h1 className="map__op">{OP_NAME[region]}</h1>
-            <span className="map__sub">{regionDef.name}</span>
+            <h1 className="map__op">{regionDef.name}</h1>
+            <span className="map__sub">{OP_NAME[region]}</span>
           </div>
           <span className="spacer" />
           <span className="chip">

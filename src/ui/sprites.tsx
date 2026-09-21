@@ -1,3 +1,4 @@
+import type { Op } from '@/engine/types'
 import type { CSSProperties } from 'react'
 import frames from './spriteFrames.json'
 
@@ -238,6 +239,13 @@ export function MissSticker({
 export const ART = {
   logo: `${IMG}/logo.webp`,
   world: `${IMG}/world.webp`,
-  additionFields: `${IMG}/additionFields.webp`,
   goober: `${IMG}/goober.webp`,
+}
+
+/** One painted map per region; the MapScreen backdrop. */
+export const REGION_ART: Record<Op, string> = {
+  add: `${IMG}/plusPlains.webp`,
+  sub: `${IMG}/minusMarsh.webp`,
+  mul: `${IMG}/timesTundra.webp`,
+  div: `${IMG}/dividedDesert.webp`,
 }
