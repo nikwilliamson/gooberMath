@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import { statFor, tierCounts, tierOf } from '@/engine/mastery'
 import { QUESTS, REGIONS } from '@/engine/quests'
 import { exportSave, importSave } from '@/store/persist'
-import { factKeysOf, questMastery, questProgress, regionFactKeys, useGame } from '@/store/game'
+import { factKeysOf, questProgress, regionFactKeys, useGame } from '@/store/game'
 import { useVoiceStatus } from '@/voice/status'
+import { GrownUpsPanel, type QuestRow, type SlowFact } from './GrownUpsPanel'
 
+/** Derives the progress tables from the save and wires the sheet's actions. */
 export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
   const save = useGame((s) => s.save)
   const replaceSave = useGame((s) => s.replaceSave)
@@ -14,7 +16,7 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
   const [io, setIo] = useState('')
   const [msg, setMsg] = useState('')
 
-  const rows = useMemo(
+  const rows = useMemo<QuestRow[]>(
     () =>
       QUESTS.map((q) => {
         const keys = factKeysOf(q)
@@ -23,140 +25,60 @@ export function GrownUpsSheet({ onClose }: { onClose: () => void }) {
         const latencies = keys
           .map((k) => statFor(save.stats, k).ewmaMs)
           .filter((m) => m > 0)
-        const median = latencies.length
+        const medianMs = latencies.length
           ? [...latencies].sort((a, b) => a - b)[Math.floor(latencies.length / 2)]
           : 0
-        return { q, counts, prog, median, mastery: questMastery(save, q), total: keys.length }
+        return {
+          id: q.id,
+          name: q.name,
+          mastered: prog.mastered,
+          cleared: prog.cleared,
+          automatic: counts.automatic,
+          known: counts.known,
+          learning: counts.learning + counts.new,
+          total: keys.length,
+          medianMs,
+          bestSniper: prog.bestSniper,
+        }
       }),
     [save],
   )
 
-  const slowest = useMemo(() => {
+  const slowest = useMemo<SlowFact[]>(() => {
     const all = REGIONS.flatMap((r) => regionFactKeys(r.id))
     return all
       .map((k) => statFor(save.stats, k))
       .filter((s) => s.seen > 0)
       .sort((a, b) => (b.ewmaMs || 0) - (a.ewmaMs || 0))
       .slice(0, 8)
+      .map((s) => ({ key: s.key, ewmaMs: s.ewmaMs, accuracy: s.correct / s.seen, tier: tierOf(s) }))
   }, [save.stats])
 
   return (
-    <div className="sheet-scrim" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="row" style={{ gap: 10 }}>
-          <h2 className="sheet__title">Grown-ups</h2>
-          <span className="spacer" />
-          <button className="btn" onClick={onClose}>
-            Done
-          </button>
-        </div>
-
-        <div className="sheet__section">
-          <span className="sheet__label">Quest progress</span>
-          <table className="data">
-            <thead>
-              <tr>
-                <th>Quest</th>
-                <th className="num">Auto</th>
-                <th className="num">Known</th>
-                <th className="num">Learning</th>
-                <th className="num">Median</th>
-                <th className="num">Best</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ q, counts, prog, median, total }) => (
-                <tr key={q.id}>
-                  <td>
-                    {/* ⭐ is mastery of the facts; ✓ only means he unlocked the next quest. */}
-                    {prog.mastered ? '⭐ ' : prog.cleared ? '✓ ' : ''}
-                    {q.name}
-                  </td>
-                  <td className="num">
-                    {counts.automatic}/{total}
-                  </td>
-                  <td className="num">{counts.known}</td>
-                  <td className="num">{counts.learning + counts.new}</td>
-                  <td className="num">{median ? `${(median / 1000).toFixed(1)}s` : '–'}</td>
-                  <td className="num">{prog.bestSniper.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <span className="sheet__label">
-            Automatic means under 1.5s. Median is his typical recall time for that quest's facts.
-          </span>
-        </div>
-
-        {slowest.length > 0 && (
-          <div className="sheet__section">
-            <span className="sheet__label">Slowest facts right now</span>
-            <table className="data">
-              <tbody>
-                {slowest.map((s) => (
-                  <tr key={s.key}>
-                    <td>{s.key.replace(/^(add|sub|mul|div):/, '')}</td>
-                    <td className="num">{(s.ewmaMs / 1000).toFixed(1)}s</td>
-                    <td className="num">{Math.round((s.correct / s.seen) * 100)}%</td>
-                    <td className="num">{tierOf(s)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="sheet__section">
-          <span className="sheet__label">Voice answers</span>
-          <span className="sheet__label">
-            Speech is recognized entirely on this device, and it can only recognize the numbers zero to one
-            hundred. Audio is processed in memory as he speaks and is never saved or sent anywhere. The mic is on
-            only during a voice run.
-          </span>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button
-              className="btn"
-              onClick={async () => {
-                setSettings({ voice: false })
-                const { deleteModel } = await import('@/voice/listener')
-                await deleteModel()
-                setVoiceMsg('Voice model removed from this device.')
-              }}
-            >
-              Remove voice model
-            </button>
-            <span className="sheet__label">{voiceMsg || (voiceModel === 'ready' ? 'Installed on this device.' : '')}</span>
-          </div>
-        </div>
-
-        <div className="sheet__section">
-          <span className="sheet__label">Move progress between devices</span>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button
-              className="btn"
-              onClick={() => {
-                setIo(exportSave(save))
-                setMsg('Copy this text, then paste it on the other device.')
-              }}
-            >
-              Export
-            </button>
-            <button
-              className="btn"
-              onClick={() => {
-                const data = importSave(io)
-                if (!data) return setMsg('That does not look like a GooberMath save.')
-                replaceSave(data)
-                setMsg('Progress loaded.')
-              }}
-            >
-              Import
-            </button>
-            <span className="sheet__label">{msg}</span>
-          </div>
-          <textarea className="io" value={io} onChange={(e) => setIo(e.target.value)} placeholder="Save data" />
-        </div>
-      </div>
-    </div>
+    <GrownUpsPanel
+      rows={rows}
+      slowest={slowest}
+      voiceNote={voiceMsg || (voiceModel === 'ready' ? 'Installed on this device.' : '')}
+      onRemoveVoice={async () => {
+        setSettings({ voice: false })
+        const { deleteModel } = await import('@/voice/listener')
+        await deleteModel()
+        setVoiceMsg('Voice model removed from this device.')
+      }}
+      io={io}
+      onIoChange={setIo}
+      ioNote={msg}
+      onExport={() => {
+        setIo(exportSave(save))
+        setMsg('Copy this text, then paste it on the other device.')
+      }}
+      onImport={() => {
+        const data = importSave(io)
+        if (!data) return setMsg('That does not look like a GooberMath save.')
+        replaceSave(data)
+        setMsg('Progress loaded.')
+      }}
+      onClose={onClose}
+    />
   )
 }
