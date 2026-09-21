@@ -5,7 +5,6 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { SplatBurst } from '../art'
 import { CorrectSticker, LEVEL_ART, MissSticker, STICKER_ANCHORS } from '../sprites'
 import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
@@ -353,13 +352,6 @@ export function RunScreen() {
           <div className="countdown">
             <span className="countdown__mode">{modeName}</span>
             <div className="countdown__n">
-              <SplatBurst
-                key={`s${count}`}
-                className="countdown__splat count-splat-in"
-                color="#f5b21f"
-                color2="#ff8a1f"
-                seed={count * 3}
-              />
               <span key={count} className="count-in countdown__digit">
                 {count}
               </span>

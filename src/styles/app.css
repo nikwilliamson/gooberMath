@@ -627,7 +627,6 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 }
 .countdown__mode { font-family: var(--font-display); font-size: clamp(1.1rem, 3.6vmin, 1.8rem); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .countdown__n { position: relative; width: 100%; height: 100%; display: grid; place-items: center; }
-.countdown__splat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150%; opacity: 0.85; z-index: 0; }
 /* Set in Obviously rather than the brush filter, and white: amber on an amber
    splat turned the digit to mud however the layers were stacked. */
 .countdown__digit {
@@ -813,7 +812,6 @@ textarea.io {
 /* Countdown digits swap rather than cut. Each tick is 700ms, so the entrance
    has to be well under that or the digit never settles before the next one. */
 .count-in { animation: countIn 300ms var(--ease-out) both; }
-.count-splat-in { animation: fbSplat 340ms var(--ease-out) both; }
 @keyframes countIn {
   from { opacity: 0; transform: scale(1.4); }
   to { opacity: 1; transform: scale(1); }
