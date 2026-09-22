@@ -1,0 +1,60 @@
+/* Over everything on the map, under the settings sheet (40) and the debug
+   overlay (90). */
+.voicegate {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; place-items: center;
+  padding: 24px;
+  background: rgba(4, 6, 12, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: voicegateIn 220ms var(--ease-out) both;
+}
+.voicegate__body { display: grid; justify-items: center; gap: 12px; text-align: center; width: min(100%, 26ch); }
+.voicegate__eyebrow { color: var(--dim); }
+/* Two lines' worth of height held open, so the ring and the skip button do
+   not hop as a one-line tip follows a two-line one. */
+.voicegate__line {
+  min-height: 2.4em;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3.4vmin, 1.5rem);
+  font-weight: 700; letter-spacing: 0.02em; line-height: 1.2;
+  text-wrap: balance;
+  animation: voicegateLine 320ms var(--ease-out) both;
+}
+.voicegate__skip { margin-top: 10px; }
+
+/* The mic in a ring that breathes: waiting, not stuck. */
+.voicegate__ring {
+  position: relative;
+  width: clamp(64px, 16vmin, 88px); aspect-ratio: 1;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green) 45%, transparent);
+}
+.voicegate__ring::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--green) 60%, transparent);
+  animation: voicegatePulse 1.6s var(--ease-out) infinite;
+}
+.voicegate__mic { width: 42%; height: 42%; }
+
+@keyframes voicegateIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes voicegateLine {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes voicegatePulse {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voicegate, .voicegate__line { animation: none; }
+  .voicegate__ring::before { animation: none; opacity: 0; }
+}

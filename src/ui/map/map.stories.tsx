@@ -91,11 +91,6 @@ export const Bar: StoryObj<typeof QuestBar> = {
 
 export const BarCleared: StoryObj<typeof QuestBar> = { ...Bar, args: { ...barArgs, cleared: true, mastered: true, learned: 10, best: 3480, bestVoice: 2210 } }
 
-/** Voice is on and the model is still loading: nothing can start yet. */
-export const BarHeld: StoryObj<typeof QuestBar> = { ...Bar, args: { ...barArgs, hold: 'Getting voice ready…' } }
-/** The first load on a device is a download, and says so. */
-export const BarDownloading: StoryObj<typeof QuestBar> = { ...Bar, args: { ...barArgs, warmUp: true, hold: 'Downloading voice (first time)…' } }
-
 /** New content offers a warm-up the first time. */
 export const BarWithWarmUp: StoryObj<typeof QuestBar> = { ...Bar, args: { ...barArgs, quest: quest('mul-1'), warmUp: true } }
 

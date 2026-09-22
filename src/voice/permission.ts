@@ -19,6 +19,7 @@ export async function primeMicPermission(): Promise<boolean> {
     setVoiceStatus({ mic: 'error', error: 'This browser cannot use the microphone.' })
     return false
   }
+  setVoiceStatus({ priming: true })
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: MIC_CONSTRAINTS })
     stream.getTracks().forEach((t) => t.stop())
@@ -29,5 +30,7 @@ export async function primeMicPermission(): Promise<boolean> {
     setVoiceStatus({ mic: denied ? 'denied' : 'error', error: String(err) })
     vlog('mic-prime-failed', { name: err instanceof DOMException ? err.name : String(err) })
     return false
+  } finally {
+    setVoiceStatus({ priming: false })
   }
 }

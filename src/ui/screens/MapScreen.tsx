@@ -7,7 +7,7 @@ import {
   allRegions, factKeysOf, questMastery, questProgress, questStatus, useGame,
 } from '@/store/game'
 import { primeMicPermission } from '@/voice/permission'
-import { useVoiceStatus } from '@/voice/status'
+import { VoiceGate } from '../components/VoiceGate'
 import { VoiceToggle } from '../components/VoiceToggle'
 import { MapView, type MapNode } from '../map/MapView'
 import type { MarkerState } from '../sprites'
@@ -33,19 +33,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
     return quests.find((q) => !questProgress(save, q.id).cleared) ?? quests[quests.length - 1]
   }, [quests, selected, save])
 
-  // A voice run needs the model before its countdown can start; the toggle
-  // warms it, and the card holds the start buttons until it is there. A failed
-  // load does not hold anything: the run goes ahead on the keypad and the
-  // toggle says why.
-  const model = useVoiceStatus((s) => s.model)
-  const downloading = useVoiceStatus((s) => s.downloading)
   const voiceOn = save.settings.voice
-  const hold = !voiceOn || model === 'ready' || model === 'missing' || model === 'error'
-    ? null
-    : downloading
-      ? 'Downloading voice (first time)…'
-      : 'Getting voice ready…'
-
   const starting = useRef(false)
   const start = async (questId: string, mode: Mode, untimed: boolean) => {
     if (starting.current) return
@@ -54,7 +42,8 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
     audio.primeMusic()
     // iOS can ask for the mic again on every launch, whatever the toggle
     // asked earlier. Asked here, inside the tap, the sheet comes up over the
-    // map; the run's own mic open then goes through without one.
+    // map (behind the VoiceGate scrim); the run's own mic open then goes
+    // through without one.
     // Refused: voice goes off so the map can say so, and the run is a keypad one.
     if (voiceOn && !(await primeMicPermission())) setSettings({ voice: false })
     starting.current = false
@@ -97,39 +86,41 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
   ) as Record<Op, { done: number; total: number }>
 
   return (
-    <MapView
-      region={region}
-      header={{ worldNo, name: regionDef.name, blurb: regionDef.blurb, cleared: clearedHere, total: quests.length, onBack: () => go('title'), onSettings }}
-      nodes={nodes}
-      current={
-        current && currentProg && currentMastery && currentStatus !== 'locked'
-          ? {
-              quest: current,
-              cleared: currentProg.cleared,
-              mastered: currentProg.mastered,
-              unlockScore: current.unlockScore ?? UNLOCK_SCORE,
-              learned: currentMastery.learned,
-              required: currentMastery.required,
-              best: currentProg.bestSniper,
-              bestVoice: currentProg.bestSniperVoice,
-              warmUp: Boolean(current.untimedFirst) && !currentProg.practiced,
-              onWarmUp: () => void start(current.id, 'sniper', true),
-              onBlitz: () => void start(current.id, 'blitz', false),
-              onPlay: () => void start(current.id, 'sniper', false),
-              hold,
-            }
-          : null
-      }
-      tabs={{
-        region,
-        counts,
-        onChange: (r) => {
-          setRegion(r)
-          setSelected(null)
-        },
-      }}
-      onSelect={setSelected}
-      questBarExtra={<VoiceToggle />}
-    />
+    <>
+      <MapView
+        region={region}
+        header={{ worldNo, name: regionDef.name, blurb: regionDef.blurb, cleared: clearedHere, total: quests.length, onBack: () => go('title'), onSettings }}
+        nodes={nodes}
+        current={
+          current && currentProg && currentMastery && currentStatus !== 'locked'
+            ? {
+                quest: current,
+                cleared: currentProg.cleared,
+                mastered: currentProg.mastered,
+                unlockScore: current.unlockScore ?? UNLOCK_SCORE,
+                learned: currentMastery.learned,
+                required: currentMastery.required,
+                best: currentProg.bestSniper,
+                bestVoice: currentProg.bestSniperVoice,
+                warmUp: Boolean(current.untimedFirst) && !currentProg.practiced,
+                onWarmUp: () => void start(current.id, 'sniper', true),
+                onBlitz: () => void start(current.id, 'blitz', false),
+                onPlay: () => void start(current.id, 'sniper', false),
+              }
+            : null
+        }
+        tabs={{
+          region,
+          counts,
+          onChange: (r) => {
+            setRegion(r)
+            setSelected(null)
+          },
+        }}
+        onSelect={setSelected}
+        questBarExtra={<VoiceToggle />}
+      />
+      <VoiceGate />
+    </>
   )
 }
