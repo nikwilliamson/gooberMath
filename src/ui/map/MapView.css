@@ -19,9 +19,10 @@
 }
 .nodes__bed {
   --fade: clamp(44px, 9vmin, 80px);
-  padding: var(--fade) clamp(14px, 3.4vmin, 30px) calc(var(--fade) - clamp(16px, 3.4vmin, 30px));
+  padding: var(--fade) clamp(14px, 3.4vmin, 30px);
   margin: 0 calc(-1 * clamp(14px, 3.4vmin, 30px));
-  display: grid; gap: 0;
+  /* Row spacing lives here, not on the rows, so each row's text centres on its platform. */
+  display: grid; gap: clamp(16px, 3.4vmin, 30px);
   background: linear-gradient(
     180deg,
     rgba(4, 6, 12, 0) 0,
