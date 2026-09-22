@@ -90,6 +90,15 @@ class AudioEngine {
 
   private build(ctx: AudioContext) {
     this.ctx = ctx
+    // iOS interrupts the context when the mic opens, a notification plays or
+    // Siri speaks, and does not hand it back on its own. Ask for it back the
+    // moment it happens, and again when the app is visible.
+    ctx.addEventListener('statechange', () => {
+      if (this.ctx !== ctx) return
+      if ((ctx.state as string) !== 'running' && ctx.state !== 'closed' && document.visibilityState === 'visible') {
+        void ctx.resume().catch(() => {})
+      }
+    })
     this.master = ctx.createGain()
     this.master.gain.value = 0.9
     this.master.connect(ctx.destination)
