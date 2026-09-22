@@ -25,3 +25,5 @@ export const Three: Story = {}
 export const One: Story = { args: { count: 1 } }
 export const Blitz: Story = { args: { count: 2, modeName: 'Blitz Mode', hint: 'Same facts. Faster you.' } }
 export const WarmUp: Story = { args: { modeName: 'Warm-up' } }
+/** A voice run holding at 3 while the mic opens. */
+export const Waiting: Story = { args: { hint: 'Opening the mic…', waiting: true } }

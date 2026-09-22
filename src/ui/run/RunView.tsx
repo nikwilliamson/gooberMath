@@ -96,7 +96,7 @@ export function RunView({
           </div>
         </div>
 
-        <Count count={count} modeName={modeName(mode, untimed)} hint={waiting ? 'Getting voice ready…' : modeHint(mode)} />
+        <Count count={count} modeName={modeName(mode, untimed)} hint={waiting ? 'Opening the mic…' : modeHint(mode)} waiting={waiting} />
       </div>
 
       {count === 0 && (

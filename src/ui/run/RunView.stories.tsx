@@ -54,7 +54,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Countdown: Story = { args: fromRun(runs.start(), { count: 3 }) }
-/** A voice run holding at 3 while the model loads. */
+/** A voice run holding at 3 while the mic opens. */
 export const CountdownWaiting: Story = { args: fromRun(runs.start({ voice: true }), { count: 3, waiting: true }) }
 export const FirstProblem: Story = { args: fromRun(runs.start()) }
 export const Streak: Story = { args: fromRun(runs.streak()) }

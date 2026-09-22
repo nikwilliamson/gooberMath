@@ -28,6 +28,14 @@
   font-variant-numeric: tabular-nums;
   filter: drop-shadow(0 6px 0 rgba(20, 10, 2, 0.45)) drop-shadow(0 0 22px rgba(8, 10, 16, 0.75));
 }
+/* Holding for the mic: the 3 is there but not yet counting. */
+.countdown__digit.countdown__digit--wait { opacity: 0.3; animation: countWait 1.4s ease-in-out infinite alternate; }
+@keyframes countWait {
+  to { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .countdown__digit.countdown__digit--wait { animation: none; opacity: 0.4; }
+}
 .countdown__dots { display: flex; gap: 8px; }
 .countdown__foot { display: grid; justify-items: center; gap: clamp(6px, 1.6vmin, 12px); }
 .countdown__dot { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--line-2); }

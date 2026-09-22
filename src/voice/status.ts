@@ -19,6 +19,9 @@ export type MicStatus = 'off' | 'opening' | 'listening' | 'denied' | 'error'
 
 interface VoiceStatus {
   model: ModelStatus
+  /** The load in progress is the first on this device: a ~30MB download,
+      not a cache read. The map says so, because it can take a while. */
+  downloading: boolean
   mic: MicStatus
   /** 0..1, the level the indicator starts at. Live readings go through
       `micLevel`, ~23 a second, and never through React. */
@@ -31,6 +34,7 @@ interface VoiceStatus {
 
 export const useVoiceStatus = create<VoiceStatus>((set) => ({
   model: 'idle',
+  downloading: false,
   mic: 'off',
   level: 0,
   unsureAt: 0,

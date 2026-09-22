@@ -19,14 +19,18 @@ export interface QuestBarProps {
   onWarmUp: () => void
   onBlitz: () => void
   onPlay: () => void
+  /** Why a run cannot start yet ("Getting voice ready…"). While set, the
+      other ways in step aside and Play carries this across the row. */
+  hold?: string | null
   /** Top right, beside the quest name: the voice toggle. */
   children?: ReactNode
 }
 
 /** The current quest's card: name and voice, targets, blurb, then the ways to start it. */
 export function QuestBar({
-  quest, cleared, mastered, unlockScore, learned, required, best, bestVoice, warmUp, onWarmUp, onBlitz, onPlay, children,
+  quest, cleared, mastered, unlockScore, learned, required, best, bestVoice, warmUp, onWarmUp, onBlitz, onPlay, hold, children,
 }: QuestBarProps) {
+  const held = Boolean(hold)
   return (
     <div className="questbar__card">
       <div className="questbar__head">
@@ -61,16 +65,18 @@ export function QuestBar({
       </div>
       <span className="questbar__blurb">{quest.blurb}</span>
       <div className="questbar__modes">
-        {warmUp && (
+        {warmUp && !held && (
           <Button variant="ghost" onClick={onWarmUp}>
             Warm up
           </Button>
         )}
-        <Button variant="ghost" onClick={onBlitz}>
-          Blitz
-        </Button>
-        <Button variant="amber" onClick={onPlay}>
-          Play
+        {!held && (
+          <Button variant="ghost" onClick={onBlitz}>
+            Blitz
+          </Button>
+        )}
+        <Button variant="amber" onClick={onPlay} disabled={held} aria-busy={held || undefined} className={held ? 'questbar__hold' : undefined}>
+          {hold || 'Play'}
         </Button>
       </div>
     </div>

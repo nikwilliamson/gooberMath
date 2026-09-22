@@ -60,6 +60,8 @@ async function evictStaleModel(name: string) {
   } catch {
     return
   }
+  // Anything but the cached name means the worker is about to download.
+  setVoiceStatus({ downloading: last !== name })
   if (last === name) return
   if (last) {
     vlog('model-evict', { from: last, to: name })
@@ -114,13 +116,13 @@ export function loadModel() {
 
   model.then(
     ({ info }) => {
-      setVoiceStatus({ model: 'ready' })
+      setVoiceStatus({ model: 'ready', downloading: false })
       vlog('model-ready', { ms: Math.round(performance.now() - started), model: info.name, hasUnk: info.hasUnk })
     },
     (err: unknown) => {
       model = null // allow a retry
       const code = err instanceof VoiceError ? err.code : 'load'
-      setVoiceStatus({ model: code === 'missing' ? 'missing' : 'error', error: String(err) })
+      setVoiceStatus({ model: code === 'missing' ? 'missing' : 'error', downloading: false, error: String(err) })
       vlog('model-failed', { code })
     },
   )
