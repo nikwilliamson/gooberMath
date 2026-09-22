@@ -25,14 +25,14 @@
   background: linear-gradient(
     180deg,
     rgba(4, 6, 12, 0) 0,
-    rgba(4, 6, 12, 0.12) calc(var(--fade) * 0.25),
-    rgba(4, 6, 12, 0.38) calc(var(--fade) * 0.55),
-    rgba(4, 6, 12, 0.56) calc(var(--fade) * 0.85),
-    rgba(4, 6, 12, 0.62) var(--fade),
-    rgba(4, 6, 12, 0.62) calc(100% - var(--fade)),
-    rgba(4, 6, 12, 0.56) calc(100% - var(--fade) * 0.85),
-    rgba(4, 6, 12, 0.38) calc(100% - var(--fade) * 0.55),
-    rgba(4, 6, 12, 0.12) calc(100% - var(--fade) * 0.25),
+    rgba(4, 6, 12, 0.15) calc(var(--fade) * 0.25),
+    rgba(4, 6, 12, 0.46) calc(var(--fade) * 0.55),
+    rgba(4, 6, 12, 0.7) calc(var(--fade) * 0.85),
+    rgba(4, 6, 12, 0.76) var(--fade),
+    rgba(4, 6, 12, 0.76) calc(100% - var(--fade)),
+    rgba(4, 6, 12, 0.7) calc(100% - var(--fade) * 0.85),
+    rgba(4, 6, 12, 0.46) calc(100% - var(--fade) * 0.55),
+    rgba(4, 6, 12, 0.15) calc(100% - var(--fade) * 0.25),
     rgba(4, 6, 12, 0) 100%
   );
 }
