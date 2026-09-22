@@ -2,10 +2,10 @@
 .scene::after {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(75% 60% at 50% 38%, transparent 30%, rgba(4, 6, 12, 0.85) 100%);
+  background: radial-gradient(75% 60% at 50% 38%, transparent 40%, rgba(4, 6, 12, 0.6) 100%);
 }
-/* Painted backdrops sit behind a heavy scrim: the art is atmosphere, and the
-   UI on top of it still has to be readable on a phone in daylight. */
+/* Painted backdrops sit behind a light scrim: the art is the point, and the
+   text on top carries its own shadow where it needs one. */
 .scene--art {
   background-size: cover;
   background-position: center;
@@ -16,8 +16,8 @@
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.30) 0%, rgba(6, 9, 16, 0.62) 70%),
-    linear-gradient(180deg, rgba(6, 9, 16, 0.42) 0%, rgba(6, 9, 16, 0.7) 55%, rgba(6, 9, 16, 0.94) 100%);
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.12) 0%, rgba(6, 9, 16, 0.36) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.22) 0%, rgba(6, 9, 16, 0.42) 55%, rgba(6, 9, 16, 0.8) 100%);
 }
 .scene--world {
   background-image: var(--world-art);
@@ -40,11 +40,11 @@
     radial-gradient(90% 70% at 20% 90%, rgba(245, 178, 31, 0.07) 0%, transparent 60%),
     linear-gradient(180deg, #121826 0%, var(--bg) 70%);
 }
-/* In play the problem is the only thing that may be bright, so the world art
-   sits under a heavier scrim than it does on the map. */
+/* In play the problem sits in its own pool of shadow, so the world only needs
+   a little more quiet than the map. */
 .scene--level::before {
   background:
-    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.55) 0%, rgba(6, 9, 16, 0.78) 70%),
-    linear-gradient(180deg, rgba(6, 9, 16, 0.6) 0%, rgba(6, 9, 16, 0.82) 55%, rgba(6, 9, 16, 0.96) 100%);
+    radial-gradient(90% 60% at 50% 30%, rgba(6, 9, 16, 0.28) 0%, rgba(6, 9, 16, 0.5) 70%),
+    linear-gradient(180deg, rgba(6, 9, 16, 0.32) 0%, rgba(6, 9, 16, 0.55) 55%, rgba(6, 9, 16, 0.86) 100%);
 }
 .scene__splats { position: absolute; inset: 0; }

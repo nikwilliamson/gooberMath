@@ -25,7 +25,7 @@ export default meta
 
 export const Header: StoryObj<typeof MapHeader> = {
   render: (args) => <MapHeader {...args} />,
-  args: { worldNo: 1, name: 'Plus Plains', op: 'add', cleared: 3, total: 6, onBack: fn(), onSettings: fn() },
+  args: { worldNo: 1, name: 'Plus Plains', op: 'add', blurb: 'Where the numbers gather.', cleared: 3, total: 6, onBack: fn(), onSettings: fn() },
 }
 
 const q = quest('add-4')

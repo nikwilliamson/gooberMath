@@ -11,6 +11,8 @@ export interface MapHeaderProps {
   /** Region name: "Plus Plains". */
   name: string
   op: Op
+  /** One line under the name: the region's blurb. */
+  blurb: string
   /** Quests cleared in this region, out of `total`. */
   cleared: number
   total: number
@@ -18,17 +20,19 @@ export interface MapHeaderProps {
   onSettings: () => void
 }
 
-/** Back, world title, cleared count, settings. */
-export function MapHeader({ worldNo, name, op, cleared, total, onBack, onSettings }: MapHeaderProps) {
+/** Back, world title with its blurb, cleared count, settings. One tight block. */
+export function MapHeader({ worldNo, name, op, blurb, cleared, total, onBack, onSettings }: MapHeaderProps) {
   return (
     <header className="map__head">
       <Button variant="ghost" iconOnly onClick={onBack} aria-label="Back">
         &#8592;
       </Button>
       <div className="map__world">
-        <Label>World {worldNo}</Label>
+        <Label>
+          World {worldNo} <span className="map__dot">&middot;</span> {OP_NAME[op]}
+        </Label>
         <h1 className="map__op">{name}</h1>
-        <span className="map__sub">{OP_NAME[op]}</span>
+        <span className="map__sub">{blurb}</span>
       </div>
       <span className="spacer" />
       <Chip>

@@ -34,8 +34,7 @@ function view(region: Op, cleared: number, patch: Partial<MapViewProps> = {}): M
   const current = nodes[Math.min(cleared, nodes.length - 1)]
   return {
     region,
-    blurb: def.blurb,
-    header: { worldNo: ['add', 'sub', 'mul', 'div'].indexOf(region) + 1, name: def.name, cleared, total: nodes.length, onBack: fn(), onSettings: fn() },
+    header: { worldNo: ['add', 'sub', 'mul', 'div'].indexOf(region) + 1, name: def.name, blurb: def.blurb, cleared, total: nodes.length, onBack: fn(), onSettings: fn() },
     nodes,
     current: {
       quest: current.quest,

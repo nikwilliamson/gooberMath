@@ -16,7 +16,6 @@ export interface MapNode extends Omit<QuestNodeProps, 'onSelect' | 'children' | 
 
 export interface MapViewProps {
   region: Op
-  blurb: string
   header: Omit<MapHeaderProps, 'op'>
   nodes: MapNode[]
   /** The selected quest's card; null when the region has nothing playable. */
@@ -28,7 +27,7 @@ export interface MapViewProps {
 }
 
 /** The world map from plain props. MapScreen wires it to the store. */
-export function MapView({ region, blurb, header, nodes, current, tabs, onSelect, questBarExtra }: MapViewProps) {
+export function MapView({ region, header, nodes, current, tabs, onSelect, questBarExtra }: MapViewProps) {
   return (
     <div className="app" data-region={region}>
       <Scene key={region} art={REGION_ART[region]} />
@@ -37,7 +36,6 @@ export function MapView({ region, blurb, header, nodes, current, tabs, onSelect,
         <MapHeader {...header} op={region} />
 
         <div className="nodes">
-          <p className="map__blurb">{blurb}</p>
           {nodes.map(({ grid, ...node }, i) => (
             <QuestNode key={node.quest.id} index={i} {...node} onSelect={() => onSelect(node.quest.id)}>
               <FactGrid {...grid} />

@@ -9,9 +9,7 @@
   grid-template-columns: minmax(0, 1fr);
   min-height: 0; min-width: 0;
 }
-.map__blurb { font-size: clamp(0.72rem, 1.9vmin, 0.86rem); color: var(--dim); font-weight: 400; margin-top: 10px; max-width: 42ch; }
-
-.nodes { min-width: 0; overflow-y: auto; padding: clamp(14px, 3vmin, 26px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
+.nodes { min-width: 0; overflow-y: auto; padding: clamp(10px, 2.4vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
 /* Thumb only, no track: a bare sliver of ink over the painted world. */
 .nodes { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
 .nodes::-webkit-scrollbar { width: 6px; }
@@ -19,4 +17,4 @@
 .nodes::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: var(--r-pill); }
 .nodes::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.36); }
 
-.questbar { min-width: 0; padding: clamp(12px, 2.6vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 12px; background: linear-gradient(180deg, transparent, rgba(6, 9, 15, 0.9) 30%); }
+.questbar { min-width: 0; padding: clamp(12px, 2.6vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 12px; background: linear-gradient(180deg, transparent, rgba(6, 9, 15, 0.55) 40%); }

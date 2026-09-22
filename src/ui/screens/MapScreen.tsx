@@ -77,8 +77,7 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
   return (
     <MapView
       region={region}
-      blurb={regionDef.blurb}
-      header={{ worldNo, name: regionDef.name, cleared: clearedHere, total: quests.length, onBack: () => go('title'), onSettings }}
+      header={{ worldNo, name: regionDef.name, blurb: regionDef.blurb, cleared: clearedHere, total: quests.length, onBack: () => go('title'), onSettings }}
       nodes={nodes}
       current={
         current && currentProg && currentMastery && currentStatus !== 'locked'
