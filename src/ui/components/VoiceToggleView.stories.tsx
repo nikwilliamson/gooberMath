@@ -13,7 +13,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { on: false, busy: false, note: null, ok: false, onToggle: fn() },
+  args: { on: false, busy: false, note: null, onToggle: fn() },
 } satisfies Meta<typeof VoiceToggleView>
 
 export default meta
@@ -25,8 +25,8 @@ export const Asking: Story = {
   args: { busy: true },
   parameters: { a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } } },
 }
-export const Loading: Story = { args: { on: true, busy: true, note: voiceNote(true, 'loading', false, false) } }
-export const Ready: Story = { args: { on: true, note: voiceNote(true, 'ready', false, false), ok: true } }
+export const Loading: Story = { args: { on: true, busy: true } }
+export const Ready: Story = { args: { on: true } }
 export const Missing: Story = { args: { on: true, note: voiceNote(true, 'missing', false, false) } }
 export const LoadError: Story = { args: { on: true, note: voiceNote(true, 'error', false, false) } }
 export const MicDenied: Story = { args: { note: voiceNote(false, 'idle', true, false) } }

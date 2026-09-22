@@ -29,4 +29,3 @@
 .voicetoggle__btn[data-on] .voicetoggle__track { background: var(--green); }
 .voicetoggle__btn[data-on] .voicetoggle__thumb { transform: translateX(1em); }
 .voicetoggle__note { font-size: clamp(0.66rem, 1.7vmin, 0.78rem); color: var(--dim); font-weight: 400; line-height: 1.4; }
-.voicetoggle__note[data-tone='ok'] { color: color-mix(in srgb, var(--green) 70%, var(--dim)); }

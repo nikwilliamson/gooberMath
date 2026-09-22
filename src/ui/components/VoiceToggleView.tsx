@@ -3,15 +3,13 @@ export interface VoiceToggleViewProps {
   on: boolean
   /** The mic prompt is up, or the model is loading. */
   busy: boolean
-  /** The line under the switch, if any. */
+  /** The line under the switch: only ever a failure. */
   note: string | null
-  /** The note is good news (voice is ready). */
-  ok?: boolean
   onToggle: () => void
 }
 
 /** The voice switch on the map's quest bar, from plain props. */
-export function VoiceToggleView({ on, busy, note, ok, onToggle }: VoiceToggleViewProps) {
+export function VoiceToggleView({ on, busy, note, onToggle }: VoiceToggleViewProps) {
   return (
     <div className="voicetoggle">
       <button
@@ -29,9 +27,7 @@ export function VoiceToggleView({ on, busy, note, ok, onToggle }: VoiceToggleVie
         </span>
       </button>
       {note && (
-        <span className="voicetoggle__note" data-tone={ok ? 'ok' : undefined}>
-          {note}
-        </span>
+        <span className="voicetoggle__note">{note}</span>
       )}
     </div>
   )

@@ -12,7 +12,10 @@ const warmModel = () =>
     () => undefined, // status carries the reason
   )
 
-/** What the switch says underneath, given where voice is. */
+/**
+ * What the switch says underneath. Nothing on the happy path: switching it
+ * on or off is its own confirmation. Only a failure explains itself.
+ */
 export function voiceNote(on: boolean, model: ModelStatus, micDenied: boolean, crashed: boolean): string | null {
   if (!on) {
     if (micDenied) return 'The microphone is blocked. Allow it for this site in Safari settings, then try again.'
@@ -20,16 +23,12 @@ export function voiceNote(on: boolean, model: ModelStatus, micDenied: boolean, c
     return null
   }
   switch (model) {
-    case 'ready':
-      return 'Say answers out loud. The keypad still works.'
     case 'missing':
       return 'Voice is not included in this build.'
     case 'error':
       return 'Voice could not load. Switch it off and on to try again.'
     default:
-      // 'idle' included: on, but the load has not reported yet. Never claim
-      // ready before it is.
-      return 'Getting voice ready. The first time downloads about 40 MB, then it stays on this device.'
+      return null
   }
 }
 
@@ -71,7 +70,6 @@ export function VoiceToggle() {
       on={on}
       busy={busy || (on && model === 'loading')}
       note={voiceNote(on, model, mic === 'denied', crashed)}
-      ok={on && model === 'ready'}
       onToggle={() => void toggle()}
     />
   )
