@@ -30,7 +30,7 @@ export default function App() {
     if (!ready) return
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const firstRun = !readLocal('goobermath:seen')
-    if (reduce && firstRun) setSettings({ flashes: false, shake: false, particles: false })
+    if (reduce && firstRun) setSettings({ flashes: false, shake: false })
     writeLocal('goobermath:seen', '1')
   }, [ready, setSettings])
 

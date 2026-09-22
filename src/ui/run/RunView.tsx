@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import type { Mode, Op } from '@/engine/types'
-import { InkLayer } from '../components/InkLayer'
 import { NumberPad } from '../components/NumberPad'
 import { Micro, Scene, cx } from '../primitives'
 import { LEVEL_ART } from '../sprites'
@@ -22,15 +21,8 @@ export interface RunViewProps {
   sticker: StickerProps | null
   /** The held wrong-answer reveal, when there is one. */
   reveal: Omit<AnswerRevealProps, 'onDismiss'> | null
-  effects: {
-    particles: boolean
-    /** Bumped on every answer; the ink layer bursts on change. */
-    pulse: number
-    /** 0..1, how hard the ink bursts. */
-    intensity: number
-    /** The board is mid-shake after a miss. */
-    shake: boolean
-  }
+  /** The board is mid-shake after a miss. */
+  shake: boolean
   /** The pad accepts input. */
   padLive: boolean
   onDigit: (d: number) => void
@@ -41,6 +33,16 @@ export interface RunViewProps {
   /** Rendered at the top of the problem card (the voice nudge). */
   problemExtra?: ReactNode
 }
+
+// The store ticks 20 times a second while the clock runs and RunScreen
+// re-renders on each; only the HUD has anything new to show. These skip the
+// frame when their props are unchanged, which the container guarantees by
+// building them with useMemo.
+const Problem = memo(ProblemCard)
+const Zone = memo(StickerZone)
+const Pad = memo(NumberPad)
+const Reveal = memo(AnswerReveal)
+const Count = memo(Countdown)
 
 export const modeName = (mode: Mode, untimed: boolean) =>
   untimed ? 'Warm-up' : mode === 'blitz' ? 'Blitz Mode' : 'Sniper Mode'
@@ -57,7 +59,7 @@ export function RunView({
   problem,
   sticker,
   reveal,
-  effects,
+  shake,
   padLive,
   onDigit,
   onBackspace,
@@ -73,27 +75,25 @@ export function RunView({
       <div className="run">
         <Hud {...hud}>{hudExtra}</Hud>
 
-        <div className={cx('board', effects.shake && 'shake')}>
-          {effects.particles && <InkLayer pulse={effects.pulse} enabled={effects.particles} intensity={effects.intensity} />}
+        <div className={cx('board', shake && 'shake')}>
+          <Zone zone="top" sticker={sticker} />
 
-          <StickerZone zone="top" sticker={sticker} />
-
-          <ProblemCard {...problem} dim={showWrong}>
+          <Problem {...problem} dim={showWrong}>
             {problemExtra}
-          </ProblemCard>
+          </Problem>
 
-          <StickerZone zone="bottom" sticker={sticker} />
+          <Zone zone="bottom" sticker={sticker} />
 
-          {reveal && <AnswerReveal {...reveal} onDismiss={onDismiss} />}
+          {reveal && <Reveal {...reveal} onDismiss={onDismiss} />}
         </div>
 
         <div className="padwrap" onClick={showWrong && reveal.ready ? onDismiss : undefined}>
           <div className={showWrong ? 'pad--dim' : ''} style={{ width: '100%', display: 'grid', placeItems: 'center' }}>
-            <NumberPad onDigit={onDigit} onBackspace={onBackspace} disabled={!padLive} />
+            <Pad onDigit={onDigit} onBackspace={onBackspace} disabled={!padLive} />
           </div>
         </div>
 
-        <Countdown count={count} modeName={modeName(mode, untimed)} hint={modeHint(mode)} />
+        <Count count={count} modeName={modeName(mode, untimed)} hint={modeHint(mode)} />
       </div>
 
       {count === 0 && (

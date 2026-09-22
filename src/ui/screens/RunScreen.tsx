@@ -11,6 +11,9 @@ import { useKeypad, useRaf } from '../hooks'
 import { RunView } from '../run/RunView'
 import { STICKER_ANCHORS } from '../sprites'
 
+/** Store ticks per second while the clock runs. */
+const TICK_MS = 50
+
 /**
  * Wires the run to the store: countdown, clock, input, audio, and the
  * choreography around answers. Everything visible is RunView.
@@ -18,7 +21,6 @@ import { STICKER_ANCHORS } from '../sprites'
 export function RunScreen() {
   const run = useGame((s) => s.run)
   const settings = useGame((s) => s.save.settings)
-  const pulse = useGame((s) => s.pulse)
   const tick = useGame((s) => s.tick)
   const arm = useGame((s) => s.arm)
   const digit = useGame((s) => s.digit)
@@ -66,7 +68,15 @@ export function RunScreen() {
   }, [quest, arm, settings.music])
 
   useEffect(() => () => audio.stopMusic(), [])
-  useRaf((now) => tick(now), live)
+  // The clock reads to the second and the bar tweens over 100ms, so the store
+  // does not need a new run object every frame; 20 a second re-renders the
+  // screen a third as often with no visible difference.
+  const lastTick = useRef(0)
+  useRaf((now) => {
+    if (now - lastTick.current < TICK_MS) return
+    lastTick.current = now
+    tick(now)
+  }, live)
 
   // Voice is a second way in, never a replacement: the keypad stays live.
   useVoiceRun({
@@ -102,20 +112,21 @@ export function RunScreen() {
     return () => window.removeEventListener('keydown', onKey)
   }, [held, canDismiss, advance])
 
+  const answered = run?.answers.length ?? 0
   useEffect(() => {
-    if (!run || run.answers.length === seenAnswers.current) return
-    seenAnswers.current = run.answers.length
-    const last = run.answers[run.answers.length - 1]
+    if (!run || answered === seenAnswers.current) return
+    seenAnswers.current = answered
+    const last = run.answers[answered - 1]
     if (!last) return
     lastWasCorrect.current = last.correct
     if (last.correct) {
-      setLastCorrectAt(run.answers.length)
+      setLastCorrectAt(answered)
       audio.hit(run.streak)
       const mult = comboMult(run.streak)
       if (mult > lastMult.current) setComboStep((n) => n + 1)
       lastMult.current = mult
     } else {
-      setLastMissAt(run.answers.length)
+      setLastMissAt(answered)
       audio.miss()
       lastMult.current = 1
       if (settings.shake) {
@@ -123,7 +134,8 @@ export function RunScreen() {
         window.setTimeout(() => setShake(false), 240)
       }
     }
-  }, [pulse, run, settings.shake])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, settings.shake])
 
   // A question swaps out only when the next one is actually on screen, so the
   // exit and entrance overlap instead of leaving a hole where the problem was.
@@ -151,38 +163,72 @@ export function RunScreen() {
     return () => window.clearTimeout(id)
   }, [outgoing])
 
+  const streak = run?.streak ?? 0
   useEffect(() => {
-    if (!run) return
-    const m = comboMult(run.streak)
+    const m = comboMult(streak)
     audio.setIntensity(m >= 3 ? 3 : m >= 2 ? 2 : m >= 1.5 ? 1 : 0)
-  }, [run?.streak, run])
+  }, [streak])
 
-  if (!run || !quest) return null
-
-  const fact = factsByKey.get(run.currentKey)!
-  const width = String(fact.answer).length
-  const mult = comboMult(run.streak)
-  const showWrong = run.phase === 'feedback' && run.lastCorrect === false
-  const lastPoints = run.answers[lastCorrectAt - 1]?.points ?? 0
+  // Everything below is derived with `run` possibly null so the memos can sit
+  // above the early return; RunView's children are memoised on these objects,
+  // so a tick that only moves the clock re-renders the HUD and nothing else.
+  const fact = run ? factsByKey.get(run.currentKey) : undefined
+  const entry = run?.entry ?? ''
+  const phase = run?.phase ?? 'over'
+  const width = fact ? String(fact.answer).length : 0
+  const mult = comboMult(streak)
+  const showWrong = phase === 'feedback' && run?.lastCorrect === false
+  const lastPoints = run?.answers[lastCorrectAt - 1]?.points ?? 0
   // Rotate through the 20 sticker phrases, offset per run so it is not always
   // the same opener.
   const stickerAt = Math.max(lastCorrectAt, lastMissAt)
-  const stickerIdx = stickerAt + (run.startedAt | 0)
-  // While answering, one slot per digit of the answer. Once answered, exactly
-  // what was entered: a spoken "8" for 10, or "100" for 10, has a different
-  // length, and padding it with "?" read as a half-typed answer.
-  const slots =
-    run.phase === 'playing'
-      ? Array.from({ length: width }, (_, i) => run.entry[i] ?? '')
-      : run.entry.split('')
+  const stickerIdx = stickerAt + ((run?.startedAt ?? 0) | 0)
+  const currentKey = run?.currentKey ?? ''
   // Derived during render, not waited for in an effect: the state update lands
   // a frame after the key changes, and that one frame had the old question
   // already unmounted and the new one still at zero opacity — an empty card for
   // 16ms. Same key either way, so the element is never remounted mid-exit.
   const ref = prevProblem.current
-  const leaving =
-    outgoing ??
-    (ref && ref.key !== run.currentKey ? { ...ref, won: lastWasCorrect.current } : null)
+  const leaving = outgoing ?? (ref && ref.key !== currentKey ? { ...ref, won: lastWasCorrect.current } : null)
+  const glow = settings.flashes ? comboStep : 0
+
+  const problem = useMemo(
+    () => ({
+      factKey: currentKey,
+      left: fact ? formatFact(fact) : '',
+      // While answering, one slot per digit of the answer. Once answered,
+      // exactly what was entered: a spoken "8" for 10, or "100" for 10, has a
+      // different length, and padding it with "?" read as a half-typed answer.
+      slots: phase === 'playing' ? Array.from({ length: width }, (_, i) => entry[i] ?? '') : entry.split(''),
+      leaving,
+      glow,
+    }),
+    [currentKey, fact, phase, width, entry, leaving, glow],
+  )
+  const sticker = useMemo(
+    () =>
+      stickerAt > 0
+        ? {
+            at: stickerAt,
+            index: stickerIdx,
+            missed: lastMissAt > lastCorrectAt,
+            points: lastPoints,
+            anchor: STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length],
+          }
+        : null,
+    [stickerAt, stickerIdx, lastMissAt, lastCorrectAt, lastPoints],
+  )
+  const reveal = useMemo(
+    () => (showWrong && fact ? { left: formatFact(fact), answer: fact.answer, entry, ready: canDismiss } : null),
+    [showWrong, fact, entry, canDismiss],
+  )
+
+  // Stable elements, or the memoised card would re-render for a new <VoiceNudge/> every tick.
+  const voice = run?.voice ?? false
+  const hudExtra = useMemo(() => (voice ? <VoiceChip /> : undefined), [voice])
+  const problemExtra = useMemo(() => (voice ? <VoiceNudge /> : undefined), [voice])
+
+  if (!run || !quest || !fact) return null
 
   return (
     <RunView
@@ -199,32 +245,16 @@ export function RunScreen() {
         comboStep,
         onQuit: quit,
       }}
-      problem={{
-        factKey: run.currentKey,
-        left: formatFact(fact),
-        slots,
-        leaving,
-        glow: settings.flashes ? comboStep : 0,
-      }}
-      sticker={
-        stickerAt > 0
-          ? {
-              at: stickerAt,
-              index: stickerIdx,
-              missed: lastMissAt > lastCorrectAt,
-              points: lastPoints,
-              anchor: STICKER_ANCHORS[stickerIdx % STICKER_ANCHORS.length],
-            }
-          : null
-      }
-      reveal={showWrong ? { left: formatFact(fact), answer: fact.answer, entry: run.entry, ready: canDismiss } : null}
-      effects={{ particles: settings.particles, pulse, intensity: mult / 3, shake }}
-      padLive={run.phase === 'playing'}
+      problem={problem}
+      sticker={sticker}
+      reveal={reveal}
+      shake={shake}
+      padLive={phase === 'playing'}
       onDigit={digit}
       onBackspace={backspace}
       onDismiss={advance}
-      hudExtra={run.voice ? <VoiceChip /> : undefined}
-      problemExtra={run.voice ? <VoiceNudge /> : undefined}
+      hudExtra={hudExtra}
+      problemExtra={problemExtra}
     />
   )
 }

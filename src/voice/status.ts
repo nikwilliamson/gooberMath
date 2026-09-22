@@ -20,7 +20,8 @@ export type MicStatus = 'off' | 'opening' | 'listening' | 'denied' | 'error'
 interface VoiceStatus {
   model: ModelStatus
   mic: MicStatus
-  /** 0..1, for the listening indicator. */
+  /** 0..1, the level the indicator starts at. Live readings go through
+      `micLevel`, ~23 a second, and never through React. */
   level: number
   /** When the recognizer last heard a number it was not sure of. */
   unsureAt: number
@@ -49,3 +50,22 @@ export const setVoiceStatus = (patch: Partial<Omit<VoiceStatus, 'set'>>) =>
 export const VOICE_RUN_KEY = 'goobermath:voice-run'
 /** Shown on the map until voice is switched back on. */
 export const VOICE_CRASHED_KEY = 'goobermath:voice-crashed'
+
+/**
+ * The mic level, ~23 readings a second while listening. Not store state: a
+ * store update re-renders every subscriber, and the only consumer is one
+ * CSS variable on the HUD chip. Subscribers write to the DOM directly.
+ */
+type LevelListener = (level: number) => void
+const levelListeners = new Set<LevelListener>()
+export const micLevel = {
+  value: 0,
+  set(level: number) {
+    this.value = level
+    for (const l of levelListeners) l(level)
+  },
+  subscribe(fn: LevelListener) {
+    levelListeners.add(fn)
+    return () => void levelListeners.delete(fn)
+  },
+}

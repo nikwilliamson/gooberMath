@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useVoiceStatus } from '@/voice/status'
+import { useEffect, useRef, useState } from 'react'
+import { micLevel, useVoiceStatus } from '@/voice/status'
 import './VoiceChip.css'
 
 const UNSURE_SHOW_MS = 1400
@@ -14,12 +14,19 @@ const UNSURE_SHOW_MS = 1400
 export function VoiceChip() {
   const mic = useVoiceStatus((s) => s.mic)
   const level = useVoiceStatus((s) => s.level)
+  const ref = useRef<HTMLDivElement>(null)
+  // ~23 readings a second: written straight to the CSS variable, no render.
+  useEffect(() => {
+    if (mic !== 'listening') return
+    return micLevel.subscribe((v) => ref.current?.style.setProperty('--level', String(v)))
+  }, [mic])
   if (mic === 'off') return null
 
   const label =
     mic === 'listening' ? 'Listening' : mic === 'opening' ? 'Starting the microphone' : 'Microphone unavailable'
   return (
     <div
+      ref={ref}
       className="voicechip"
       data-state={mic}
       style={{ ['--level' as string]: mic === 'listening' ? level : 0 }}

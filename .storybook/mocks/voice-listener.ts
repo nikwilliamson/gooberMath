@@ -22,7 +22,6 @@ export async function loadModel() {
 }
 
 export async function openMic(
-  _ctx: AudioContext,
   _onFinal: (words: HeardWord[], now: number) => void,
   _onLevel: (rms: number, now: number) => void,
 ): Promise<MicSession> {

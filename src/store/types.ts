@@ -22,7 +22,6 @@ export interface Settings {
   sfx: boolean
   flashes: boolean
   shake: boolean
-  particles: boolean
   /** Answer out loud. Off by default; recognition runs on the device. */
   voice: boolean
 }
@@ -70,6 +69,6 @@ export const DEFAULT_SAVE: SaveData = {
   pad: 'pad-ink',
   daily: { date: today(), runs: 0, streakDays: 0, lastDate: '' },
   // He leans into stimulation, so everything is on and loud by default.
-  settings: { music: true, sfx: true, flashes: true, shake: true, particles: true, voice: false },
+  settings: { music: true, sfx: true, flashes: true, shake: true, voice: false },
   forcedRegions: [],
 }

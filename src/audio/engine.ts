@@ -1,6 +1,19 @@
 /**
- * Everything here is synthesised at runtime: no audio files to load, no
- * latency on the first hit, and hit pitch can follow the combo.
+ * One AudioContext for everything: sound effects are synthesised on it, the
+ * run track is a decoded buffer played through it, and the mic joins it for
+ * voice runs. One context means one route — on an iPhone with the mic live,
+ * a bare <audio> element could drop to the earpiece while the effects stayed
+ * on the speaker; here they cannot diverge.
+ *
+ * iOS specifics this is built around:
+ * - Nothing plays until the context is created or resumed inside a tap.
+ * - Opening the mic switches the audio session to play-and-record, which can
+ *   re-clock the hardware. A context created before that then renders at the
+ *   wrong rate (pitched, crackling, or silent). After the mic opens, the
+ *   listener calls `afterMicOpened()`, which rebuilds the context if the rate
+ *   changed and picks the music back up where it was.
+ * - A phone call or Siri leaves the context `interrupted` (not `suspended`);
+ *   both are resumed.
  */
 
 const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28]
@@ -9,10 +22,17 @@ const BASE_HZ = 261.63 // C4
 /** The run track. 60s, so it runs exactly as long as a run does. */
 const MUSIC_URL = `${import.meta.env.BASE_URL}audio/ComboUp.m4a`
 const MUSIC_BASE_VOLUME = 0.6
+/** Gain moves are smoothed over this many seconds; no zipper noise. */
+const GAIN_SMOOTH_S = 0.05
 
 const semi = (n: number) => BASE_HZ * Math.pow(2, n / 12)
 
 export type SoundPack = 'pad-ink' | 'sound-arcade' | 'sound-bell'
+
+type Ctor = typeof AudioContext
+
+const contextCtor = (): Ctor | null =>
+  window.AudioContext ?? (window as unknown as { webkitAudioContext?: Ctor }).webkitAudioContext ?? null
 
 class AudioEngine {
   private ctx: AudioContext | null = null
@@ -20,43 +40,62 @@ class AudioEngine {
   private musicGain: GainNode | null = null
   private sfxGain: GainNode | null = null
   private noise: AudioBuffer | null = null
-  private music: HTMLAudioElement | null = null
-  /**
-   * Voice runs play the track through the AudioContext rather than as a bare
-   * media element. With the mic live, iOS switches to play-and-record, and a
-   * bare element on iPhone can drop to the earpiece; audio in the context
-   * follows the same route as the sound effects. Wiring an element into a
-   * context is permanent, so voice runs get their own element and keypad
-   * runs keep exactly the path they had.
-   */
-  private plainMusic: HTMLAudioElement | null = null
-  private routedMusic: HTMLAudioElement | null = null
-  private routed = false
+
+  private musicBuffer: AudioBuffer | null = null
+  private musicLoad: Promise<AudioBuffer | null> | null = null
+  private musicSource: AudioBufferSourceNode | null = null
   /** Whether music *should* be playing, so a settings toggle can resume it. */
   private wantMusic = false
-  private primed = false
+  private musicLoop = false
+  /** performance.now() when the current run's track logically started. */
+  private musicStartedAt = 0
 
   intensity = 0
   sfxEnabled = true
   musicEnabled = true
   pack: SoundPack = 'pad-ink'
 
-  /** Must be called from a user gesture; browsers block audio otherwise. */
+  constructor() {
+    // Coming back from the background or a call: the context may need a nudge.
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.resume()
+      })
+    }
+  }
+
+  /** Must be called from a user gesture the first time; browsers block audio otherwise. */
   unlock() {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume()
+      this.resume()
       return
     }
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const Ctor = contextCtor()
     if (!Ctor) return
-    const ctx = new Ctor()
+    this.build(new Ctor())
+  }
+
+  /** The shared context, created on first use. Call from a gesture the first time. */
+  context(): AudioContext | null {
+    this.unlock()
+    return this.ctx
+  }
+
+  private resume() {
+    const ctx = this.ctx
+    if (!ctx) return
+    // 'interrupted' is iOS's own state after a call or Siri; it is not in lib.dom.
+    if ((ctx.state as string) !== 'running') void ctx.resume().catch(() => {})
+  }
+
+  private build(ctx: AudioContext) {
     this.ctx = ctx
     this.master = ctx.createGain()
     this.master.gain.value = 0.9
     this.master.connect(ctx.destination)
 
     this.musicGain = ctx.createGain()
-    this.musicGain.gain.value = 0.34
+    this.musicGain.gain.value = this.musicEnabled ? this.musicVolume() : 0
     this.musicGain.connect(this.master)
 
     this.sfxGain = ctx.createGain()
@@ -70,23 +109,28 @@ class AudioEngine {
     this.noise = buf
   }
 
-  /** The shared context, created on first use. The mic joins this one: two
-      contexts contending for the iOS audio session is a known way to lose
-      playback. Call from a gesture the first time. */
-  context(): AudioContext | null {
-    this.unlock()
+  /**
+   * Call once the mic stream is open. If the hardware rate changed underneath
+   * the context, rebuild it on the new rate; the music, if playing, resumes at
+   * the point it had reached. Returns the live context.
+   */
+  afterMicOpened(): AudioContext | null {
+    const Ctor = contextCtor()
+    if (!Ctor || !this.ctx) return this.ctx
+    const probe = new Ctor()
+    if (probe.sampleRate === this.ctx.sampleRate) {
+      void probe.close()
+      this.resume()
+      return this.ctx
+    }
+    const old = this.ctx
+    this.musicSource?.stop()
+    this.musicSource = null
+    this.build(probe)
+    this.resume()
+    void old.close().catch(() => {})
+    if (this.wantMusic && this.musicEnabled) void this.playMusic()
     return this.ctx
-  }
-
-  /** Route music for the next run. Call from the tap that starts it. */
-  setRouted(on: boolean) {
-    const want = on && !!this.ctx
-    if (want === this.routed) return
-    this.music?.pause()
-    this.routed = want
-    this.music = want ? this.routedMusic : this.plainMusic
-    // The other element has not been through a gesture yet.
-    this.primed = false
   }
 
   private env(node: AudioNode, at: number, peak: number, attack: number, decay: number) {
@@ -187,91 +231,76 @@ class AudioEngine {
 
   // --- music ---------------------------------------------------------------
 
-  private ensureMusic(): HTMLAudioElement | null {
-    if (this.music) return this.music
-    try {
-      const el = new Audio(MUSIC_URL)
-      el.preload = 'auto'
-      el.volume = MUSIC_BASE_VOLUME
-      el.crossOrigin = 'anonymous'
-      if (this.routed && this.ctx && this.musicGain) {
-        // Volume moves to the gain node: iOS ignores element.volume anyway.
-        el.volume = 1
-        this.ctx.createMediaElementSource(el).connect(this.musicGain)
-        this.musicGain.gain.value = this.musicVolume()
-        this.routedMusic = el
-      } else {
-        this.plainMusic = el
+  /**
+   * Fetch and decode the track. Idempotent; call from the taps that lead to a
+   * run so it is in memory before the countdown ends. One plain fetch, which
+   * the service worker caches whole — unlike a media element's range requests,
+   * which it never could.
+   */
+  primeMusic() {
+    void this.loadMusic()
+  }
+
+  private loadMusic(): Promise<AudioBuffer | null> {
+    if (this.musicLoad) return this.musicLoad
+    this.musicLoad = (async () => {
+      try {
+        const res = await fetch(MUSIC_URL)
+        if (!res.ok) throw new Error(String(res.status))
+        const bytes = await res.arrayBuffer()
+        this.unlock()
+        if (!this.ctx) throw new Error('no context')
+        this.musicBuffer = await this.ctx.decodeAudioData(bytes)
+        return this.musicBuffer
+      } catch {
+        this.musicLoad = null // allow a retry on the next tap
+        return null
       }
-      this.music = el
-      return el
-    } catch {
-      return null
-    }
+    })()
+    return this.musicLoad
+  }
+
+  /** Seconds into the track the run has reached. */
+  private musicOffset() {
+    return Math.max(0, (performance.now() - this.musicStartedAt) / 1000)
   }
 
   /**
-   * iOS will not start audio outside a user gesture, and the track starts after
-   * the countdown rather than on the tap, so it has to be unlocked during the
-   * gesture. Call this ONLY from a real tap that precedes a run — never from
-   * unlock(), which every sound effect calls: re-priming mid-run pauses the
-   * track that is already playing.
+   * Start the buffer from wherever the run has reached. If the decode is still
+   * in flight (a first visit on a slow connection), the track joins late but
+   * in time with the clock rather than from the top.
    */
-  primeMusic() {
-    if (this.primed || this.wantMusic) return
-    const el = this.ensureMusic()
-    if (!el) return
-    el.muted = true
-    void el
-      .play()
-      .then(() => {
-        this.primed = true
-        // If a run started while this was in flight, leave it alone.
-        if (!this.wantMusic) {
-          el.pause()
-          try {
-            el.currentTime = 0
-          } catch {
-            /* ignore */
-          }
-        }
-        el.muted = false
-      })
-      .catch(() => {
-        el.muted = false
-      })
+  private async playMusic() {
+    const buf = await this.loadMusic()
+    if (!buf || !this.wantMusic || !this.musicEnabled || !this.ctx || !this.musicGain) return
+    this.musicSource?.stop()
+    const src = this.ctx.createBufferSource()
+    src.buffer = buf
+    src.loop = this.musicLoop
+    src.connect(this.musicGain)
+    const offset = this.musicOffset()
+    if (!this.musicLoop && offset >= buf.duration) return
+    src.start(0, this.musicLoop ? offset % buf.duration : offset)
+    src.onended = () => {
+      if (this.musicSource === src) this.musicSource = null
+    }
+    this.musicSource = src
+    this.resume()
   }
 
   /** Called when the clock starts, not when the run screen mounts. */
   startMusic(loop = false) {
     this.wantMusic = true
-    if (!this.musicEnabled) return
-    const el = this.ensureMusic()
-    if (!el) return
-    el.loop = loop
-    // A prime may have left it muted; startMusic is the authority.
-    el.muted = false
+    this.musicLoop = loop
+    this.musicStartedAt = performance.now()
     this.applyMusicVolume()
-    try {
-      el.currentTime = 0
-    } catch {
-      /* not seekable yet; it will still start from the top */
-    }
-    void el.play().catch(() => {
-      /* autoplay refused: the run is still perfectly playable in silence */
-    })
+    void this.playMusic()
   }
 
   stopMusic() {
     this.wantMusic = false
-    const el = this.music
-    if (!el) return
-    el.pause()
-    try {
-      el.currentTime = 0
-    } catch {
-      /* ignore */
-    }
+    this.musicSource?.stop()
+    this.musicSource = null
   }
 
   private musicVolume() {
@@ -279,13 +308,16 @@ class AudioEngine {
   }
 
   private applyMusicVolume() {
-    if (this.routed && this.musicGain) this.musicGain.gain.value = this.musicVolume()
-    else if (this.music) this.music.volume = this.musicVolume()
+    if (!this.ctx || !this.musicGain) return
+    const target = this.musicEnabled ? this.musicVolume() : 0
+    this.musicGain.gain.setTargetAtTime(target, this.ctx.currentTime, GAIN_SMOOTH_S)
   }
 
   /** Combo tier lifts the music a little rather than changing the arrangement. */
   setIntensity(level: number) {
-    this.intensity = Math.max(0, Math.min(3, level))
+    const next = Math.max(0, Math.min(3, level))
+    if (next === this.intensity) return
+    this.intensity = next
     this.applyMusicVolume()
   }
 
@@ -293,11 +325,13 @@ class AudioEngine {
     this.sfxEnabled = s.sfx
     const wasEnabled = this.musicEnabled
     this.musicEnabled = s.music
+    this.applyMusicVolume()
     if (!s.music) {
-      this.music?.pause()
+      this.musicSource?.stop()
+      this.musicSource = null
     } else if (!wasEnabled && this.wantMusic) {
-      // Turned back on mid-run: pick the track up where it was.
-      void this.music?.play().catch(() => {})
+      // Turned back on mid-run: pick the track up where it would be.
+      void this.playMusic()
     }
   }
 }

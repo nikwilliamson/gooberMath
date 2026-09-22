@@ -34,7 +34,7 @@ function fromRun(run: RunState, patch: Partial<RunViewProps> = {}): RunViewProps
     },
     sticker: last ? { at: n, index: n + 3, missed: !last.correct, points: last.points, anchor: STICKER_ANCHORS[(n + 3) % 4] } : null,
     reveal: held ? { left: formatFact(fact), answer: fact.answer, entry: run.entry, ready: true } : null,
-    effects: { particles: false, pulse: 0, intensity: mult / 3, shake: false },
+    shake: false,
     padLive: run.phase === 'playing',
     onDigit: fn(),
     onBackspace: fn(),
@@ -61,7 +61,7 @@ export const HeldWrong: Story = { args: fromRun(runs.heldWrong()) }
 export const LastTenSeconds: Story = { args: fromRun(runs.lastTen()) }
 export const Untimed: Story = { args: fromRun(runs.untimed()) }
 export const Blitz: Story = { args: fromRun(runs.streak({ mode: 'blitz' })) }
-export const Shaking: Story = { args: fromRun(runs.heldWrong(), { effects: { particles: false, pulse: 0, intensity: 0, shake: true } }) }
+export const Shaking: Story = { args: fromRun(runs.heldWrong(), { shake: true }) }
 export const MinusMarsh: Story = { args: fromRun(runs.streak({ questId: 'sub-2' })) }
 export const TimesTundra: Story = { args: fromRun(runs.streak({ questId: 'mul-3' })) }
 export const DividedDesert: Story = { args: fromRun(runs.streak({ questId: 'div-2' })) }

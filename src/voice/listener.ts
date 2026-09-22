@@ -6,7 +6,8 @@ import type { CaptureMessage } from './capture.worklet'
 import { vlog } from './debug'
 import { grammarFor } from './numbers'
 import { MIC_CONSTRAINTS } from './permission'
-import { setVoiceStatus } from './status'
+import { micLevel, setVoiceStatus } from './status'
+import { audio } from '@/audio/engine'
 import type { HeardWord } from './voice'
 
 /**
@@ -124,7 +125,6 @@ export interface MicSession {
 const workletLoaded = new WeakSet<BaseAudioContext>()
 
 export async function openMic(
-  ctx: AudioContext,
   onFinal: (words: HeardWord[], now: number) => void,
   onLevel: (rms: number, now: number) => void,
 ): Promise<MicSession> {
@@ -142,11 +142,21 @@ export async function openMic(
     throw new VoiceError(denied ? 'denied' : 'mic')
   }
 
+  // The mic can re-clock the hardware; the engine rebuilds its context if so.
+  const ctx = audio.afterMicOpened()
+  if (!ctx) {
+    stream.getTracks().forEach((t) => t.stop())
+    setAudioSession('auto')
+    setVoiceStatus({ mic: 'error', error: 'no audio context' })
+    throw new VoiceError('mic')
+  }
+
   if (!workletLoaded.has(ctx)) {
     await ctx.audioWorklet.addModule(captureUrl)
     workletLoaded.add(ctx)
   }
-  if (ctx.state === 'suspended') await ctx.resume()
+  // 'interrupted' is iOS's state after a call; it needs the same resume.
+  if ((ctx.state as string) !== 'running') await ctx.resume().catch(() => {})
 
   // Vosk resamples to the model's 16k itself; hand it the context's own rate.
   const rec: KaldiRecognizer = new client.KaldiRecognizer(ctx.sampleRate, JSON.stringify(grammarFor(info.hasUnk)))
@@ -179,7 +189,7 @@ export async function openMic(
       origin = performance.now() - (ctx.currentTime - m.contextTime) * 1000
       vlog('mic-start', { sampleRate: ctx.sampleRate, originSkewMs: Math.round((ctx.currentTime - m.contextTime) * 1000) })
     } else if (m.type === 'level') {
-      setVoiceStatus({ level: Math.min(1, m.rms * 8) })
+      micLevel.set(Math.min(1, m.rms * 8))
       onLevel(m.rms, performance.now())
     }
   }
@@ -222,6 +232,7 @@ export async function openMic(
       stream.getTracks().forEach((t) => t.stop())
       rec.remove()
       setAudioSession('auto')
+      micLevel.set(0)
       setVoiceStatus({ mic: 'off', level: 0 })
       vlog('mic-closed')
     },

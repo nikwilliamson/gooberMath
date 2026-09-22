@@ -9,7 +9,6 @@ export const SETTING_TOGGLES: Array<{ key: keyof Settings; icon: string; label: 
   { key: 'sfx', icon: '🔊', label: 'Sounds' },
   { key: 'flashes', icon: '✨', label: 'Flashes' },
   { key: 'shake', icon: '💥', label: 'Shake' },
-  { key: 'particles', icon: '🎨', label: 'Splats' },
 ]
 
 export interface SettingsPanelProps {
@@ -19,7 +18,7 @@ export interface SettingsPanelProps {
   /** Equipped goober skin id. */
   goober: string
   onToggle: (key: keyof Settings, on: boolean) => void
-  /** Flip flashes, shake and splats together. */
+  /** Flip flashes and shake together. */
   onCalm: (calm: boolean) => void
   onCosmetic: (id: Cosmetic['id']) => void
   onClose: () => void
@@ -27,7 +26,7 @@ export interface SettingsPanelProps {
 
 /** The settings sheet from plain props. SettingsSheet wires it to the store. */
 export function SettingsPanel({ settings, owned, goober, onToggle, onCalm, onCosmetic, onClose }: SettingsPanelProps) {
-  const calm = !settings.flashes && !settings.shake && !settings.particles
+  const calm = !settings.flashes && !settings.shake
   return (
     <Sheet title="Settings" onClose={onClose}>
       <SheetSection label="Sound & effects">
@@ -37,7 +36,7 @@ export function SettingsPanel({ settings, owned, goober, onToggle, onCalm, onCos
           ))}
         </div>
         <Button onClick={() => onCalm(!calm)}>
-          {calm ? 'Turn effects back on' : 'Calm mode (no flashes, shake or splats)'}
+          {calm ? 'Turn effects back on' : 'Calm mode (no flashes or shake)'}
         </Button>
       </SheetSection>
 

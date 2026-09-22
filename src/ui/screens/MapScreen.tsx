@@ -32,8 +32,6 @@ export function MapScreen({ onSettings }: { onSettings: () => void }) {
 
   const start = (questId: string, mode: Mode, untimed: boolean) => {
     audio.unlock()
-    // Voice runs route music through the context; set it before priming.
-    audio.setRouted(save.settings.voice)
     audio.primeMusic()
     begin(questId, mode, untimed)
   }

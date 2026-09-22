@@ -37,7 +37,7 @@ export const Settings: StoryObj<typeof SettingsPanel> = {
 export const SettingsCalm: StoryObj<typeof SettingsPanel> = {
   ...Settings,
   play: undefined,
-  args: { ...settingsArgs, settings: { ...DEFAULT_SAVE.settings, flashes: false, shake: false, particles: false }, goober: 'goober-slate' },
+  args: { ...settingsArgs, settings: { ...DEFAULT_SAVE.settings, flashes: false, shake: false }, goober: 'goober-slate' },
 }
 
 const rows: QuestRow[] = [

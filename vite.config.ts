@@ -51,14 +51,16 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ request }: { request: Request }) =>
-              request.destination === 'image' || request.destination === 'audio',
+            // Art, and the run track. The track is fetched whole by the audio
+            // engine (one plain request, decoded in memory), so it caches as a
+            // normal 200; a media element's range requests never could.
+            urlPattern: ({ request, url }: { request: Request; url: URL }) =>
+              request.destination === 'image' || /\/audio\//.test(url.pathname),
             handler: 'CacheFirst',
             options: {
               cacheName: 'goobermath-media',
               expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 60 },
               cacheableResponse: { statuses: [0, 200] },
-              rangeRequests: true,
             },
           },
         ],

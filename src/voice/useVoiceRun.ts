@@ -37,8 +37,8 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
   // The mic opens as the countdown starts and closes with the run.
   useEffect(() => {
     if (!enabled) return
-    const ctx = audio.context()
-    if (!ctx) return
+    // The context exists from the tap that started the run; the mic joins it.
+    if (!audio.context()) return
 
     let session: { close: () => void; flush: () => void } | null = null
     const endpointer = createEndpointer()
@@ -51,7 +51,6 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
     void import('./listener')
       .then(({ openMic }) =>
         openMic(
-          ctx,
           (words: HeardWord[], now: number) => dispatchRef.current({ type: 'FINAL', words, now }),
           (rms, now) => {
             const before = vad.current.voicedAt

@@ -22,7 +22,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
         audio.applySettings({ ...settings, ...next })
         audio.tap()
       }}
-      onCalm={(calm) => setSettings({ flashes: !calm, shake: !calm, particles: !calm })}
+      onCalm={(calm) => setSettings({ flashes: !calm, shake: !calm })}
       onCosmetic={setCosmetic}
       onClose={onClose}
     />
