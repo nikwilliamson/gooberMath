@@ -1,9 +1,5 @@
 .questbar__card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'info stats' 'blurb blurb' 'foot foot';
-  align-items: center;
-  column-gap: 14px; row-gap: 6px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   padding: clamp(14px, 3vmin, 22px) clamp(16px, 3.4vmin, 26px);
   /* Same treatment as the problem card: a pool of shadow, not a box. */
   background: radial-gradient(
@@ -16,19 +12,9 @@
 /* A floor, so the quest name and blurb wrap to their own row rather than being
    squeezed into a one-word-per-line ribbon, but one that can never itself
    force the card wider than the screen. */
-.questbar__info { grid-area: info; display: grid; gap: 2px; min-width: 0; }
-.questbar__name { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; line-height: 1.1; }
-.questbar__blurb { grid-area: blurb; font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; line-height: 1.35; }
-.questbar__stats { grid-area: stats; display: flex; gap: 16px; align-items: end; }
-.questbar__target { display: grid; gap: 1px; text-align: right; }
-.questbar__targetv { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; color: var(--amber); line-height: 1.1; }
-/* The action row: voice on the left, modes on the right; wraps on the narrowest phones. */
-.questbar__foot { grid-area: foot; display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; margin-top: 4px; }
-.questbar__foot .voicetoggle { flex: 1 1 auto; }
-.questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
-/* Below 360px the stats drop under the name rather than squeezing it. */
-@media (max-width: 360px) {
-  .questbar__card { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'info' 'stats' 'blurb' 'foot'; }
-  .questbar__stats { justify-content: start; }
-  .questbar__target { text-align: left; }
-}
+.questbar__info { display: grid; gap: 2px; flex: 1; min-width: min(100%, 150px); }
+.questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
+.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; }
+.questbar__target { display: grid; gap: 2px; text-align: right; }
+.questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
+.questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -9,7 +9,19 @@
   grid-template-columns: minmax(0, 1fr);
   min-height: 0; min-width: 0;
 }
-.nodes { min-width: 0; overflow-y: auto; padding: clamp(10px, 2.4vmin, 20px) clamp(14px, 3.4vmin, 30px); display: grid; gap: 0; align-content: start; }
+/* The ladder sits in a pool of shadow like the problem card. The gradient is
+   on the scroll container, so it stays put while the list scrolls under it. */
+.nodes {
+  min-width: 0; overflow-y: auto;
+  padding: clamp(10px, 2.4vmin, 20px) clamp(14px, 3.4vmin, 30px);
+  display: grid; gap: 0; align-content: start;
+  background: radial-gradient(
+    ellipse 80% 62% at 42% 50%,
+    rgba(4, 6, 12, 0.82) 0%,
+    rgba(4, 6, 12, 0.55) 55%,
+    rgba(4, 6, 12, 0) 100%
+  );
+}
 /* Thumb only, no track: a bare sliver of ink over the painted world. */
 .nodes { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
 .nodes::-webkit-scrollbar { width: 6px; }

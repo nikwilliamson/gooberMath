@@ -16,7 +16,7 @@ export interface QuestBarProps {
   onWarmUp: () => void
   onBlitz: () => void
   onPlay: () => void
-  /** On the action row, left of the mode buttons: the voice toggle. */
+  /** Between the targets and the mode buttons: the voice toggle. */
   children?: ReactNode
 }
 
@@ -29,36 +29,32 @@ export function QuestBar({
       <div className="questbar__info">
         <Label>Current quest</Label>
         <span className="questbar__name">{quest.name}</span>
+        <span className="questbar__blurb">{quest.blurb}</span>
       </div>
-      <div className="questbar__stats">
-        <div className="questbar__target">
-          <Label>{cleared ? 'Unlocked' : 'Unlock at'}</Label>
-          <Num className="questbar__targetv">{cleared ? '✓' : unlockScore.toLocaleString()}</Num>
-        </div>
-        <div className="questbar__target">
-          <Label>Facts</Label>
-          <Num className="questbar__targetv">
-            {learned}/{required}
-            {mastered ? ' ★' : ''}
-          </Num>
-        </div>
+      <div className="questbar__target">
+        <Label>{cleared ? 'Unlocked' : 'Unlock at'}</Label>
+        <Num className="questbar__targetv">{cleared ? '✓' : unlockScore.toLocaleString()}</Num>
       </div>
-      <span className="questbar__blurb">{quest.blurb}</span>
-      <div className="questbar__foot">
-        {children}
-        <div className="questbar__modes">
-          {warmUp && (
-            <Button variant="ghost" onClick={onWarmUp}>
-              Warm up
-            </Button>
-          )}
-          <Button variant="ghost" onClick={onBlitz}>
-            Blitz
+      <div className="questbar__target">
+        <Label>Facts learned</Label>
+        <Num className="questbar__targetv">
+          {learned}/{required}
+          {mastered ? ' ★' : ''}
+        </Num>
+      </div>
+      {children}
+      <div className="questbar__modes">
+        {warmUp && (
+          <Button variant="ghost" onClick={onWarmUp}>
+            Warm up
           </Button>
-          <Button variant="amber" onClick={onPlay}>
-            Play
-          </Button>
-        </div>
+        )}
+        <Button variant="ghost" onClick={onBlitz}>
+          Blitz
+        </Button>
+        <Button variant="amber" onClick={onPlay}>
+          Play
+        </Button>
       </div>
     </div>
   )

@@ -10,8 +10,7 @@
 }
 .node__marker--open .node__num { color: var(--dim); }
 .node--locked .node__marker { filter: saturate(0.6) brightness(0.8); }
-/* The list sits straight on the painting now, so the text carries its own shadow. */
-.node__body { padding-bottom: clamp(16px, 3.4vmin, 30px); display: grid; gap: 3px; text-align: left; width: 100%; text-shadow: 0 1px 6px rgba(4, 6, 12, 0.9); }
+.node__body { padding-bottom: clamp(16px, 3.4vmin, 30px); display: grid; gap: 3px; text-align: left; width: 100%; }
 .node__name { font-size: clamp(0.88rem, 2.4vmin, 1.05rem); font-weight: 700; }
 .node--locked .node__name, .node--locked .node__meta { color: var(--dimmer); }
 .node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 400; display: flex; gap: 12px; flex-wrap: wrap; }
