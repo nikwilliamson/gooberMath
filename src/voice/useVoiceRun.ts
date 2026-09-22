@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { audio } from '@/audio/engine'
 import { useGame } from '@/store/game'
 import { useRaf } from '@/ui/hooks'
@@ -16,8 +16,14 @@ interface Props {
   shownAt: number
 }
 
-export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
+/**
+ * Returns whether the mic has settled: it is listening, or it is not going to
+ * (permission refused, no model, no context). The countdown holds until then,
+ * so the permission sheet never lands mid-count and the first problem is heard.
+ */
+export function useVoiceRun({ enabled, playing, answer, shownAt }: Props): { micSettled: boolean } {
   const state = useRef(initialVoice)
+  const [micSettled, setMicSettled] = useState(false)
   /** Whether he is still making sound: keeps a wrong answer held mid-count. */
   const vad = useRef(createVad())
 
@@ -37,8 +43,12 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
   // The mic opens as the countdown starts and closes with the run.
   useEffect(() => {
     if (!enabled) return
+    setMicSettled(false)
     // The context exists from the tap that started the run; the mic joins it.
-    if (!audio.context()) return
+    if (!audio.context()) {
+      setMicSettled(true)
+      return
+    }
 
     let session: { close: () => void; flush: () => void } | null = null
     const endpointer = createEndpointer()
@@ -76,6 +86,9 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
         // The run carries on with the keypad; status explains why on the map.
         vlog('mic-open-failed', { error: String(err) })
       })
+      .finally(() => {
+        if (!cancelled) setMicSettled(true)
+      })
 
     // iOS stops capture when the app is backgrounded and does not reliably
     // restart it; close cleanly rather than leave a dead stream open.
@@ -103,4 +116,6 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props) {
   useRaf((now) => {
     if (state.current.held) dispatchRef.current({ type: 'TICK', now, voicedAt: vad.current.voicedAt })
   }, enabled && playing)
+
+  return { micSettled }
 }

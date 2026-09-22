@@ -212,16 +212,32 @@ export async function openMic(
   sink.gain.value = 0
   node.connect(sink).connect(ctx.destination)
 
-  /** performance.now() of the first sample the recognizer received. */
+  /**
+   * performance.now() of the recognizer's audio-clock zero. Re-estimated from
+   * every level message as `now - audioSec`; each estimate is late by that
+   * message's delivery latency and never early, so the minimum over a short
+   * window is the best guess and a stalled context (interrupted, resumed
+   * later) ages out of the window on its own.
+   */
   let origin = performance.now()
+  const estimates: number[] = []
+  const ORIGIN_WINDOW = 24 // ~1s of level messages
+  let firstLevel = true
   node.port.onmessage = (e: MessageEvent<CaptureMessage>) => {
     const m = e.data
+    const now = performance.now()
     if (m.type === 'start') {
-      origin = performance.now() - (ctx.currentTime - m.contextTime) * 1000
       vlog('mic-start', { sampleRate: ctx.sampleRate, originSkewMs: Math.round((ctx.currentTime - m.contextTime) * 1000) })
     } else if (m.type === 'level') {
+      estimates.push(now - m.audioSec * 1000)
+      if (estimates.length > ORIGIN_WINDOW) estimates.shift()
+      origin = Math.min(...estimates)
+      if (firstLevel) {
+        firstLevel = false
+        vlog('mic-clock', { audioSec: +m.audioSec.toFixed(3) })
+      }
       micLevel.set(Math.min(1, m.rms * 8))
-      onLevel(m.rms, performance.now())
+      onLevel(m.rms, now)
     }
   }
 

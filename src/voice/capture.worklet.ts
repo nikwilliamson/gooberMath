@@ -8,9 +8,12 @@
  * - Samples are scaled to 16-bit range here. The library does that inside
  *   acceptWaveformFloat, but its port path forwards chunks untouched; unscaled
  *   audio reaches Vosk as near-silence and every result comes back empty.
- * - The first batch reports the audio clock it started at. Vosk's word times
- *   are seconds of audio since the recognizer began, cumulative across
- *   utterances, so this one timestamp maps every word onto the game clock.
+ * - Every level message reports how much audio has been sent so far. Vosk's
+ *   word times are seconds of audio since the recognizer began, cumulative
+ *   across utterances, so `now - audioSec` on the main thread is where that
+ *   clock's zero sits on the game clock. It is re-derived on every message:
+ *   the worklet's own clock and the main thread's ctx.currentTime were 2.7s
+ *   apart on an iPhone, which had put every word before its problem.
  */
 
 // AudioWorkletGlobalScope is not in lib.dom.
@@ -31,7 +34,9 @@ export interface CaptureOptions {
 
 export type CaptureMessage =
   | { type: 'start'; contextTime: number }
-  | { type: 'level'; rms: number }
+  /** `audioSec`: seconds of audio handed to the recognizer so far, which is
+      the clock its word times are in. */
+  | { type: 'level'; rms: number; audioSec: number }
 
 /** 2048 frames: ~43ms at 48k. Small enough to keep latency low, large enough
     that the per-message cost is noise. */
@@ -42,6 +47,7 @@ class Capture extends AudioWorkletProcessor {
   private buf = new Float32Array(BATCH)
   private n = 0
   private sumSq = 0
+  private sent = 0
   private started = false
   private readonly recognizerId: string
 
@@ -79,7 +85,8 @@ class Capture extends AudioWorkletProcessor {
       { action: 'audioChunk', recognizerId: this.recognizerId, data, sampleRate },
       [data.buffer],
     )
-    this.port.postMessage({ type: 'level', rms: Math.sqrt(this.sumSq / BATCH) } satisfies CaptureMessage)
+    this.sent += BATCH
+    this.port.postMessage({ type: 'level', rms: Math.sqrt(this.sumSq / BATCH), audioSec: this.sent / sampleRate } satisfies CaptureMessage)
     this.buf = new Float32Array(BATCH)
     this.n = 0
     this.sumSq = 0

@@ -22,6 +22,8 @@ const BASE_HZ = 261.63 // C4
 /** The run track. 60s, so it runs exactly as long as a run does. */
 const MUSIC_URL = `${import.meta.env.BASE_URL}audio/ComboUp.m4a`
 const MUSIC_BASE_VOLUME = 0.6
+/** With voice on the track sits under his speaking voice, not beside it. */
+const VOICE_DUCK = 0.5
 /** Gain moves are smoothed over this many seconds; no zipper noise. */
 const GAIN_SMOOTH_S = 0.05
 
@@ -53,6 +55,7 @@ class AudioEngine {
   intensity = 0
   sfxEnabled = true
   musicEnabled = true
+  voiceOn = false
   pack: SoundPack = 'pad-ink'
 
   constructor() {
@@ -313,7 +316,7 @@ class AudioEngine {
   }
 
   private musicVolume() {
-    return Math.min(1, MUSIC_BASE_VOLUME + this.intensity * 0.06)
+    return Math.min(1, MUSIC_BASE_VOLUME + this.intensity * 0.06) * (this.voiceOn ? VOICE_DUCK : 1)
   }
 
   private applyMusicVolume() {
@@ -330,8 +333,9 @@ class AudioEngine {
     this.applyMusicVolume()
   }
 
-  applySettings(s: { music: boolean; sfx: boolean }) {
+  applySettings(s: { music: boolean; sfx: boolean; voice: boolean }) {
     this.sfxEnabled = s.sfx
+    this.voiceOn = s.voice
     const wasEnabled = this.musicEnabled
     this.musicEnabled = s.music
     this.applyMusicVolume()

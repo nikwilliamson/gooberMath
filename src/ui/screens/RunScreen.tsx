@@ -5,7 +5,6 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
-import { useVoiceStatus } from '@/voice/status'
 import { useVoiceRun } from '@/voice/useVoiceRun'
 import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
 import { useKeypad, useRaf } from '../hooks'
@@ -14,7 +13,7 @@ import { STICKER_ANCHORS } from '../sprites'
 
 /** Store ticks per second while the clock runs. */
 const TICK_MS = 50
-/** A voice run holds the countdown until the model is ready, up to this long. */
+/** A voice run holds the countdown until the mic is live, up to this long. */
 const VOICE_WAIT_MS = 15_000
 
 /**
@@ -49,14 +48,24 @@ export function RunScreen() {
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
 
-  // A voice run's mic cannot open until the model has loaded, and on a fresh
-  // page that can take several seconds: started blind, the first problems
-  // would not hear him. So the countdown holds at 3 until the model reports
-  // ready (or fails, in which case the keypad run goes ahead), capped so a
-  // stalled download can never hold the game hostage.
-  const model = useVoiceStatus((s) => s.model)
+  // Voice is a second way in, never a replacement: the keypad stays live.
+  // The mic opens as soon as the run screen mounts; the countdown holds until
+  // it has settled (see the hold below), so the first problem is heard.
+  const { micSettled } = useVoiceRun({
+    enabled: run?.voice ?? false,
+    playing: live && run?.phase === 'playing',
+    answer: run ? (factsByKey.get(run.currentKey)?.answer ?? -1) : -1,
+    shownAt: run?.shownAt ?? 0,
+  })
+
+  // A voice run's mic cannot open until the model has loaded (seconds, on a
+  // fresh page), and on iOS the permission sheet can come back on every launch
+  // even though the toggle asked once already. Started blind, the sheet would
+  // land mid-count and the first problems would not hear him. So the countdown
+  // holds at 3 until the mic is listening, or has failed and the keypad run
+  // goes ahead; capped so a stalled download can never hold the game hostage.
   const [waitedOut, setWaitedOut] = useState(false)
-  const waiting = Boolean(run?.voice) && (model === 'idle' || model === 'loading') && !waitedOut
+  const waiting = Boolean(run?.voice) && !micSettled && !waitedOut
   useEffect(() => {
     if (!waiting) return
     const id = window.setTimeout(() => setWaitedOut(true), VOICE_WAIT_MS)
@@ -95,13 +104,6 @@ export function RunScreen() {
     tick(now)
   }, live)
 
-  // Voice is a second way in, never a replacement: the keypad stays live.
-  useVoiceRun({
-    enabled: run?.voice ?? false,
-    playing: live && run?.phase === 'playing',
-    answer: run ? (factsByKey.get(run.currentKey)?.answer ?? -1) : -1,
-    shownAt: run?.shownAt ?? 0,
-  })
   useKeypad(live && run?.phase === 'playing', { digit, backspace, escape: quit })
 
   // The reveal ignores input for a beat before it will accept a dismissal.
