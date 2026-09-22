@@ -158,6 +158,31 @@ describe('voiceStep', () => {
     expect(r.state.held?.value).toBe(30)
   })
 
+  it('asks again when one teen is heard for another below TENS_SURE', () => {
+    // Measured with a TV on: "fifteen" decoded as "thirteen" at 0.62 and 0.74.
+    for (const conf of [0.62, 0.74, TENS_SURE - 0.01]) {
+      const r = play([problem(15), final(T + 900, w('thirteen', T, 400, conf))])
+      expect(r.outs).toEqual([{ kind: 'unsure' }])
+      expect(r.state.held).toBeNull()
+    }
+  })
+
+  it('still holds a clearly spoken wrong teen, and a low teen for a non-teen answer', () => {
+    const sure = play([problem(15), final(T + 900, w('thirteen', T, 400, TENS_SURE))])
+    expect(sure.outs).toEqual([])
+    expect(sure.state.held?.value).toBe(13)
+    const digit = play([problem(8), final(T + 900, w('thirteen', T, 400, 0.7))])
+    expect(digit.outs).toEqual([])
+    expect(digit.state.held?.value).toBe(13)
+  })
+
+  it('reports whether a held number went through on quiet or on the cap', () => {
+    const held = play([problem(3), final(T + 900, w('eight', T))]).state
+    expect(voiceStep(held, tick(T + 900 + HOLD_MS + 1)).via).toBe('quiet')
+    const noisy = tick(T + 900 + HOLD_CAP_MS, T + 900 + HOLD_CAP_MS)
+    expect(voiceStep(held, noisy).via).toBe('cap')
+  })
+
   it('does not rescue a tens word for anything but its own teen', () => {
     // "eighty" at 0.65 for 13: not its partner, so an ordinary wrong answer.
     const r = play([problem(13), final(T + 900, w('eighty', T, 400, TENS_SURE - 0.25))])

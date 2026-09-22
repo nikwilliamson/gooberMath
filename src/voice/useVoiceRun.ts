@@ -32,7 +32,7 @@ export function useVoiceRun({ enabled, playing, answer, shownAt }: Props): { mic
     state.current = step.state
     if (!step.out) return
     const { kind: outcome, ...detail } = step.out
-    vlog('decision', { outcome, ...detail, answer, voicedAt: Math.round(vad.current.voicedAt) })
+    vlog('decision', { outcome, ...detail, via: step.via ?? 'said', answer, voicedAt: Math.round(vad.current.voicedAt) })
     if (step.out.kind === 'answer') useGame.getState().spoken(step.out.value, step.out.spokeAt)
     else setVoiceStatus({ unsureAt: performance.now() })
   }

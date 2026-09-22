@@ -102,14 +102,20 @@ export type VoiceOut =
 export interface VoiceStep {
   state: VoiceState
   out?: VoiceOut
+  /** For the debug log: what let a held number through. */
+  via?: 'quiet' | 'cap'
 }
 
 export const initialVoice: VoiceState = { answer: null, shownAt: 0, held: null }
 
 const minConf = (words: readonly HeardWord[]) => Math.min(...words.map((w) => w.conf))
 
+const isTeen = (n: number) => n >= 13 && n <= 19
+
 /** 13 → 30, 19 → 90; null for anything that is not a teen. */
-const tensPartner = (teen: number) => (teen >= 13 && teen <= 19 ? (teen - 10) * 10 : null)
+const tensPartner = (teen: number) => (isTeen(teen) ? (teen - 10) * 10 : null)
+
+const unsure = (s: VoiceState): VoiceStep => ({ state: s, out: { kind: 'unsure' } })
 
 const answered = (s: VoiceState, value: number, spokeAt: number): VoiceStep => ({
   state: { ...s, answer: null, held: null },
@@ -145,8 +151,9 @@ export function voiceStep(s: VoiceState, e: VoiceEvent): VoiceStep {
     case 'TICK': {
       if (s.answer === null || !s.held) return { state: s }
       const quiet = e.now - (e.voicedAt ?? 0) >= QUIET_MS
-      const due = (e.now >= s.held.until && quiet) || e.now >= s.held.cap
-      return due ? answered(s, s.held.value, s.held.spokeAt) : { state: s }
+      if (e.now >= s.held.until && quiet) return { ...answered(s, s.held.value, s.held.spokeAt), via: 'quiet' }
+      if (e.now >= s.held.cap) return { ...answered(s, s.held.value, s.held.spokeAt), via: 'cap' }
+      return { state: s }
     }
 
     case 'FINAL': {
@@ -177,7 +184,12 @@ export function voiceStep(s: VoiceState, e: VoiceEvent): VoiceStep {
 
       if (value === open.answer && conf >= ACCEPT_CONF) return answered(s, value, spokeAt)
       // Keep any held number: a mumble after "six" does not erase the six.
-      if (conf < MIN_CONF) return { state: s, out: { kind: 'unsure' } }
+      if (conf < MIN_CONF) return unsure(s)
+      // One teen heard for another. The "-teen" carries the word and the
+      // onset that tells them apart is the quiet part, the first thing a TV
+      // in the room takes: "fifteen" came back as "thirteen" at 0.62 and 0.74
+      // with one on. Never scored as a miss below TENS_SURE; he says it again.
+      if (isTeen(open.answer) && isTeen(value) && conf < TENS_SURE) return unsure(s)
       return judge(open, value, spokeAt, e.now)
     }
   }
