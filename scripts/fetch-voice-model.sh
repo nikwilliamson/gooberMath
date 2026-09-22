@@ -160,6 +160,8 @@ fi
 rm -f "${MODEL}/README"
 mv "${MODEL}" "${TMP}/${SERVED}"
 mkdir -p "${OUT}"
+# Earlier repacks are dead weight in dist/ and nothing serves them.
+find "${OUT}" -maxdepth 1 -name 'vosk-model-*.tar.gz' ! -name "${SERVED}.tar.gz" -delete
 COPYFILE_DISABLE=1 tar -C "${TMP}" -czf "${ARCHIVE}" "${SERVED}"
 BYTES="$(wc -c < "${ARCHIVE}" | tr -d ' ')"
 
