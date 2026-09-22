@@ -12,6 +12,6 @@
 .node--locked .node__marker { filter: saturate(0.6) brightness(0.8); }
 .node__body { padding-bottom: clamp(16px, 3.4vmin, 30px); display: grid; gap: 3px; text-align: left; width: 100%; }
 .node__name { font-size: clamp(0.88rem, 2.4vmin, 1.05rem); font-weight: 700; }
-.node--locked .node__name, .node--locked .node__meta { color: var(--dimmer); }
+.node--locked .node__name, .node--locked .node__meta { color: var(--dim); }
 .node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 400; display: flex; gap: 12px; flex-wrap: wrap; }
 .node__grid { margin-top: 5px; }

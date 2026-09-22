@@ -10,15 +10,18 @@
   min-height: 0; min-width: 0;
 }
 /* The ladder sits in a pool of shadow like the problem card. The gradient is
-   on the scroll container, so it stays put while the list scrolls under it. */
+   on the scroll container, so it holds still while the list moves under it.
+   The vertical radius is exactly half the box, so the pool fades to nothing at
+   the top and bottom edges instead of being cut off by them. */
 .nodes {
   min-width: 0; overflow-y: auto;
-  padding: clamp(10px, 2.4vmin, 20px) clamp(14px, 3.4vmin, 30px);
+  padding: clamp(18px, 4vmin, 32px) clamp(14px, 3.4vmin, 30px) clamp(10px, 2.4vmin, 20px);
   display: grid; gap: 0; align-content: start;
   background: radial-gradient(
-    ellipse 80% 62% at 42% 50%,
-    rgba(4, 6, 12, 0.82) 0%,
-    rgba(4, 6, 12, 0.55) 55%,
+    ellipse 95% 50% at 45% 50%,
+    rgba(4, 6, 12, 0.94) 0%,
+    rgba(4, 6, 12, 0.86) 50%,
+    rgba(4, 6, 12, 0.55) 80%,
     rgba(4, 6, 12, 0) 100%
   );
 }

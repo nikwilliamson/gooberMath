@@ -13,7 +13,7 @@
   /* Keyed to vw, not vmin: on a short landscape phone vmin is the height, and
      the title has nothing to do with the height. */
   font-size: clamp(1.1rem, 4.8vw, 2rem);
-  margin: 0;
+  margin: 4px 0 0;
   min-width: 0;
   overflow-wrap: anywhere;
   font-weight: 700;
