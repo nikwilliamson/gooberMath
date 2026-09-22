@@ -42,8 +42,38 @@ const BASE = import.meta.env.BASE_URL
 const absolute = (path: string) => new URL(path, window.location.href).toString()
 
 const LOAD_TIMEOUT_MS = 180_000
+/** Which model this device last cached, so a new one can evict the old. */
+const MODEL_NAME_KEY = 'goobermath:voice-model'
 
 let model: Promise<{ client: VoskClient; info: ModelInfo }> | null = null
+
+/**
+ * The worker caches every model it has ever loaded, keyed by URL, in one
+ * IndexedDB database and restores all of it into memory on every load. When
+ * the served model changes name, wipe the database first so the old copy is
+ * not carried around forever beside the new one.
+ */
+async function evictStaleModel(name: string) {
+  let last: string | null = null
+  try {
+    last = localStorage.getItem(MODEL_NAME_KEY)
+  } catch {
+    return
+  }
+  if (last === name) return
+  if (last) {
+    vlog('model-evict', { from: last, to: name })
+    await new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase('/vosk')
+      req.onsuccess = req.onerror = req.onblocked = () => resolve()
+    })
+  }
+  try {
+    localStorage.setItem(MODEL_NAME_KEY, name)
+  } catch {
+    /* private mode: it will simply evict again next time */
+  }
+}
 
 /** Idempotent. Resolves when the recognizer is ready; safe to call early. */
 export function loadModel() {
@@ -55,6 +85,7 @@ export function loadModel() {
     const res = await fetch(`${BASE}voice/model.json`, { cache: 'no-cache' }).catch(() => null)
     if (!res?.ok) throw new VoiceError('missing')
     const info = (await res.json()) as ModelInfo
+    await evictStaleModel(info.name)
 
     // Not createVoskClient: it only listens for 'load', and a failed download
     // is reported as 'error', so its promise never settles.
