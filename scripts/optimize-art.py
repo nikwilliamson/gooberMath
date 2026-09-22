@@ -40,7 +40,7 @@ PLAN = {
     'dividedDesertLevel': (1536, 74, False),
     'positiveSprite':     (1150, 88, False),
     'incorrectSprite':    (1150, 88, False),
-    'levelMarkers':       (1254, 88, False),
+    'levelMarkers':       (480, 88, False),
 }
 
 
