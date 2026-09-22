@@ -5,6 +5,7 @@ import { questById } from '@/engine/quests'
 import { buildCtx } from '@/engine/run'
 import { comboMult } from '@/engine/scoring'
 import { useGame } from '@/store/game'
+import { useVoiceStatus } from '@/voice/status'
 import { useVoiceRun } from '@/voice/useVoiceRun'
 import { VoiceChip, VoiceNudge } from '../components/VoiceChip'
 import { useKeypad, useRaf } from '../hooks'
@@ -13,6 +14,8 @@ import { STICKER_ANCHORS } from '../sprites'
 
 /** Store ticks per second while the clock runs. */
 const TICK_MS = 50
+/** A voice run holds the countdown until the model is ready, up to this long. */
+const VOICE_WAIT_MS = 15_000
 
 /**
  * Wires the run to the store: countdown, clock, input, audio, and the
@@ -46,8 +49,22 @@ export function RunScreen() {
   const quest = run ? questById(run.questId) : null
   const factsByKey = useMemo(() => (quest ? buildCtx(quest).byKey : new Map()), [quest])
 
+  // A voice run's mic cannot open until the model has loaded, and on a fresh
+  // page that can take several seconds: started blind, the first problems
+  // would not hear him. So the countdown holds at 3 until the model reports
+  // ready (or fails, in which case the keypad run goes ahead), capped so a
+  // stalled download can never hold the game hostage.
+  const model = useVoiceStatus((s) => s.model)
+  const [waitedOut, setWaitedOut] = useState(false)
+  const waiting = Boolean(run?.voice) && (model === 'idle' || model === 'loading') && !waitedOut
   useEffect(() => {
-    if (!quest) return
+    if (!waiting) return
+    const id = window.setTimeout(() => setWaitedOut(true), VOICE_WAIT_MS)
+    return () => window.clearTimeout(id)
+  }, [waiting])
+
+  useEffect(() => {
+    if (!quest || waiting) return
     let n = 3
     audio.countdownBeep()
     const id = window.setInterval(() => {
@@ -65,7 +82,7 @@ export function RunScreen() {
       }
     }, 700)
     return () => window.clearInterval(id)
-  }, [quest, arm, settings.music])
+  }, [quest, arm, settings.music, waiting])
 
   useEffect(() => () => audio.stopMusic(), [])
   // The clock reads to the second and the bar tweens over 100ms, so the store
@@ -236,6 +253,7 @@ export function RunScreen() {
       mode={run.mode}
       untimed={run.untimed}
       count={count}
+      waiting={waiting}
       hud={{
         untimed: run.untimed,
         msLeft: run.msLeft,

@@ -16,6 +16,8 @@ export interface RunViewProps {
   untimed: boolean
   /** Countdown digit; 0 once the run is live. */
   count: number
+  /** The countdown is holding for the voice model. */
+  waiting?: boolean
   hud: Omit<HudProps, 'children'>
   problem: Omit<ProblemCardProps, 'children'>
   sticker: StickerProps | null
@@ -55,6 +57,7 @@ export function RunView({
   mode,
   untimed,
   count,
+  waiting,
   hud,
   problem,
   sticker,
@@ -93,7 +96,7 @@ export function RunView({
           </div>
         </div>
 
-        <Count count={count} modeName={modeName(mode, untimed)} hint={modeHint(mode)} />
+        <Count count={count} modeName={modeName(mode, untimed)} hint={waiting ? 'Getting voice ready…' : modeHint(mode)} />
       </div>
 
       {count === 0 && (
