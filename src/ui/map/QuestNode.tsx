@@ -11,21 +11,21 @@ export interface QuestNodeProps {
   quest: QuestDef
   status: QuestStatus
   marker: MarkerState
+  /** The quest the card below is showing; the only one that shows its grid. */
+  active: boolean
   /** Facts learned out of the number needed for mastery. */
   learned: number
   required: number
   mastered: boolean
-  bestSniper: number
-  bestSniperVoice: number
   perfect: boolean
   onSelect: () => void
-  /** The fact grid. */
+  /** The fact grid, shown only while active. */
   children?: ReactNode
 }
 
 /** One rung of the quest ladder: marker on the rail, details on the body. */
 export function QuestNode({
-  index, quest, status, marker, learned, required, mastered, bestSniper, bestSniperVoice, perfect, onSelect, children,
+  index, quest, status, marker, active, learned, required, mastered, perfect, onSelect, children,
 }: QuestNodeProps) {
   return (
     <div className={cx('node', status === 'locked' && 'node--locked')}>
@@ -43,16 +43,18 @@ export function QuestNode({
         <span className="node__meta">
           <span>{quest.blurb}</span>
         </span>
-        <span className="node__meta">
-          <span>
-            {learned}/{required} facts
-            {mastered ? ' ★' : ''}
+        {(learned > 0 || perfect) && (
+          <span className="node__meta">
+            {learned > 0 && (
+              <span>
+                {learned}/{required} facts
+                {mastered ? ' ★' : ''}
+              </span>
+            )}
+            {perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
           </span>
-          <span>Best {bestSniper.toLocaleString()}</span>
-          {bestSniperVoice > 0 && <span>Voice {bestSniperVoice.toLocaleString()}</span>}
-          {perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
-        </span>
-        <span className="node__grid">{children}</span>
+        )}
+        {active && <span className="node__grid">{children}</span>}
       </button>
     </div>
   )

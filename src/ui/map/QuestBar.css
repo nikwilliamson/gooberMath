@@ -16,7 +16,7 @@
 .questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
 .questbar__head .voicetoggle { flex: 0 1 auto; justify-items: end; text-align: right; }
 .questbar__head .voicetoggle__note { max-width: 22ch; }
-.questbar__stats { display: flex; gap: clamp(16px, 5vmin, 40px); }
+.questbar__stats { display: flex; gap: clamp(14px, 4vmin, 32px); flex-wrap: wrap; }
 .questbar__target { display: grid; gap: 2px; }
 .questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
 .questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; line-height: 1.35; }
