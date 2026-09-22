@@ -24,7 +24,7 @@
 }
 .map__sub {
   font-size: clamp(0.7rem, 1.9vmin, 0.84rem);
-  color: var(--dim); font-weight: 400; line-height: 1.25;
+  color: var(--text); font-weight: 400; line-height: 1.25;
   margin-top: 2px;
   min-width: 0; overflow-wrap: anywhere;
   max-width: 42ch;
