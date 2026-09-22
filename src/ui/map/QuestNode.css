@@ -14,4 +14,16 @@
 .node__name { font-size: clamp(0.88rem, 2.4vmin, 1.05rem); font-weight: 700; }
 .node--locked .node__name, .node--locked .node__meta { color: var(--dim); }
 .node__meta { font-size: clamp(0.66rem, 1.8vmin, 0.78rem); color: var(--dim); font-weight: 400; display: flex; gap: 12px; flex-wrap: wrap; }
-.node__grid { margin-top: 5px; }
+/* The active quest: its name takes the region's ink and its platform glows. */
+.node--active .node__name { color: var(--ink); }
+.node--active .node__marker { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ink) 55%, transparent)); }
+/* The grid folds open and closed: a 0fr→1fr track animates its height, so the
+   rows above and below (and the centred list) glide rather than jump. */
+.node__grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--dur-enter) var(--ease-out), opacity var(--dur-state) var(--ease-snap), margin-top var(--dur-enter) var(--ease-out);
+}
+.node__grid[data-open] { grid-template-rows: 1fr; opacity: 1; margin-top: 5px; }
+.node__gridinner { min-height: 0; overflow: hidden; }

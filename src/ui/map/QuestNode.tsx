@@ -28,7 +28,7 @@ export function QuestNode({
   index, quest, status, marker, active, learned, required, mastered, perfect, onSelect, children,
 }: QuestNodeProps) {
   return (
-    <div className={cx('node', status === 'locked' && 'node--locked')}>
+    <div className={cx('node', status === 'locked' && 'node--locked', active && 'node--active')}>
       <div className="node__rail">
         <span className={`node__marker node__marker--${marker}`}>
           <LevelMarker state={marker} width="100%" />
@@ -54,7 +54,10 @@ export function QuestNode({
             {perfect && <span style={{ color: 'var(--amber)' }}>Perfect</span>}
           </span>
         )}
-        {active && <span className="node__grid">{children}</span>}
+        {/* Always in the tree so it can animate open and closed. */}
+        <span className="node__grid" data-open={active || undefined} aria-hidden={!active}>
+          <span className="node__gridinner">{children}</span>
+        </span>
       </button>
     </div>
   )

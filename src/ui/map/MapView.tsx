@@ -36,11 +36,13 @@ export function MapView({ region, header, nodes, current, tabs, onSelect, questB
         <MapHeader {...header} op={region} />
 
         <div className="nodes">
-          {nodes.map(({ grid, ...node }, i) => (
-            <QuestNode key={node.quest.id} index={i} {...node} onSelect={() => onSelect(node.quest.id)}>
-              <FactGrid {...grid} />
-            </QuestNode>
-          ))}
+          <div className="nodes__bed">
+            {nodes.map(({ grid, ...node }, i) => (
+              <QuestNode key={node.quest.id} index={i} {...node} onSelect={() => onSelect(node.quest.id)}>
+                <FactGrid {...grid} />
+              </QuestNode>
+            ))}
+          </div>
         </div>
 
         <div className="questbar">
