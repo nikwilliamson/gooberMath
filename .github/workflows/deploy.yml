@@ -28,6 +28,9 @@ jobs:
 
       - run: npm ci
 
+      # The story tests render every story in Chromium (vitest.config.ts).
+      - run: npx playwright install --with-deps chromium
+
       - run: npm run typecheck
       - run: npm test
 
