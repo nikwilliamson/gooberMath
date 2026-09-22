@@ -16,33 +16,37 @@ export interface QuestBarProps {
   onWarmUp: () => void
   onBlitz: () => void
   onPlay: () => void
-  /** Between the targets and the mode buttons: the voice toggle. */
+  /** Top right, beside the quest name: the voice toggle. */
   children?: ReactNode
 }
 
-/** The current quest's card: name, targets, and the ways to start it. */
+/** The current quest's card: name and voice, targets, blurb, then the ways to start it. */
 export function QuestBar({
   quest, cleared, mastered, unlockScore, learned, required, warmUp, onWarmUp, onBlitz, onPlay, children,
 }: QuestBarProps) {
   return (
     <div className="questbar__card">
-      <div className="questbar__info">
-        <Label>Current quest</Label>
-        <span className="questbar__name">{quest.name}</span>
-        <span className="questbar__blurb">{quest.blurb}</span>
+      <div className="questbar__head">
+        <div className="questbar__info">
+          <Label>Current quest</Label>
+          <span className="questbar__name">{quest.name}</span>
+        </div>
+        {children}
       </div>
-      <div className="questbar__target">
-        <Label>{cleared ? 'Unlocked' : 'Unlock at'}</Label>
-        <Num className="questbar__targetv">{cleared ? '✓' : unlockScore.toLocaleString()}</Num>
+      <div className="questbar__stats">
+        <div className="questbar__target">
+          <Label>{cleared ? 'Unlocked' : 'Unlock at'}</Label>
+          <Num className="questbar__targetv">{cleared ? '✓' : unlockScore.toLocaleString()}</Num>
+        </div>
+        <div className="questbar__target">
+          <Label>Facts learned</Label>
+          <Num className="questbar__targetv">
+            {learned}/{required}
+            {mastered ? ' ★' : ''}
+          </Num>
+        </div>
       </div>
-      <div className="questbar__target">
-        <Label>Facts learned</Label>
-        <Num className="questbar__targetv">
-          {learned}/{required}
-          {mastered ? ' ★' : ''}
-        </Num>
-      </div>
-      {children}
+      <span className="questbar__blurb">{quest.blurb}</span>
       <div className="questbar__modes">
         {warmUp && (
           <Button variant="ghost" onClick={onWarmUp}>

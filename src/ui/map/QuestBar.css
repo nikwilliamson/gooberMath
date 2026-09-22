@@ -1,5 +1,5 @@
 .questbar__card {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  display: grid; gap: 10px;
   padding: clamp(14px, 3vmin, 22px) clamp(16px, 3.4vmin, 26px);
   /* Same treatment as the problem card: a pool of shadow, not a box. */
   background: radial-gradient(
@@ -9,12 +9,17 @@
     rgba(4, 6, 12, 0) 100%
   );
 }
-/* A floor, so the quest name and blurb wrap to their own row rather than being
-   squeezed into a one-word-per-line ribbon, but one that can never itself
-   force the card wider than the screen. */
-.questbar__info { display: grid; gap: 2px; flex: 1; min-width: min(100%, 150px); }
+/* Four rows: name with the voice switch beside it, the two targets, the blurb,
+   the mode buttons. */
+.questbar__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
+.questbar__info { display: grid; gap: 2px; min-width: 0; }
 .questbar__name { font-size: clamp(0.95rem, 2.6vmin, 1.2rem); font-weight: 700; }
-.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; }
-.questbar__target { display: grid; gap: 2px; text-align: right; }
+.questbar__head .voicetoggle { flex: 0 1 auto; justify-items: end; text-align: right; }
+.questbar__head .voicetoggle__note { max-width: 22ch; }
+.questbar__stats { display: flex; gap: clamp(16px, 5vmin, 40px); }
+.questbar__target { display: grid; gap: 2px; }
 .questbar__targetv { font-size: clamp(1rem, 2.8vmin, 1.3rem); font-weight: 700; color: var(--amber); }
-.questbar__modes { display: flex; gap: 8px; flex-wrap: wrap; }
+.questbar__blurb { font-size: clamp(0.68rem, 1.8vmin, 0.8rem); color: var(--dim); font-weight: 400; line-height: 1.35; }
+.questbar__modes { display: flex; gap: 8px; }
+/* Play takes whatever the row has left. */
+.questbar__modes .btn--amber { flex: 1; }
